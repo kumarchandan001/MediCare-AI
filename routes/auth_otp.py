@@ -16,6 +16,7 @@ Routes:
   POST     /guest-login      — Guest (demo) login bypass
 """
 
+import os
 import logging
 from flask import (
     Blueprint, render_template, request,
@@ -39,6 +40,9 @@ from services.email_service import (
 
 logger = logging.getLogger(__name__)
 auth_bp = Blueprint("auth", __name__)
+
+# When SMTP is unavailable (e.g. Render free tier), skip OTP email verification
+SKIP_EMAIL_VERIFY = os.getenv("SKIP_EMAIL_VERIFICATION", "false").lower() == "true"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -153,6 +157,19 @@ def signup():
         user_id = new_user.id
 
     # ── Send OTP ─────────────────────────────────────────────────────────────
+    # If SMTP is unavailable (cloud free tier), auto-verify and log in directly
+    if SKIP_EMAIL_VERIFY:
+        logger.info("SKIP_EMAIL_VERIFICATION=true → auto-verifying %s", email)
+        user = db.session.get(User, user_id)
+        if user:
+            user.email_verified = True
+            db.session.commit()
+            _start_session(user)
+            flash("🎉 Account created! Welcome to MediCare AI!", "success")
+            if not user.profile_completed:
+                return redirect(url_for("onboarding.onboarding_page"))
+            return redirect(url_for("home"))
+
     otp, err = create_otp(email, "signup", ip_address=_get_ip(), user_agent=_get_ua())
     if err:
         return render_template("auth/signup.html", errors={"general": err},
@@ -165,10 +182,17 @@ def signup():
         email_sent = False
 
     if not email_sent:
-        logger.error("Failed to send OTP email to %s", email)
-        return render_template("auth/signup.html",
-            errors={"general": "Could not send verification email. Please check your email address or try again later."},
-            form_data={"username": username, "email": email, "phone": phone})
+        # SMTP failed — auto-verify as fallback so user isn't blocked
+        logger.warning("SMTP failed for %s — auto-verifying as fallback", email)
+        user = db.session.get(User, user_id)
+        if user:
+            user.email_verified = True
+            db.session.commit()
+            _start_session(user)
+            flash("🎉 Account created! Welcome to MediCare AI!", "success")
+            if not user.profile_completed:
+                return redirect(url_for("onboarding.onboarding_page"))
+            return redirect(url_for("home"))
 
     session["otp_email"]   = email
     session["otp_purpose"] = "signup"
@@ -281,7 +305,7 @@ def login():
             form_data={"identifier": identifier})
 
     # ── Email verified? ──────────────────────────────────────────────────────
-    if not user.email_verified:
+    if not user.email_verified and not SKIP_EMAIL_VERIFY:
         return render_template("auth/login.html",
             error="Email not verified. Please check your inbox or sign up again.",
             form_data={"identifier": identifier})
@@ -323,6 +347,18 @@ def login():
         return redirect(url_for("home"))
 
     # ── OTP LOGIN (2FA) ──────────────────────────────────────────────────────
+    # If SMTP is unavailable, fall back to direct login automatically
+    if SKIP_EMAIL_VERIFY:
+        record_login_attempt(user.email, True, ip)
+        unlock_account(user.email)
+        _start_session(user)
+        flash("Welcome back! Logged in successfully.", "success")
+        if user.is_admin:
+            return redirect("/admin/dashboard")
+        if not user.profile_completed:
+            return redirect(url_for("onboarding.onboarding_page"))
+        return redirect(url_for("home"))
+
     otp, err = create_otp(user.email, "login", ip_address=ip, user_agent=_get_ua())
     if err:
         return render_template("auth/login.html",
@@ -335,9 +371,17 @@ def login():
         email_sent = False
 
     if not email_sent:
-        return render_template("auth/login.html",
-            error="Could not send OTP email. Please try the direct sign-in option or try again later.",
-            form_data={"identifier": identifier})
+        # SMTP failed — fall back to direct login so user isn't locked out
+        logger.warning("SMTP failed for login OTP — falling back to direct login for %s", user.email)
+        record_login_attempt(user.email, True, ip)
+        unlock_account(user.email)
+        _start_session(user)
+        flash("Welcome back! Logged in successfully.", "success")
+        if user.is_admin:
+            return redirect("/admin/dashboard")
+        if not user.profile_completed:
+            return redirect(url_for("onboarding.onboarding_page"))
+        return redirect(url_for("home"))
 
     session["otp_email"]   = user.email
     session["otp_purpose"] = "login"

@@ -28,6 +28,8 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: SKIP_EMAIL_VERIFICATION
+        value: "true"   # Render free tier blocks SMTP port 587
 
 databases:
   - name: medicare-db
