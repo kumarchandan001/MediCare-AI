@@ -38,10 +38,9 @@ def create_admin():
             user.is_admin = True
             user.email_verified = True
             user.profile_completed = True
-            if os.getenv("ADMIN_PASSWORD"):
-                user.password_hash = generate_password_hash(password)
+            user.password_hash = generate_password_hash(password)
             db.session.commit()
-            print(f"✅ Admin user '{user.username}' updated (is_admin=True)")
+            print(f"✅ Admin user '{user.username}' updated (is_admin=True, password reset)")
         else:
             user = User(
                 username=username,
