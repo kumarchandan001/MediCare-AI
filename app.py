@@ -106,6 +106,39 @@ with app.app_context():
         logger.critical("Check DATABASE_URL in .env and ensure PostgreSQL is running")
         raise SystemExit(1)
 
+    # ── Auto-create admin user on startup ────────────────────────────────────
+    try:
+        from models.user import User
+        from werkzeug.security import generate_password_hash as _gph
+
+        _admin_user = os.getenv("ADMIN_USERNAME", "sysadmin")
+        _admin_email = os.getenv("ADMIN_EMAIL", "admin@medicare-ai.com")
+        _admin_pw = os.getenv("ADMIN_PASSWORD", "Admin@2026")
+
+        admin = User.query.filter(
+            (User.username == _admin_user) | (User.email == _admin_email)
+        ).first()
+
+        if admin:
+            admin.is_admin = True
+            admin.email_verified = True
+            admin.profile_completed = True
+            admin.password_hash = _gph(_admin_pw)
+            db.session.commit()
+            logger.info("✅ Admin '%s' updated", admin.username)
+        else:
+            admin = User(
+                username=_admin_user, email=_admin_email,
+                password_hash=_gph(_admin_pw),
+                first_name="System", last_name="Admin",
+                email_verified=True, profile_completed=True, is_admin=True,
+            )
+            db.session.add(admin)
+            db.session.commit()
+            logger.info("✅ Admin '%s' created", _admin_user)
+    except Exception as e:
+        logger.warning("⚠️ Admin setup skipped: %s", e)
+
 # ── Register Blueprints ───────────────────────────────────────────────────────
 from routes.auth_otp   import auth_bp          # OTP-based auth (replaces old auth.py)
 from routes.health     import health_bp
