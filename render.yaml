@@ -30,6 +30,12 @@ services:
         sync: false
       - key: SKIP_EMAIL_VERIFICATION
         value: "true"   # Render free tier blocks SMTP port 587
+      - key: ADMIN_USERNAME
+        value: "sysadmin"
+      - key: ADMIN_EMAIL
+        sync: false     # Set manually in Render Dashboard
+      - key: ADMIN_PASSWORD
+        sync: false     # Set a strong password in Render Dashboard
 
 databases:
   - name: medicare-db
