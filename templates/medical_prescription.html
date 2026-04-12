@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Medical Prescriptions — Karuna AI{% endblock %}
+{% block breadcrumb %}Prescriptions{% endblock %}
+
+{% block additional_styles %}
+<style>
+  .rx-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-6); flex-wrap:wrap; gap:var(--space-4); }
+  .rx-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:var(--space-5); }
+
+  .rx-card {
+    background:var(--surface-container-lowest);
+    border-radius:var(--radius-xl);
+    box-shadow:var(--shadow-sm);
+    overflow:hidden;
+    transition:all var(--transition-normal);
+  }
+  .rx-card:hover { box-shadow:var(--shadow-md); transform:translateY(-3px); }
+
+  .rx-card-header {
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    padding: var(--space-4) var(--space-5);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .rx-card-header h3 { font-family:var(--font-display); font-weight:700; font-size:var(--text-title-md); margin:0; }
+
+  .rx-card-body { padding:var(--space-5); }
+
+  .rx-detail { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3); font-size:var(--text-body-md); color:var(--on-surface-variant); }
+  .rx-detail i { color:var(--primary); width:18px; text-align:center; }
+
+  .rx-card-footer {
+    padding:var(--space-3) var(--space-5);
+    background:var(--surface-container-low);
+    display:flex; gap:var(--space-2);
+  }
+
+  @media (max-width:768px) { .rx-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rx-top">
+  <div>
+    <h1 class="page-title">Medical Prescriptions</h1>
+    <p class="page-subtitle">Manage and review your prescriptions from healthcare providers.</p>
+  </div>
+  <button class="btn btn-primary"><i class="fas fa-plus"></i> Add Prescription</button>
+</div>
+
+<div class="rx-grid stagger-children">
+  <div class="rx-card">
+    <div class="rx-card-header"><h3>General Checkup</h3><span class="badge badge-success">Active</span></div>
+    <div class="rx-card-body">
+      <div class="rx-detail"><i class="fas fa-user-md"></i> Dr. Smith</div>
+      <div class="rx-detail"><i class="fas fa-calendar"></i> Prescribed: Jan 15, 2024</div>
+      <div class="rx-detail"><i class="fas fa-pills"></i> Vitamin D 1000IU, Omega-3 500mg</div>
+      <div class="rx-detail"><i class="fas fa-clock"></i> Duration: 3 months</div>
+    </div>
+    <div class="rx-card-footer">
+      <button class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> View</button>
+      <button class="btn btn-ghost btn-sm"><i class="fas fa-download"></i> Download</button>
+    </div>
+  </div>
+
+  <div class="rx-card">
+    <div class="rx-card-header"><h3>Allergy Treatment</h3><span class="badge badge-warning">Expiring</span></div>
+    <div class="rx-card-body">
+      <div class="rx-detail"><i class="fas fa-user-md"></i> Dr. Lee</div>
+      <div class="rx-detail"><i class="fas fa-calendar"></i> Prescribed: Dec 10, 2023</div>
+      <div class="rx-detail"><i class="fas fa-pills"></i> Cetirizine 10mg, Nasal Spray</div>
+      <div class="rx-detail"><i class="fas fa-clock"></i> Duration: 2 months</div>
+    </div>
+    <div class="rx-card-footer">
+      <button class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> View</button>
+      <button class="btn btn-ghost btn-sm"><i class="fas fa-download"></i> Download</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

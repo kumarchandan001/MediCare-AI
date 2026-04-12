@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Tracking — Karuna AI{% endblock %}
+{% block breadcrumb %}Activity Tracking{% endblock %}
+
+{% block additional_styles %}
+<style>
+  .activity-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+    margin-bottom: var(--space-8);
+  }
+
+  .ring-stat {
+    text-align: center;
+    padding: var(--space-6);
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+  }
+
+  .ring-stat:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+
+  .ring-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-4);
+    position: relative;
+  }
+
+  .ring-circle svg { transform: rotate(-90deg); }
+
+  .ring-value {
+    position: absolute;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-title-lg);
+    color: var(--on-surface);
+  }
+
+  .ring-label {
+    font-size: var(--text-label-md);
+    color: var(--on-surface-variant);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: var(--space-1);
+  }
+
+  .ring-detail { font-size: var(--text-body-md); color: var(--on-surface-variant); }
+
+  /* Log entry */
+  .log-form-card {
+    background: var(--gradient-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    color: var(--on-primary);
+    margin-bottom: var(--space-6);
+  }
+
+  .log-form-card h3 {
+    font-family: var(--font-display);
+    font-size: var(--text-headline-sm);
+    font-weight: 700;
+    margin-bottom: var(--space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .log-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
+  .log-field label { display:block; font-weight:600; margin-bottom:var(--space-2); font-size:var(--text-label-lg); }
+  .log-field input, .log-field select {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.92);
+    color: var(--on-surface);
+    font-size: var(--text-body-md);
+    outline: none;
+  }
+
+  .log-field input:focus, .log-field select:focus { box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
+
+  .log-submit {
+    margin-top: var(--space-5);
+    padding: var(--space-3) var(--space-8);
+    border-radius: var(--radius-full);
+    background: var(--on-primary);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: var(--text-body-lg);
+    transition: all var(--transition-fast);
+  }
+
+  .log-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+
+  /* Recent activities */
+  .activity-list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-3);
+    transition: background-color var(--transition-fast);
+  }
+
+  .activity-list-item:hover { background-color: var(--surface-container-low); }
+
+  .act-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .act-info { flex: 1; }
+  .act-name { font-weight: 600; color: var(--on-surface); }
+  .act-meta { font-size: var(--text-label-sm); color: var(--on-surface-variant); }
+  .act-cals { font-family: var(--font-display); font-weight: 700; color: var(--tertiary); }
+
+  @media (max-width: 1024px) { .activity-metrics { grid-template-columns: repeat(2, 1fr); } .log-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .activity-metrics { grid-template-columns: 1fr; } .log-row { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Activity Tracking</h1>
+  <p class="page-subtitle">Track your daily physical activity and reach your fitness goals.</p>
+</div>
+
+<!-- Metrics -->
+<div class="activity-metrics stagger-children">
+  <div class="ring-stat">
+    <div class="ring-circle">
+      <svg width="100" height="100"><circle cx="50" cy="50" r="42" fill="none" stroke="#eceeee" stroke-width="8"/><circle cx="50" cy="50" r="42" fill="none" stroke="#00665a" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="100" stroke-linecap="round"/></svg>
+      <span class="ring-value">6,248</span>
+    </div>
+    <div class="ring-label" data-i18n="metric.steps_unit" data-i18n="health.steps">Steps</div>
+    <div class="ring-detail">of 10,000 goal</div>
+  </div>
+  <div class="ring-stat">
+    <div class="ring-circle">
+      <svg width="100" height="100"><circle cx="50" cy="50" r="42" fill="none" stroke="#eceeee" stroke-width="8"/><circle cx="50" cy="50" r="42" fill="none" stroke="#8b4823" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="145" stroke-linecap="round"/></svg>
+      <span class="ring-value">325</span>
+    </div>
+    <div class="ring-label" data-i18n="health.calories">Calories</div>
+    <div class="ring-detail">of 500 goal</div>
+  </div>
+  <div class="ring-stat">
+    <div class="ring-circle">
+      <svg width="100" height="100"><circle cx="50" cy="50" r="42" fill="none" stroke="#eceeee" stroke-width="8"/><circle cx="50" cy="50" r="42" fill="none" stroke="#3182ce" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="178" stroke-linecap="round"/></svg>
+      <span class="ring-value">32</span>
+    </div>
+    <div class="ring-label">Active Min</div>
+    <div class="ring-detail">of 60 goal</div>
+  </div>
+  <div class="ring-stat">
+    <div class="ring-circle">
+      <svg width="100" height="100"><circle cx="50" cy="50" r="42" fill="none" stroke="#eceeee" stroke-width="8"/><circle cx="50" cy="50" r="42" fill="none" stroke="#48bb78" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="66" stroke-linecap="round"/></svg>
+      <span class="ring-value">2.4</span>
+    </div>
+    <div class="ring-label" data-i18n="health.distance">Distance</div>
+    <div class="ring-detail">km walked</div>
+  </div>
+</div>
+
+<!-- Log Activity -->
+<div class="log-form-card animate-slide-up">
+  <h3><i class="fas fa-plus-circle"></i> Log Activity</h3>
+  <form id="activityForm">
+    <div class="log-row">
+      <div class="log-field">
+        <label for="act-type">Activity Type</label>
+        <select id="act-type">
+          <option value="walking" data-i18n="health.walking">Walking</option>
+          <option value="running" data-i18n="health.running">Running</option>
+          <option value="cycling" data-i18n="health.cycling">Cycling</option>
+          <option value="swimming" data-i18n="health.swimming">Swimming</option>
+          <option value="yoga" data-i18n="health.yoga">Yoga</option>
+          <option value="gym">Gym Workout</option>
+          <option value="other" data-i18n="health.other" data-i18n="em.other" data-i18n="prof.other">Other</option>
+        </select>
+      </div>
+      <div class="log-field">
+        <label for="act-duration">Duration (min)</label>
+        <input type="number" id="act-duration" placeholder="e.g., 30">
+      </div>
+      <div class="log-field">
+        <label for="act-calories">Calories Burned</label>
+        <input type="number" id="act-calories" placeholder="e.g., 150">
+      </div>
+    </div>
+    <button type="submit" class="log-submit"><i class="fas fa-save"></i> Save Activity</button>
+  </form>
+</div>
+
+<!-- Recent Activities -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-header-title"><i class="fas fa-history"></i> Recent Activities</span>
+  </div>
+  <div class="card-body">
+    <div class="activity-list-item">
+      <div class="act-icon"><i class="fas fa-walking"></i></div>
+      <div class="act-info"><span class="act-name">Morning Walk</span><div class="act-meta">Today • 45 min</div></div>
+      <span class="act-cals">210 cal</span>
+    </div>
+    <div class="activity-list-item">
+      <div class="act-icon"><i class="fas fa-bicycle"></i></div>
+      <div class="act-info"><span class="act-name" data-i18n="health.cycling">Cycling</span><div class="act-meta">Yesterday • 30 min</div></div>
+      <span class="act-cals">280 cal</span>
+    </div>
+    <div class="activity-list-item">
+      <div class="act-icon"><i class="fas fa-dumbbell"></i></div>
+      <div class="act-info"><span class="act-name">Gym Workout</span><div class="act-meta">2 days ago • 60 min</div></div>
+      <span class="act-cals">450 cal</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+  document.getElementById('activityForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('Activity logged successfully!');
+    this.reset();
+  });
+</script>
+{% endblock %}

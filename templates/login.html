@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0A7A6B">
+  <title>Login — MediCare AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/medicare.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <style>
+    body { background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 50%, #f0f9ff 100%); display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; font-family:var(--font-body); }
+    .auth-page { display:flex; width:100%; max-width:960px; min-height:540px; border-radius:var(--radius-xl); overflow:hidden; box-shadow:0 25px 50px rgba(0,0,0,.08); }
+    .auth-left { flex:1; background:linear-gradient(135deg,#0a7a6b 0%,#059669 50%,#047857 100%); color:#fff; display:flex; flex-direction:column; justify-content:center; padding:3rem; position:relative; overflow:hidden; }
+    .auth-left::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,.06); }
+    .auth-left::after { content:''; position:absolute; bottom:-80px; left:-40px; width:250px; height:250px; border-radius:50%; background:rgba(255,255,255,.04); }
+    .auth-brand { display:flex; align-items:center; gap:12px; margin-bottom:2rem; position:relative; z-index:1; }
+    .auth-brand-icon { width:48px; height:48px; border-radius:var(--radius-lg); background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
+    .auth-brand h2 { font-family:var(--font-display); font-weight:800; font-size:1.4rem; }
+    .auth-left h1 { font-family:var(--font-display); font-weight:700; font-size:2rem; line-height:1.3; margin-bottom:1rem; position:relative; z-index:1; }
+    .auth-left p { opacity:.85; font-size:.9rem; line-height:1.6; position:relative; z-index:1; }
+    .auth-features { margin-top:2rem; position:relative; z-index:1; }
+    .auth-feat { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:.85rem; opacity:.9; }
+    .auth-feat i { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:.7rem; }
+    .auth-right { flex:1; background:#fff; display:flex; flex-direction:column; justify-content:center; padding:3rem; }
+    .auth-right h2 { font-family:var(--font-display); font-weight:700; font-size:1.5rem; color:var(--text); margin-bottom:6px; }
+    .auth-right .auth-sub { font-size:.85rem; color:var(--text-muted); margin-bottom:2rem; }
+    .auth-form .fg { margin-bottom:1.25rem; }
+    .auth-form label { display:block; font-size:.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px; }
+    .auth-form input { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:.88rem; transition:var(--transition); box-sizing:border-box; }
+    .auth-form input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,122,107,.1); }
+    .auth-btn { width:100%; padding:12px; background:var(--primary); color:#fff; border:none; border-radius:var(--radius-md); font-family:var(--font-display); font-weight:700; font-size:.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:var(--transition); margin-top:.5rem; }
+    .auth-btn:hover { background:var(--primary-light); transform:translateY(-2px); box-shadow:var(--shadow-primary); }
+    .auth-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .auth-footer { text-align:center; margin-top:1.5rem; font-size:.85rem; color:var(--text-muted); }
+    .auth-footer a { color:var(--primary); font-weight:600; text-decoration:none; }
+    .auth-footer a:hover { text-decoration:underline; }
+    .auth-divider { display:flex; align-items:center; gap:12px; margin:1.5rem 0; color:var(--text-muted); font-size:.75rem; }
+    .auth-divider::before,.auth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    .auth-error { background:var(--danger-bg); color:var(--danger); padding:10px 14px; border-radius:var(--radius-md); font-size:.82rem; margin-bottom:1rem; display:none; }
+    .auth-error.show { display:flex; align-items:center; gap:8px; }
+    .auth-success { background:var(--success-bg); color:var(--success); padding:10px 14px; border-radius:var(--radius-md); font-size:.82rem; margin-bottom:1rem; display:none; }
+    .auth-success.show { display:flex; align-items:center; gap:8px; }
+    @media (max-width:768px) { .auth-page{flex-direction:column;max-width:420px;min-height:auto} .auth-left{padding:2rem} .auth-left h1{font-size:1.4rem} .auth-features{display:none} }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="auth-brand-icon"><i class="fas fa-heart-pulse"></i></div>
+        <h2>MediCare<span style="opacity:.8">AI</span></h2>
+      </div>
+      <h1>Your Intelligent Personal Health Assistant</h1>
+      <p>AI-powered health monitoring, disease prediction, and personalised wellness coaching — all in one platform.</p>
+      <div class="auth-features">
+        <div class="auth-feat"><i class="fas fa-brain"></i> AI-powered health insights</div>
+        <div class="auth-feat"><i class="fas fa-stethoscope"></i> ML disease prediction</div>
+        <div class="auth-feat"><i class="fas fa-chart-line"></i> Smart trend analytics</div>
+        <div class="auth-feat"><i class="fas fa-robot"></i> Gemini AI chatbot</div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <h2>Welcome Back</h2>
+      <p class="auth-sub">Sign in to your MediCare AI account</p>
+      <div class="auth-error" id="login-error"><i class="fas fa-circle-xmark"></i><span id="login-error-msg"></span></div>
+      <div class="auth-success" id="login-success"><i class="fas fa-circle-check"></i><span id="login-success-msg"></span></div>
+      <form class="auth-form" id="login-form">
+        <div class="fg">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus>
+        </div>
+        <div class="fg">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="auth-btn" id="login-btn"><i class="fas fa-right-to-bracket"></i> Sign In</button>
+      </form>
+      <div class="auth-divider">or</div>
+      <button type="button" class="auth-btn" style="background:var(--surface-3);color:var(--text)" onclick="guestLogin()"><i class="fas fa-user"></i> Continue as Guest</button>
+      <div class="auth-footer">
+        Don't have an account? <a href="{{ url_for('auth.signup') }}">Create one</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('login-btn');
+      var errBox = document.getElementById('login-error');
+      var succBox = document.getElementById('login-success');
+      errBox.classList.remove('show'); succBox.classList.remove('show');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+
+      var data = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value
+      };
+
+      fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(data)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success) {
+          succBox.classList.add('show');
+          document.getElementById('login-success-msg').textContent = 'Login successful! Redirecting...';
+          setTimeout(function() { window.location.href = d.redirect || '/'; }, 800);
+        } else {
+          errBox.classList.add('show');
+          document.getElementById('login-error-msg').textContent = d.error || 'Invalid credentials';
+          btn.disabled = false; btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Sign In';
+        }
+      })
+      .catch(function() {
+        errBox.classList.add('show');
+        document.getElementById('login-error-msg').textContent = 'Network error. Please try again.';
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Sign In';
+      });
+    });
+
+    function guestLogin() {
+      fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({username: 'demo_user', password: 'demo', guest: true})
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { window.location.href = d.redirect || '/'; })
+      .catch(function() { window.location.href = '/'; });
+    }
+  </script>
+</body>
+</html>

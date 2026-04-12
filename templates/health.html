@@ -1,0 +1,946 @@
+{% extends "base.html" %}
+
+{% block title %}Health Tracking — MediCare AI{% endblock %}
+{% block page_title %}Health Tracking{% endblock %}
+{% block breadcrumb %}Health{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Page intro bar ───────────────────────────────────────────────────── */
+  .intro-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: var(--space-6) var(--space-8);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-6); margin-bottom: var(--space-6);
+  }
+  .intro-bar h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; margin-bottom: 4px; }
+  .intro-bar p  { font-size: .88rem; color: var(--text-secondary); line-height: 1.55; max-width: 480px; }
+  .intro-right { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-3); flex-shrink: 0; }
+  .intro-right .last-updated { font-size: .75rem; color: var(--text-muted); }
+
+  /* ── Form enhancements ────────────────────────────────────────────────── */
+  .form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5); }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-weight: 600; font-size: .82rem; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .form-label i { color: var(--primary); font-size: .8rem; }
+  .form-input {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+    border-radius: var(--radius-md); font-family: var(--font-body); font-size: .88rem;
+    color: var(--text); background: var(--surface); transition: var(--transition);
+  }
+  .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(10,122,107,.1); }
+  .form-input::placeholder { color: var(--text-muted); }
+  textarea.form-input { resize: vertical; min-height: 56px; }
+  .form-hint { font-size: .72rem; color: var(--text-muted); }
+  .bp-row { display: flex; align-items: center; gap: 6px; }
+  .bp-row .form-input { width: 50%; }
+  .bp-row .sep { font-weight: 700; color: var(--text-muted); font-size: 1.1rem; }
+  .quick-add-row { display: flex; gap: 6px; margin-top: 4px; }
+
+  /* ── Stress slider ────────────────────────────────────────────────────── */
+  .stress-row { display: flex; align-items: center; gap: var(--space-3); }
+  .stress-row input[type=range] { flex: 1; accent-color: var(--primary); }
+  .stress-val {
+    width: 36px; height: 36px; border-radius: var(--radius-md);
+    background: var(--primary-50); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+  }
+
+  /* ── AI feedback box ──────────────────────────────────────────────────── */
+  .ai-feedback-box {
+    display: none; margin-top: var(--space-5); padding: var(--space-4) var(--space-5);
+    background: var(--primary-50); border-radius: var(--radius-lg);
+    border-left: 4px solid var(--primary);
+    gap: var(--space-3); align-items: flex-start;
+  }
+  .ai-feedback-box.show { display: flex; }
+  .ai-feedback-box .ai-icon {
+    width: 32px; height: 32px; border-radius: var(--radius-md);
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; flex-shrink: 0;
+  }
+  .ai-feedback-box p { font-size: .85rem; color: var(--primary-700); line-height: 1.55; margin: 0; }
+
+  /* ── BMI Scale ────────────────────────────────────────────────────────── */
+  .bmi-result-box { display: none; text-align: center; padding: var(--space-5) 0; }
+  .bmi-result-box.show { display: block; }
+  .bmi-number { font-family: var(--font-display); font-weight: 800; font-size: 3rem; line-height: 1; }
+  .bmi-number.underweight { color: var(--warning); }
+  .bmi-number.normal { color: var(--success); }
+  .bmi-number.overweight { color: #ea580c; }
+  .bmi-number.obese { color: var(--danger); }
+  .bmi-cat-text { font-size: .9rem; font-weight: 600; margin-top: 4px; }
+  .bmi-scale {
+    display: flex; height: 10px; border-radius: 5px; overflow: hidden;
+    margin: var(--space-4) 0 var(--space-2); position: relative;
+  }
+  .bmi-scale .seg { flex: 1; }
+  .bmi-scale .seg-u { background: var(--warning); }
+  .bmi-scale .seg-n { background: var(--success); }
+  .bmi-scale .seg-o { background: #ea580c; }
+  .bmi-scale .seg-ob { background: var(--danger); }
+  .bmi-pointer {
+    position: absolute; top: -6px; width: 12px; height: 22px;
+    border-radius: 3px; background: var(--text); border: 2px solid #fff;
+    box-shadow: var(--shadow-sm); transition: left .5s var(--ease);
+    transform: translateX(-50%);
+  }
+  .bmi-ranges { display: flex; justify-content: space-between; font-size: .68rem; color: var(--text-muted); }
+
+  /* ── Mini summary cards ───────────────────────────────────────────────── */
+  .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-5); }
+  .mini-card {
+    background: var(--surface-2); border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-4); text-align: center;
+  }
+  .mini-card .mini-val { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+  .mini-card .mini-lbl { font-size: .7rem; color: var(--text-muted); }
+  .mini-prog { height: 4px; background: var(--surface-3); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .mini-prog-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width .5s var(--ease); }
+
+  /* ── Medication cards ─────────────────────────────────────────────────── */
+  .med-list { display: flex; flex-direction: column; gap: var(--space-3); }
+  .med-item {
+    display: flex; align-items: center; gap: var(--space-4);
+    padding: var(--space-4); background: var(--surface-2);
+    border-radius: var(--radius-lg); transition: var(--transition);
+  }
+  .med-item:hover { box-shadow: var(--shadow-sm); }
+  .med-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--primary-50); color: var(--primary);
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .med-info { flex: 1; }
+  .med-name { font-weight: 600; font-size: .9rem; }
+  .med-detail { font-size: .75rem; color: var(--text-muted); }
+  .med-actions { display: flex; gap: 6px; }
+
+  /* ── Activity list ────────────────────────────────────────────────────── */
+  .act-list { display: flex; flex-direction: column; gap: var(--space-2); }
+  .act-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--space-3) var(--space-4); background: var(--surface-2);
+    border-radius: var(--radius-md); font-size: .82rem;
+  }
+  .act-row .act-type { font-weight: 600; }
+
+  /* ── Toggle form ──────────────────────────────────────────────────────── */
+  .toggle-form { display: none; }
+  .toggle-form.show { display: block; }
+
+  /* ── Data table ───────────────────────────────────────────────────────── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .data-table th {
+    padding: var(--space-3) var(--space-4); text-align: left;
+    font-weight: 600; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+  }
+  .data-table td {
+    padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-light);
+  }
+  .data-table tr:hover td { background: var(--surface-2); }
+  .status-dot {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 10px; border-radius: var(--radius-full);
+    font-size: .7rem; font-weight: 600;
+  }
+  .status-dot.good { background: var(--success-bg); color: var(--success); }
+  .status-dot.warn { background: var(--warning-bg); color: var(--warning); }
+  .status-dot.poor { background: var(--danger-bg); color: var(--danger); }
+  .empty-state {
+    text-align: center; padding: var(--space-8); color: var(--text-muted); font-size: .88rem;
+  }
+  .empty-state i { font-size: 2rem; margin-bottom: var(--space-3); display: block; opacity: .4; }
+
+  /* ── Submit row ───────────────────────────────────────────────────────── */
+  .submit-row { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-6); }
+  .submit-hint { font-size: .75rem; color: var(--text-muted); }
+
+  /* ── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .form-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .intro-bar { flex-direction: column; align-items: flex-start; }
+    .intro-right { align-items: flex-start; }
+    .form-grid-4 { grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: PAGE INTRO BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: DAILY HEALTH INPUT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-clipboard-list"></i> <span data-i18n="health.daily">Daily Health Log</span></div>
+    <div class="flex gap-3 items-center">
+      <span class="badge badge-primary" data-i18n="health.feeds_ai">Feeds AI</span>
+      {% if today_log %}
+        <span class="badge badge-success"><i class="fas fa-circle-check"></i> Logged Today</span>
+      {% else %}
+        <span class="text-xs text-muted" data-i18n="health.log_once">Log once per day for best results</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+
+    {% if today_log %}
+    <!-- ── Today's Logged Data Summary ──────────────────────────────────── -->
+    <div id="daily-summary-view">
+      <div style="background:var(--success-bg);border:1px solid var(--success);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-5);display:flex;align-items:center;gap:var(--space-3)">
+        <i class="fas fa-circle-check" style="color:var(--success);font-size:1.2rem"></i>
+        <div>
+          <strong style="color:var(--success)">Today's data already recorded ✅</strong>
+          <div style="font-size:.78rem;color:var(--text-muted);margin-top:2px">Logged at {{ today_log.updated_at.strftime('%I:%M %p') if today_log.updated_at else '—' }} · You can edit your entry below</div>
+        </div>
+      </div>
+
+      <div class="form-grid-4 mb-5">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-moon"></i> Sleep</label>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:var(--primary)">{{ today_log.sleep_hours or '—' }} <span style="font-size:.8rem;font-weight:400;color:var(--text-muted)" data-i18n="metric.hrs">hrs</span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-shoe-prints"></i> Steps</label>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:var(--primary)">{{ '{:,}'.format(today_log.steps or 0) }}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-droplet"></i> Water</label>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:var(--primary)">{{ ((today_log.water_ml or 0) / 1000)|round(1) }} <span style="font-size:.8rem;font-weight:400;color:var(--text-muted)" data-i18n="metric.litres">L</span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-face-smile"></i> Mood</label>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:var(--primary)">{{ today_log.mood_score or '—' }} <span style="font-size:.8rem;font-weight:400;color:var(--text-muted)">/10</span></div>
+        </div>
+      </div>
+
+      {% if today_log.notes %}
+      <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-bottom:var(--space-4)">
+        <span class="form-label" style="margin-bottom:4px"><i class="fas fa-pen"></i> Notes</span>
+        <p style="font-size:.85rem;color:var(--text-secondary);margin:0">{{ today_log.notes }}</p>
+      </div>
+      {% endif %}
+
+      <button class="btn btn-secondary" id="edit-today-btn" type="button">
+        <i class="fas fa-pen-to-square"></i> Edit Today's Data
+      </button>
+    </div>
+    {% endif %}
+
+    <!-- ── Daily Health Form ────────────────────────────────────────────── -->
+    <form id="daily-health-form" autocomplete="off" {% if today_log %}style="display:none"{% endif %}>
+
+      <!-- ROW 1 — Core Metrics -->
+      <div class="form-grid-4 mb-5">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-moon"></i> <span data-i18n="health.sleep_hours">Sleep Hours</span></label>
+          <input type="number" class="form-input" id="sleep-input" placeholder="7.5" min="0" max="24" step="0.5" value="{{ today_log.sleep_hours or '' if today_log else '' }}">
+          <span class="form-hint">Recommended: 7-9 hours</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-shoe-prints"></i> <span data-i18n="health.steps">Steps</span></label>
+          <input type="number" class="form-input" id="steps-input" placeholder="10000" min="0" max="100000" value="{{ today_log.steps or '' if today_log else '' }}">
+          <span class="form-hint">Goal: 10,000 steps</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-droplet"></i> <span data-i18n="health.water_intake">Water Intake (Litres)</span></label>
+          <input type="number" class="form-input" id="water-input" placeholder="2.0" min="0" max="10" step="0.1" value="{{ ((today_log.water_ml or 0) / 1000)|round(1) if today_log and today_log.water_ml else '' }}">
+          <div class="quick-add-row">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="quickAddWater(0.5)">+0.5L</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="quickAddWater(1)">+1L</button>
+          </div>
+          <span class="form-hint">Goal: 2.5L per day</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-heart"></i> <span data-i18n="health.heart_rate">Heart Rate (bpm)</span></label>
+          <input type="number" class="form-input" id="heart-rate-input" placeholder="72" min="40" max="200">
+          <span class="form-hint">Normal: 60-100 bpm</span>
+        </div>
+      </div>
+
+      <!-- ROW 2 — Additional -->
+      <div class="form-grid-4 mb-5">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-face-meh"></i> <span data-i18n="health.mood">Mood (1-10)</span></label>
+          <div class="stress-row">
+            <input type="range" id="mood-input" min="1" max="10" value="{{ today_log.mood_score or 5 if today_log else 5 }}">
+            <div class="stress-val" id="mood-display">{{ today_log.mood_score or 5 if today_log else 5 }}</div>
+          </div>
+          <span class="form-hint">1=Poor, 10=Excellent</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-bolt"></i> <span data-i18n="health.energy">Energy Level (1-10)</span></label>
+          <div class="stress-row">
+            <input type="range" id="energy-input" min="1" max="10" value="{{ today_log.energy_level or 5 if today_log else 5 }}">
+            <div class="stress-val" id="energy-display">{{ today_log.energy_level or 5 if today_log else 5 }}</div>
+          </div>
+          <span class="form-hint">1=Exhausted, 10=Energetic</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-lungs"></i> <span data-i18n="health.oxygen">Blood Oxygen (%)</span></label>
+          <input type="number" class="form-input" id="oxygen-input" placeholder="98" min="80" max="100">
+          <span class="form-hint">Normal: 95-100%</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-pen"></i> <span data-i18n="health.notes">Notes (optional)</span></label>
+          <textarea class="form-input" id="health-notes" data-i18n-placeholder="health.notes_hint" placeholder="How are you feeling today?" rows="2">{{ today_log.notes or '' if today_log else '' }}</textarea>
+        </div>
+      </div>
+
+      <div id="daily-log-validation-container"></div>
+
+      <!-- Submit -->
+      <div class="submit-row">
+        <button type="button" class="btn btn-primary btn-lg" id="save-health-btn">
+          <i class="fas fa-floppy-disk"></i> <span data-i18n="health.save_data">Save Health Data</span>
+        </button>
+        {% if today_log %}
+        <button type="button" class="btn btn-secondary btn-lg" id="cancel-edit-btn">
+          <i class="fas fa-xmark"></i> Cancel
+        </button>
+        {% endif %}
+        <span class="submit-hint">Data is saved and used for AI analysis</span>
+      </div>
+    </form>
+
+    <!-- AI Feedback -->
+    <div class="ai-feedback-box" id="ai-feedback-box">
+      <div class="ai-icon"><i class="fas fa-brain"></i></div>
+      <p id="ai-feedback-text">Your health data looks great today!</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: BMI + ACTIVITY
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-2 mb-6">
+
+  <!-- BMI Calculator -->
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-weight-scale"></i> <span data-i18n="health.bmi_calc">BMI Calculator</span></div>
+      <span class="badge badge-info" id="bmi-category-badge">—</span>
+    </div>
+    <div class="card-body">
+      <div class="form-group mb-4">
+        <label class="form-label" data-i18n="health.height">Height (cm)</label>
+        <input type="number" class="form-input" id="bmi-height" placeholder="170" min="50" max="250">
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" data-i18n="health.weight">Weight (kg)</label>
+        <input type="number" class="form-input" id="bmi-weight" placeholder="70" min="20" max="300">
+      </div>
+      <button class="btn btn-primary btn-block" id="calc-bmi-btn">
+        <i class="fas fa-calculator"></i> <span data-i18n="health.calc_bmi">Calculate BMI</span>
+      </button>
+
+      <div class="bmi-result-box" id="bmi-result">
+        <div class="bmi-number" id="bmi-number">—</div>
+        <div class="bmi-cat-text" id="bmi-cat-text">—</div>
+        <div class="bmi-scale">
+          <div class="seg seg-u"></div>
+          <div class="seg seg-n"></div>
+          <div class="seg seg-o"></div>
+          <div class="seg seg-ob"></div>
+          <div class="bmi-pointer" id="bmi-pointer"></div>
+        </div>
+        <div class="bmi-ranges">
+          <span>&lt;18.5</span><span>18.5-24.9</span><span>25-29.9</span><span>≥30</span>
+        </div>
+      </div>
+
+      <div class="data-table mt-4" style="font-size:.75rem">
+        <table style="width:100%">
+          <tr><td>&lt; 18.5</td><td data-i18n="health.underweight">Underweight</td></tr>
+          <tr><td>18.5 – 24.9</td><td data-i18n="health.normal">Normal <i class="fas fa-circle-check" style="color:var(--success)"></i></td></tr>
+          <tr><td>25 – 29.9</td><td data-i18n="health.overweight">Overweight</td></tr>
+          <tr><td>≥ 30</td><td data-i18n="health.obese">Obese</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Tracking -->
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-person-running"></i> <span data-i18n="health.activity_track">Activity Tracking</span></div>
+      <button class="btn btn-sm btn-primary" id="log-activity-btn"><i class="fas fa-plus"></i> <span data-i18n="health.log_activity">Log Activity</span></button>
+    </div>
+    <div class="card-body">
+
+      <!-- Today's summary -->
+      <div class="mini-grid">
+        <div class="mini-card">
+          <div class="mini-val" id="today-steps">0</div>
+          <div class="mini-lbl" data-i18n="metric.steps_unit" data-i18n="health.steps">Steps</div>
+          <div class="mini-prog"><div class="mini-prog-fill" id="steps-prog-bar" style="width:0%"></div></div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-val" id="today-calories">0</div>
+          <div class="mini-lbl" data-i18n="health.calories">Calories</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-val" id="today-active-min">0</div>
+          <div class="mini-lbl">Active Min</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-val" id="today-distance">0</div>
+          <div class="mini-lbl">Km</div>
+        </div>
+      </div>
+
+      <!-- Activity input form -->
+      <div class="toggle-form" id="activity-form">
+        <div class="form-group mb-3">
+          <label class="form-label">Activity Type</label>
+          <select class="form-input" id="act-type">
+            <option value="Walking" data-i18n="health.walking">Walking</option>
+            <option value="Running" data-i18n="health.running">Running</option>
+            <option value="Cycling" data-i18n="health.cycling">Cycling</option>
+            <option value="Swimming" data-i18n="health.swimming">Swimming</option>
+            <option value="Gym" data-i18n="health.gym">Gym</option>
+            <option value="Yoga" data-i18n="health.yoga">Yoga</option>
+            <option value="Other" data-i18n="health.other" data-i18n="em.other" data-i18n="prof.other">Other</option>
+          </select>
+        </div>
+        <div class="form-grid-4 mb-3" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="form-group">
+            <label class="form-label" data-i18n="metric.steps_unit" data-i18n="health.steps">Steps</label>
+            <input type="number" class="form-input" id="act-steps" placeholder="5000">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="health.calories">Calories</label>
+            <input type="number" class="form-input" id="act-calories" placeholder="200">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duration (min)</label>
+            <input type="number" class="form-input" id="act-duration" placeholder="30">
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button type="button" class="btn btn-primary" id="save-activity-btn"><i class="fas fa-check"></i> Save Activity</button>
+          <button type="button" class="btn btn-secondary" id="cancel-activity-btn" data-i18n="health.cancel" data-i18n="em.cancel" data-i18n="prof.cancel">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Recent activities -->
+      <div class="act-list mt-4" id="activity-list">
+        <div class="empty-state"><i class="fas fa-person-walking"></i>No activities logged yet</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: MEDICATION REMINDERS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-pills"></i> <span data-i18n="health.meds">Medication Reminders</span></div>
+    <button class="btn btn-primary btn-sm" id="add-med-btn"><i class="fas fa-plus"></i> <span data-i18n="health.add_med">Add Medicine</span></button>
+  </div>
+  <div class="card-body">
+    <div class="grid-2">
+
+      <!-- Medication list -->
+      <div class="med-list" id="medication-list">
+        <div class="empty-state"><i class="fas fa-pills"></i>No medications added yet</div>
+      </div>
+
+      <!-- Add medication form -->
+      <div class="toggle-form" id="add-med-form">
+        <div class="card" style="border:1px dashed var(--border)">
+          <div class="card-body">
+            <h4 class="text-sm font-semibold mb-4"><i class="fas fa-plus-circle" style="color:var(--primary)"></i> Add New Medication</h4>
+            <div class="form-group mb-3">
+              <label class="form-label">Medicine Name</label>
+              <input type="text" class="form-input" id="med-name-input" placeholder="e.g. Ibuprofen">
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label" data-i18n="health.dosage">Dosage</label>
+              <input type="text" class="form-input" id="med-dosage-input" placeholder="e.g. 500mg">
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Reminder Time</label>
+              <input type="time" class="form-input" id="med-time-input" value="08:00">
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label" data-i18n="health.frequency">Frequency</label>
+              <select class="form-input" id="med-freq-input">
+                <option value="Daily" data-i18n="health.daily">Daily</option>
+                <option value="Twice Daily">Twice Daily</option>
+                <option value="Weekly" data-i18n="health.weekly">Weekly</option>
+                <option value="As Needed">As Needed</option>
+              </select>
+            </div>
+            <div class="form-group mb-4">
+              <label class="form-label">Instructions</label>
+              <textarea class="form-input" id="med-notes-input" placeholder="e.g. Take after meals" rows="2"></textarea>
+            </div>
+            <div class="flex gap-3">
+              <button type="button" class="btn btn-primary" id="save-med-btn"><i class="fas fa-check"></i> Save Medicine</button>
+              <button type="button" class="btn btn-secondary" id="cancel-med-btn" data-i18n="health.cancel" data-i18n="em.cancel" data-i18n="prof.cancel">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6: HEALTH HISTORY
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-8 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-clock-rotate-left"></i> <span data-i18n="health.history">Health History</span></div>
+    <div class="flex gap-2">
+      <button class="btn btn-sm btn-primary" id="hist-7d" onclick="loadHealthHistory('week')">Last 7 Days</button>
+      <button class="btn btn-sm btn-secondary" id="hist-30d" onclick="loadHealthHistory('month')">Last 30 Days</button>
+    </div>
+  </div>
+  <div class="card-body" style="overflow-x:auto">
+    <table class="data-table" id="health-history-table">
+      <thead>
+        <tr>
+          <th data-i18n="health.date">Date</th><th>Sleep</th><th>Heart Rate</th><th>Oxygen</th><th>Temp</th><th>Blood Pressure</th><th data-i18n="health.status">Status</th>
+        </tr>
+      </thead>
+      <tbody id="history-tbody">
+        <tr><td colspan="7" class="empty-state"><i class="fas fa-clock"></i> No health records yet. Start logging above!</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  /* ─── Helpers ──────────────────────────────────────────────────────────── */
+  function val(id)  { var e = document.getElementById(id); return e ? e.value : ''; }
+  function num(id)  { return parseFloat(val(id)) || 0; }
+  function now()    { return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+
+  function updateTime() {
+    var el = document.getElementById('last-updated-time');
+    if (el) el.textContent = now();
+  }
+
+  /* ─── 0. Edit / Cancel toggle ───────────────────────────────────────────── */
+  var editBtn   = document.getElementById('edit-today-btn');
+  var cancelBtn = document.getElementById('cancel-edit-btn');
+  var summaryEl = document.getElementById('daily-summary-view');
+  var formEl    = document.getElementById('daily-health-form');
+
+  if (editBtn) {
+    editBtn.addEventListener('click', function() {
+      if (summaryEl) summaryEl.style.display = 'none';
+      formEl.style.display = 'block';
+    });
+  }
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      formEl.style.display = 'none';
+      if (summaryEl) summaryEl.style.display = 'block';
+    });
+  }
+
+  /* ─── Range slider displays ────────────────────────────────────────────── */
+  var moodInput   = document.getElementById('mood-input');
+  var moodDisp    = document.getElementById('mood-display');
+  var energyInput = document.getElementById('energy-input');
+  var energyDisp  = document.getElementById('energy-display');
+  if (moodInput && moodDisp)     moodInput.addEventListener('input', function() { moodDisp.textContent = this.value; });
+  if (energyInput && energyDisp) energyInput.addEventListener('input', function() { energyDisp.textContent = this.value; });
+
+  /* ─── 1. Save Health Data (Daily Log) ──────────────────────────────────── */
+  document.getElementById('save-health-btn').addEventListener('click', function () {
+    var sleep    = num('sleep-input');
+    var steps    = num('steps-input');
+    var hr       = num('heart-rate-input');
+    var oxygen   = num('oxygen-input');
+    var water    = num('water-input');
+    var mood     = num('mood-input');
+    var energy   = num('energy-input');
+    var notes    = val('health-notes');
+
+    if (!sleep && !steps && !water) {
+      showToast(t('Please enter at least sleep, steps, or water intake.'), 'warning');
+      return;
+    }
+
+    var body = {
+      sleep_hours: sleep || null,
+      steps: steps || null,
+      water_intake: water ? Math.round(water * 1000) : null,
+      mood_score: mood || null,
+      energy_level: energy || null,
+      heart_rate: hr || null,
+      oxygen_level: oxygen || null,
+      notes: notes,
+      force_confirm: !!document.getElementById('daily-health-form').dataset.forceConfirm
+    };
+
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    var btn = this;
+
+    fetch('/api/v1/health/daily-log', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    })
+    .then(async function(r) { 
+        if (r.status === 406) {
+          const errData = await r.json();
+          renderDailyLogValidationWarning(errData.details.warnings, errData.details.suggestions);
+          return null;
+        }
+        return r.json(); 
+    })
+    .then(function(d) {
+      if (!d) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Health Data';
+        return; // Handled by 406 warning box
+      }
+        
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Health Data';
+      if (d.success) {
+        document.getElementById('daily-log-validation-container').innerHTML = '';
+        document.getElementById('daily-health-form').dataset.forceConfirm = '';
+        showToast(t('Daily health data saved! AI insights updated. ✅'), 'success');
+        updateTime();
+        generateAIFeedback(sleep, hr, water, oxygen, mood);
+        loadHealthHistory('week');
+        /* Reload page to show logged summary instead of form */
+        setTimeout(function() { window.location.reload(); }, 1200);
+      } else {
+        showToast(d.error || d.errors ? (d.errors || []).join(', ') : 'Failed to save.', 'error');
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Health Data';
+      showToast(t('Network error. Please try again.'), 'error');
+    });
+  });
+
+  function renderDailyLogValidationWarning(warnings, suggestions) {
+      const container = document.getElementById('daily-log-validation-container');
+      let html = `
+        <div class="validation-warning-box relative">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="validation-warning-content">
+            <h4>Significant Data Change Detected</h4>
+            <p>${warnings.join('<br>')}</p>
+            <div class="validation-warning-actions">
+              <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('daily-health-form').dataset.forceConfirm = 'true'; document.getElementById('save-health-btn').click();">
+                <i class="fas fa-check"></i> I am sure, save it
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      container.innerHTML = html;
+
+      // Color bounds logic
+      if (warnings.some(w => w.toLowerCase().includes('steps'))) {
+          document.getElementById('steps-input').classList.add('input-warning');
+      }
+      if (warnings.some(w => w.toLowerCase().includes('sleep'))) {
+          document.getElementById('sleep-input').classList.add('input-warning');
+      }
+  }
+
+  function generateAIFeedback(sleep, hr, water, oxygen, stress) {
+    var box  = document.getElementById('ai-feedback-box');
+    var text = document.getElementById('ai-feedback-text');
+    var hints = [];
+    if (sleep > 0 && sleep < 6) hints.push('Low sleep detected (' + sleep + 'h). Try to sleep earlier tonight.');
+    if (hr > 100) hints.push('Elevated heart rate (' + hr + ' bpm). Consider resting and hydrating.');
+    if (water > 0 && water < 1.5) hints.push('Low hydration (' + water + 'L). Drink more water today.');
+    if (oxygen > 0 && oxygen < 95) hints.push('Oxygen level is below normal (' + oxygen + '%). Monitor closely.');
+    if (stress >= 7) hints.push('High stress level (' + stress + '/10). Try deep breathing or a short walk.');
+    if (hints.length === 0) hints.push('Great job logging your health today! All values look good.');
+    text.textContent = hints.join(' ');
+    box.classList.add('show');
+  }
+
+
+  /* ─── 2. Water Quick Add ───────────────────────────────────────────────── */
+  window.quickAddWater = function(amount) {
+    var el = document.getElementById('water-input');
+    el.value = (parseFloat(el.value) || 0) + amount;
+  };
+
+
+  /* ─── 3. (Moved: mood + energy sliders handled above) ───────────────── */
+
+
+  /* ─── 4. BMI Calculator ────────────────────────────────────────────────── */
+  document.getElementById('calc-bmi-btn').addEventListener('click', function () {
+    var h = num('bmi-height');
+    var w = num('bmi-weight');
+    if (!h || !w || h < 50 || w < 20) {
+      showToast(t('Please enter valid height and weight.'), 'warning');
+      return;
+    }
+    var bmi = (w / ((h / 100) * (h / 100))).toFixed(1);
+    var cat, cls;
+    if (bmi < 18.5)      { cat = 'Underweight'; cls = 'underweight'; }
+    else if (bmi < 25)   { cat = 'Normal';      cls = 'normal'; }
+    else if (bmi < 30)   { cat = 'Overweight';   cls = 'overweight'; }
+    else                 { cat = 'Obese';        cls = 'obese'; }
+
+    document.getElementById('bmi-number').textContent = bmi;
+    document.getElementById('bmi-number').className = 'bmi-number ' + cls;
+    document.getElementById('bmi-cat-text').textContent = cat;
+    document.getElementById('bmi-category-badge').textContent = cat;
+    document.getElementById('bmi-category-badge').className = 'badge ' + (cls === 'normal' ? 'badge-success' : (cls === 'obese' ? 'badge-danger' : 'badge-warning'));
+    document.getElementById('bmi-result').classList.add('show');
+
+    /* pointer position: map 15-40 BMI to 0-100% */
+    var pct = Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100));
+    document.getElementById('bmi-pointer').style.left = pct + '%';
+
+    /* Save to backend */
+    fetch('/api/v1/health/bmi', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({height: h, weight: w})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.success) showToast('BMI saved: ' + bmi + ' (' + cat + ')', 'success');
+    }).catch(function() {});
+  });
+
+
+  /* ─── 5. Load Medications ──────────────────────────────────────────────── */
+  function loadMedications() {
+    fetch('/api/v1/health/medications')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var list = document.getElementById('medication-list');
+        if (!d.success || !d.medications || d.medications.length === 0) {
+          list.innerHTML = '<div class="empty-state"><i class="fas fa-pills"></i>No medications added yet</div>';
+          return;
+        }
+        list.innerHTML = '';
+        d.medications.forEach(function(m) {
+          var html =
+            '<div class="med-item">' +
+              '<div class="med-icon"><i class="fas fa-pills"></i></div>' +
+              '<div class="med-info">' +
+                '<div class="med-name">' + m.medication_name + '</div>' +
+                '<div class="med-detail">' + (m.dosage || '') + ' · ' + (m.reminder_time || '') + ' · ' + (m.frequency || '') + '</div>' +
+              '</div>' +
+              '<div class="med-actions">' +
+                '<button class="btn btn-sm btn-success" onclick="markTaken(\'' + m.medication_name.replace(/'/g, "\\'") + '\',\'' + (m.dosage||'').replace(/'/g, "\\'") + '\')"><i class="fas fa-check"></i></button>' +
+              '</div>' +
+            '</div>';
+          list.insertAdjacentHTML('beforeend', html);
+        });
+      })
+      .catch(function() {});
+  }
+
+  window.markTaken = function(name, dosage) {
+    fetch('/api/v1/health/medications/history', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({medication_name: name, dosage: dosage, status: 'taken'})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.success) showToast(t('toast.med_taken'), 'success');
+    }).catch(function() { showToast(t('Failed to record.'), 'error'); });
+  };
+
+
+  /* ─── 6. Add Medication ────────────────────────────────────────────────── */
+  var addMedBtn    = document.getElementById('add-med-btn');
+  var addMedForm   = document.getElementById('add-med-form');
+  var cancelMedBtn = document.getElementById('cancel-med-btn');
+  var saveMedBtn   = document.getElementById('save-med-btn');
+
+  addMedBtn.addEventListener('click', function () { addMedForm.classList.add('show'); });
+  cancelMedBtn.addEventListener('click', function () { addMedForm.classList.remove('show'); });
+
+  saveMedBtn.addEventListener('click', function () {
+    var name = val('med-name-input');
+    if (!name) { showToast(t('Please enter medicine name.'), 'warning'); return; }
+    fetch('/api/v1/health/medications', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        medication_name: name,
+        dosage: val('med-dosage-input'),
+        reminder_time: val('med-time-input'),
+        frequency: val('med-freq-input'),
+        notes: val('med-notes-input')
+      })
+    }).then(function(r) { return r.json(); }).then(function() {
+      showToast(t('toast.med_added'), 'success');
+      addMedForm.classList.remove('show');
+      loadMedications();
+    }).catch(function() { showToast(t('Failed to save.'), 'error'); });
+  });
+
+
+  /* ─── 7. Load Activity ─────────────────────────────────────────────────── */
+  function loadActivity() {
+    var today = new Date().toISOString().split('T')[0];
+    fetch('/api/v1/health/activity?start_date=' + today)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var acts = d.activities || [];
+        var steps = 0, cals = 0, mins = 0, dist = 0;
+        acts.forEach(function(a) {
+          steps += a.steps || 0;
+          cals  += a.calories_burned || 0;
+          mins  += a.duration || 0;
+          dist  += a.distance || 0;
+        });
+        document.getElementById('today-steps').textContent = steps.toLocaleString();
+        document.getElementById('today-calories').textContent = cals;
+        document.getElementById('today-active-min').textContent = mins;
+        document.getElementById('today-distance').textContent = dist.toFixed(1);
+        document.getElementById('steps-prog-bar').style.width = Math.min(100, (steps / 10000) * 100) + '%';
+
+        /* Render list (last 5) */
+        var list = document.getElementById('activity-list');
+        if (acts.length === 0) {
+          list.innerHTML = '<div class="empty-state"><i class="fas fa-person-walking"></i>No activities logged today</div>';
+          return;
+        }
+        list.innerHTML = '';
+        acts.slice(0, 5).forEach(function(a) {
+          list.insertAdjacentHTML('beforeend',
+            '<div class="act-row"><span class="act-type">' + a.activity_type + '</span>' +
+            '<span>' + (a.steps || 0) + ' steps</span>' +
+            '<span>' + (a.calories_burned || 0) + ' cal</span>' +
+            '<span>' + (a.duration || 0) + ' min</span></div>'
+          );
+        });
+      })
+      .catch(function() {});
+  }
+
+
+  /* ─── 8. Save Activity ─────────────────────────────────────────────────── */
+  var logActBtn    = document.getElementById('log-activity-btn');
+  var actForm      = document.getElementById('activity-form');
+  var cancelActBtn = document.getElementById('cancel-activity-btn');
+  var saveActBtn   = document.getElementById('save-activity-btn');
+
+  logActBtn.addEventListener('click', function () { actForm.classList.add('show'); });
+  cancelActBtn.addEventListener('click', function () { actForm.classList.remove('show'); });
+
+  saveActBtn.addEventListener('click', function () {
+    var type = val('act-type');
+    fetch('/api/v1/health/activity', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        activity_type: type,
+        steps: num('act-steps') || null,
+        calories_burned: num('act-calories') || null,
+        duration: num('act-duration') || null
+      })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.success) {
+        showToast(t('toast.activity'), 'success');
+        actForm.classList.remove('show');
+        loadActivity();
+      } else { showToast(d.error || 'Failed.', 'error'); }
+    }).catch(function() { showToast(t('Network error.'), 'error'); });
+  });
+
+
+  /* ─── 9. Load Health History ───────────────────────────────────────────── */
+  window.loadHealthHistory = function(range) {
+    range = range || 'week';
+    document.getElementById('hist-7d').className  = 'btn btn-sm ' + (range === 'week'  ? 'btn-primary' : 'btn-secondary');
+    document.getElementById('hist-30d').className = 'btn btn-sm ' + (range === 'month' ? 'btn-primary' : 'btn-secondary');
+
+    fetch('/api/v1/health/history?range=' + range)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var tbody = document.getElementById('history-tbody');
+        if (!d.success || !d.history || d.history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-clock"></i> No health records found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        d.history.slice(0, 15).forEach(function(h) {
+          var date = h.created_at ? h.created_at.split(' ')[0] : '—';
+          var sleep = h.sleep_hours != null ? h.sleep_hours + 'h' : '—';
+          var hr    = h.heart_rate || '—';
+          var o2    = h.oxygen_level ? h.oxygen_level + '%' : '—';
+          var temp  = h.body_temperature ? h.body_temperature + '°F' : '—';
+          var bp    = '—';
+          if (h.blood_pressure) {
+            try {
+              var bpObj = typeof h.blood_pressure === 'string' ? JSON.parse(h.blood_pressure) : h.blood_pressure;
+              bp = bpObj.systolic + '/' + bpObj.diastolic;
+            } catch(e) { bp = h.blood_pressure; }
+          }
+
+          /* Status */
+          var status = 'good', statusTxt = 'Good';
+          if ((h.sleep_hours && h.sleep_hours < 6) || (h.heart_rate && h.heart_rate > 100)) {
+            status = 'warn'; statusTxt = 'Warning';
+          }
+          if ((h.oxygen_level && h.oxygen_level < 95) || (h.heart_rate && h.heart_rate > 120)) {
+            status = 'poor'; statusTxt = 'Poor';
+          }
+
+          tbody.insertAdjacentHTML('beforeend',
+            '<tr><td>' + date + '</td><td>' + sleep + '</td><td>' + hr + '</td>' +
+            '<td>' + o2 + '</td><td>' + temp + '</td><td>' + bp + '</td>' +
+            '<td><span class="status-dot ' + status + '">' + statusTxt + '</span></td></tr>'
+          );
+        });
+      })
+      .catch(function() {
+        document.getElementById('history-tbody').innerHTML =
+          '<tr><td colspan="7" class="empty-state">Failed to load history.</td></tr>';
+      });
+  };
+
+
+  /* ─── 10. Page Load ────────────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function () {
+    updateTime();
+    loadMedications();
+    loadActivity();
+    loadHealthHistory('week');
+  });
+
+})();
+</script>
+{% endblock %}

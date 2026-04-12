@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Health Tips — Karuna AI{% endblock %}
+{% block breadcrumb %}Health Tips{% endblock %}
+
+{% block additional_styles %}
+<style>
+  .tips-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    padding: var(--space-2);
+    background-color: var(--surface-container-low);
+    border-radius: var(--radius-xl);
+  }
+
+  .tip-cat-btn {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--text-label-lg);
+    font-weight: 500;
+    color: var(--on-surface-variant);
+    background: transparent;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    border: none;
+  }
+
+  .tip-cat-btn:hover { background-color: var(--surface-container); }
+  .tip-cat-btn.active { background: var(--gradient-primary); color: var(--on-primary); font-weight: 600; }
+
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-5);
+  }
+
+  .tip-card {
+    background-color: var(--surface-container-lowest);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+  }
+
+  .tip-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+
+  .tip-card-visual {
+    height: 140px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--on-primary);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tip-card-visual::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
+  }
+
+  .tip-card-body {
+    padding: var(--space-5);
+  }
+
+  .tip-card-body h3 {
+    font-family: var(--font-display);
+    font-size: var(--text-title-md);
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: var(--space-2);
+  }
+
+  .tip-card-body p {
+    font-size: var(--text-body-md);
+    color: var(--on-surface-variant);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+  }
+
+  .tip-tag {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-label-sm);
+    font-weight: 600;
+    background-color: rgba(0, 102, 90, 0.08);
+    color: var(--primary);
+  }
+
+  @media (max-width: 768px) {
+    .tips-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Health Tips</h1>
+  <p class="page-subtitle">Evidence-based health tips to improve your daily wellness.</p>
+</div>
+
+<!-- Category Filter -->
+<div class="tips-categories">
+  <button class="tip-cat-btn active" data-cat="all">All</button>
+  <button class="tip-cat-btn" data-cat="nutrition">Nutrition</button>
+  <button class="tip-cat-btn" data-cat="fitness">Fitness</button>
+  <button class="tip-cat-btn" data-cat="sleep">Sleep</button>
+  <button class="tip-cat-btn" data-cat="mental">Mental Health</button>
+  <button class="tip-cat-btn" data-cat="hydration">Hydration</button>
+</div>
+
+<!-- Tips Grid -->
+<div class="tips-grid stagger-children" id="tipsGrid">
+  <div class="tip-card" data-category="hydration">
+    <div class="tip-card-visual"><i class="fas fa-glass-water"></i></div>
+    <div class="tip-card-body">
+      <h3>Stay Hydrated</h3>
+      <p>Drink at least 8 glasses of water daily. Carry a reusable bottle and set reminders to stay on track.</p>
+      <span class="tip-tag">Hydration</span>
+    </div>
+  </div>
+
+  <div class="tip-card" data-category="fitness">
+    <div class="tip-card-visual" style="background:linear-gradient(135deg,#8b4823,#a96039);"><i class="fas fa-running"></i></div>
+    <div class="tip-card-body">
+      <h3>Move Every Day</h3>
+      <p>At least 30 minutes of moderate exercise daily reduces risk of heart disease, diabetes, and depression.</p>
+      <span class="tip-tag">Fitness</span>
+    </div>
+  </div>
+
+  <div class="tip-card" data-category="nutrition">
+    <div class="tip-card-visual" style="background:linear-gradient(135deg,#276749,#48bb78);"><i class="fas fa-apple-alt"></i></div>
+    <div class="tip-card-body">
+      <h3>Eat the Rainbow</h3>
+      <p>Include fruits and vegetables of different colors in your diet for a wide range of essential nutrients.</p>
+      <span class="tip-tag">Nutrition</span>
+    </div>
+  </div>
+
+  <div class="tip-card" data-category="sleep">
+    <div class="tip-card-visual" style="background:linear-gradient(135deg,#2b6cb0,#4299e1);"><i class="fas fa-moon"></i></div>
+    <div class="tip-card-body">
+      <h3>Prioritize Sleep</h3>
+      <p>Aim for 7-9 hours of quality sleep. Maintain a consistent schedule and limit screens before bed.</p>
+      <span class="tip-tag">Sleep</span>
+    </div>
+  </div>
+
+  <div class="tip-card" data-category="mental">
+    <div class="tip-card-visual" style="background:linear-gradient(135deg,#553c9a,#6b46c1);"><i class="fas fa-brain"></i></div>
+    <div class="tip-card-body">
+      <h3>Practice Mindfulness</h3>
+      <p>Spend 10 minutes daily on meditation or deep breathing. It reduces stress, improves focus, and boosts emotional well-being.</p>
+      <span class="tip-tag">Mental Health</span>
+    </div>
+  </div>
+
+  <div class="tip-card" data-category="nutrition">
+    <div class="tip-card-visual" style="background:linear-gradient(135deg,#9c4221,#dd6b20);"><i class="fas fa-utensils"></i></div>
+    <div class="tip-card-body">
+      <h3>Mindful Eating</h3>
+      <p>Eat slowly, savor each bite, and stop when you're full. Avoid eating in front of screens for better digestion.</p>
+      <span class="tip-tag">Nutrition</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+  document.querySelectorAll('.tip-cat-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tip-cat-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      const cat = this.dataset.cat;
+      document.querySelectorAll('.tip-card').forEach(card => {
+        card.style.display = (cat === 'all' || card.dataset.category === cat) ? '' : 'none';
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,991 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — MediCare AI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Overview{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Greeting Bar ─────────────────────────────────────────────────────── */
+  .greeting-bar {
+    background: linear-gradient(135deg, var(--primary), var(--primary-400));
+    color: #fff;
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+    position: relative;
+    overflow: hidden;
+  }
+  .greeting-bar::before {
+    content: '\f21e'; /* fa-heart-pulse */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: -60px;
+    right: -10px;
+    font-size: 20rem;
+    color: rgba(255,255,255,.05);
+    transform: rotate(5deg);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .greeting-bar::after {
+    content: '\f48b'; /* fa-notes-medical */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: -20px;
+    right: 180px;
+    font-size: 8rem;
+    color: rgba(255,255,255,.03);
+    transform: rotate(-10deg);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .greeting-text h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; margin-bottom: var(--space-1); }
+  .greeting-text p  { font-size: .9rem; opacity: .85; }
+  .greeting-text .greeting-date { font-size: .75rem; opacity: .6; margin-top: var(--space-2); }
+  .karuna-box {
+    background: rgba(255,255,255,.15);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-5);
+    display: flex; align-items: flex-start; gap: var(--space-3);
+    max-width: 380px; position: relative; z-index: 1;
+    flex-shrink: 0;
+  }
+  .karuna-icon {
+    width: 36px; height: 36px; border-radius: var(--radius-md);
+    background: rgba(255,255,255,.2); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .karuna-box p { font-size: .82rem; line-height: 1.55; opacity: .95; }
+  .karuna-pulse {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #4ade80; margin-left: 6px; vertical-align: middle;
+    animation: pulseDot 1.6s infinite;
+  }
+  @keyframes pulseDot {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%     { opacity: .4; transform: scale(1.6); }
+  }
+
+  /* ── Quick Action Cards ───────────────────────────────────────────────── */
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-4);
+  }
+  .quick-card {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; padding: var(--space-6) var(--space-4);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); transition: all 300ms var(--ease);
+    text-decoration: none; color: var(--text);
+    position: relative; overflow: hidden;
+  }
+  .quick-card::after {
+    content: '\f061'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+    position: absolute; bottom: 12px; right: 14px; font-size: .75rem;
+    color: var(--text-muted); opacity: 0; transition: var(--transition);
+  }
+  .quick-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); color: var(--text); }
+  .quick-card:active { transform: scale(0.97); }
+  .quick-card:hover::after { opacity: 1; }
+  .quick-icon {
+    width: 54px; height: 54px; border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: var(--space-4);
+  }
+  .quick-icon.teal   { background: var(--primary-50); color: var(--primary); }
+  .quick-icon.purple  { background: #f3e8ff; color: #7c3aed; }
+  .quick-icon.red     { background: var(--danger-bg);  color: var(--danger); }
+  .quick-icon.blue    { background: var(--info-bg);    color: var(--info); }
+  .quick-icon.amber   { background: var(--warning-bg); color: var(--warning); }
+  .quick-card h4 { font-family: var(--font-display); font-weight: 600; font-size: .9rem; margin-bottom: 4px; }
+  .quick-card p  { font-size: .75rem; color: var(--text-muted); }
+
+  /* Skeleton loader — defined in global medicare.css */
+
+  /* ── Risk reasons list ────────────────────────────────────────────────── */
+  .risk-reasons-list { list-style: none; padding: 0; margin-top: var(--space-4); }
+  .risk-reasons-list li {
+    font-size: .78rem; color: var(--text-secondary); padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-light); display: flex; align-items: flex-start; gap: 8px;
+  }
+  .risk-reasons-list li:last-child { border-bottom: none; }
+  .risk-reasons-list li i { color: var(--warning); margin-top: 2px; flex-shrink: 0; }
+
+  /* ── Chart labels ─────────────────────────────────────────────────────── */
+  .chart-label { font-size: .78rem; color: var(--text-muted); text-align: center; margin-top: var(--space-2); }
+
+  /* ── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .greeting-bar { flex-direction: column; align-items: flex-start; }
+    .karuna-box { max-width: 100%; }
+    .quick-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .quick-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Google Fit Integration Card ─────────────────────────────────────── */
+  .gfit-card {
+    background: var(--surface, #ffffff);
+    color: var(--text-color, #1f2937);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-left: 4px solid #1a73e8;
+    border-radius: var(--radius-xl);
+    padding: var(--space-5) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+  .gfit-left { display: flex; align-items: center; gap: var(--space-4); z-index: 1; }
+  .gfit-icon {
+    width: 48px; height: 48px; border-radius: var(--radius-lg);
+    background: #e8f0fe; color: #1a73e8; display: flex;
+    align-items: center; justify-content: center; font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .gfit-info h4 { font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
+  .gfit-info p  { font-size: .78rem; color: var(--text-muted, #6b7280); margin: 0; }
+  .gfit-actions { display: flex; gap: var(--space-3); z-index: 1; flex-shrink: 0; flex-wrap: wrap; }
+  .gfit-btn {
+    padding: 8px 18px; border-radius: var(--radius-md); font-size: .82rem;
+    font-weight: 600; border: none; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 6px; transition: all 200ms var(--ease);
+    text-decoration: none;
+  }
+  .gfit-btn-connect { background: #1a73e8; color: #fff; border: 1px solid #1a73e8; }
+  .gfit-btn-connect:hover { background: #1557b0; color: #fff; transform: translateY(-1px); }
+  .gfit-btn-sync { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+  .gfit-btn-sync:hover { background: #e5e7eb; }
+  .gfit-btn-sync:disabled { opacity: .5; cursor: not-allowed; }
+  .gfit-btn-disconnect { background: #fee2e2; color: #ef4444; font-size: .72rem; padding: 6px 12px; border: 1px solid #fecaca; }
+  .gfit-btn-disconnect:hover { background: #fecaca; }
+  .gfit-status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: .7rem; font-weight: 600;
+  }
+  .gfit-status-badge.connected { background: #dcfce7; color: #166534; }
+  .gfit-status-badge.disconnected { background: #f3f4f6; color: #6b7280; }
+  .gfit-spinner {
+    display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.15);
+    border-top-color: #374151; border-radius: 50%;
+    animation: gfitSpin .6s linear infinite;
+  }
+  @keyframes gfitSpin { to { transform: rotate(360deg); } }
+  @media (max-width: 640px) {
+    .gfit-card { flex-direction: column; align-items: flex-start; }
+    .gfit-actions { width: 100%; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: GREETING BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="greeting-bar animate-fade-in">
+  <div class="greeting-text">
+    <h2 id="greeting-time">Good Morning!</h2>
+    <p data-i18n="greeting.subtitle">Here's your AI health summary for today</p>
+    <div class="greeting-date" id="current-date"></div>
+  </div>
+  <div class="karuna-box">
+    <div class="karuna-icon"><i class="fas fa-brain"></i></div>
+    <p id="karuna-says"><span data-i18n="greeting.analyzing">MediCare AI is analyzing your data...</span><span class="karuna-pulse"></span></p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: HEALTH METRICS ROW
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-4 mb-6">
+
+  <!-- Sleep -->
+  <div class="metric-card success animate-fade-in anim-delay-1">
+    <div class="metric-card-header">
+      <div class="metric-icon success"><i class="fas fa-moon"></i></div>
+      <span class="metric-trend flat" id="sleep-trend"><i class="fas fa-minus"></i> --</span>
+    </div>
+    <div class="metric-value"><span id="sleep-val">--</span><span class="metric-unit" data-i18n="metric.hrs">hrs</span></div>
+    <div class="metric-label" data-i18n="dash.last_sleep">Last Night's Sleep</div>
+    <span id="sleep-source-badge" class="source-badge" style="display:none"></span>
+    <div class="metric-progress"><div class="metric-progress-fill" id="sleep-progress" style="width:0%"></div></div>
+  </div>
+
+  <!-- Steps -->
+  <div class="metric-card info animate-fade-in anim-delay-2">
+    <div class="metric-card-header">
+      <div class="metric-icon info"><i class="fas fa-shoe-prints"></i></div>
+      <span class="metric-trend flat" id="steps-trend"><i class="fas fa-minus"></i> --</span>
+    </div>
+    <div class="metric-value"><span id="steps-val">--</span><span class="metric-unit" data-i18n="metric.steps_unit" data-i18n="health.steps">Steps</span></div>
+    <div class="metric-label" data-i18n="dash.activity">Today's Activity</div>
+    <span id="steps-source-badge" class="source-badge" style="display:none"></span>
+    <div class="metric-progress"><div class="metric-progress-fill" id="steps-progress" style="width:0%"></div></div>
+  </div>
+
+  <!-- Water -->
+  <div class="metric-card cyan animate-fade-in anim-delay-3">
+    <div class="metric-card-header">
+      <div class="metric-icon cyan"><i class="fas fa-droplet"></i></div>
+      <span class="metric-trend flat" id="water-trend"><i class="fas fa-minus"></i> --</span>
+    </div>
+    <div class="metric-value"><span id="water-val">--</span><span class="metric-unit" data-i18n="metric.litres">L</span></div>
+    <div class="metric-label" data-i18n="dash.water">Water Intake</div>
+    <span id="water-source-badge" class="source-badge" style="display:none"></span>
+    <div class="metric-progress"><div class="metric-progress-fill" id="water-progress" style="width:0%"></div></div>
+  </div>
+
+  <!-- BMI -->
+  <div class="metric-card warning animate-fade-in anim-delay-4">
+    <div class="metric-card-header">
+      <div class="metric-icon warning"><i class="fas fa-weight-scale"></i></div>
+      <span class="metric-trend flat" id="bmi-trend"><i class="fas fa-minus"></i> --</span>
+    </div>
+    <div class="metric-value"><span id="bmi-val">--</span></div>
+    <div class="metric-label" data-i18n="dash.bmi">Body Mass Index</div>
+    <div class="text-sm text-muted mt-1" id="bmi-status">—</div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: MAIN CONTENT ROW
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-2-1 mb-6">
+
+  <!-- Left Column -->
+  <div class="flex-col gap-6">
+
+    <!-- A: AI Insights -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-brain"></i> <span data-i18n="dash.ai_insights">AI Health Insights</span></div>
+        <span class="badge badge-primary" data-i18n="dash.powered_ai">Powered by AI</span>
+      </div>
+      <div class="card-body flex-col gap-3" id="dynamic-ai-insights-container">
+        <!-- Will be populated dynamically by JS via applyHealthData -->
+        <div class="insight-card info">
+          <div class="insight-icon"><i class="fas fa-circle-notch fa-spin"></i></div>
+          <div class="insight-body">
+            <div class="insight-title">Loading</div>
+            <div class="insight-desc">Fetching your personalized health insights...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B: Trend Charts -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-chart-line"></i> <span data-i18n="dash.trends">Health Trends</span></div>
+        <div class="flex gap-2">
+          <button class="btn btn-sm btn-primary" id="chart-7d" onclick="loadCharts(7)">7 Days</button>
+          <button class="btn btn-sm btn-secondary" id="chart-30d" onclick="loadCharts(30)">30 Days</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div>
+            <canvas id="sleepChart" height="200"></canvas>
+            <div class="chart-label">Sleep (Last 7 Days)</div>
+          </div>
+          <div>
+            <canvas id="activityChart" height="200"></canvas>
+            <div class="chart-label">Steps (Last 7 Days)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         GOOGLE FIT INTEGRATION (Moved below Health Trends)
+         ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="gfit-card animate-fade-in" id="gfit-card">
+      <div class="gfit-left">
+        <div class="gfit-icon"><i class="fas fa-heartbeat"></i></div>
+        <div class="gfit-info">
+          <h4>Google Fit</h4>
+          <p id="gfit-subtitle">Connect your wearable for real-time health data</p>
+        </div>
+      </div>
+      <div class="gfit-actions" id="gfit-actions">
+        <!-- Populated dynamically by JS based on connection status -->
+        <a href="/auth/google" class="gfit-btn gfit-btn-connect" id="gfit-connect-btn"
+           onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Connecting...'; this.style.pointerEvents='none';">
+          <i class="fab fa-google"></i> Connect Google Fit
+        </a>
+      </div>
+    </div>
+
+    {# ── Pass any pending Google Fit server-side message to JS via data attrs ── #}
+    {% if gfit_msg %}
+    <span id="gfit-server-msg" hidden
+          data-type="{{ gfit_msg.type }}"
+          data-text="{{ gfit_msg.text }}"></span>
+    {% endif %}
+
+  </div>
+
+  <!-- Right Column -->
+  <div class="flex-col gap-6">
+
+    <!-- C: Risk Score -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-shield-heart"></i> <span data-i18n="dash.risk_score">Health Risk Score</span></div>
+      </div>
+      <div class="card-body text-center">
+        <div id="risk-score-val" class="risk-score-display">&mdash;</div>
+        <div id="risk-level-label" class="risk-label mt-2" data-i18n="dash.calculating">Calculating...</div>
+        <div class="risk-bar mt-4">
+          <div class="risk-bar-indicator" id="risk-indicator" style="left:0%"></div>
+        </div>
+        <ul class="risk-reasons-list" id="risk-reasons"></ul>
+        <div class="text-xs text-muted mt-3">Last updated: Just now</div>
+        <a href="{{ url_for('health.reports') }}" class="btn btn-outline btn-sm btn-block mt-4">
+          <i class="fas fa-chart-bar"></i> <span data-i18n="dash.view_report">View Full Report</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- D: Smart Alerts -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-bell"></i> <span data-i18n="dash.alerts">Smart Alerts</span></div>
+        <span class="badge badge-danger" id="alert-count-badge">{{ alerts|length if alerts else 0 }}</span>
+      </div>
+      <div class="card-body flex-col gap-3" id="alerts-container">
+        {% for alert in alerts %}
+          <div class="alert-item">
+            <div class="alert-severity-dot {{ alert.severity }}"></div>
+            <div class="alert-content">
+              <div class="alert-title">{{ alert.title }}</div>
+              <div class="alert-message">{{ alert.message }}</div>
+            </div>
+            <span class="alert-badge {{ alert.severity }}">{{ alert.severity|upper }}</span>
+          </div>
+        {% else %}
+          <div class="insight-card good">
+            <div class="insight-icon"><i class="fas fa-circle-check"></i></div>
+            <div class="insight-body">
+              <div class="insight-title">All Clear</div>
+              <div class="insight-desc">No active alerts. Your health looks good!</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: HABIT COACH ROW
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-seedling"></i> <span data-i18n="dash.coach">AI Habit Coach</span></div>
+    <div class="flex gap-3 items-center">
+      <span class="badge badge-success" data-i18n="dash.personalised">Personalised</span>
+      <button class="btn btn-sm btn-secondary" id="refresh-habits-btn">
+        <i class="fas fa-arrows-rotate"></i> <span data-i18n="dash.refresh">Refresh Tips</span>
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="grid-3" id="habit-tips-container">
+      <!-- Skeleton placeholders -->
+      <div class="habit-card">
+        <div class="habit-priority-bar medium"></div>
+        <div class="habit-card-content">
+          <div class="skeleton" style="width:70%;height:16px;margin-bottom:12px"></div>
+          <div class="skeleton" style="width:100%;height:12px;margin-bottom:8px"></div>
+          <div class="skeleton" style="width:85%;height:12px"></div>
+        </div>
+      </div>
+      <div class="habit-card">
+        <div class="habit-priority-bar high"></div>
+        <div class="habit-card-content">
+          <div class="skeleton" style="width:60%;height:16px;margin-bottom:12px"></div>
+          <div class="skeleton" style="width:100%;height:12px;margin-bottom:8px"></div>
+          <div class="skeleton" style="width:90%;height:12px"></div>
+        </div>
+      </div>
+      <div class="habit-card">
+        <div class="habit-priority-bar low"></div>
+        <div class="habit-card-content">
+          <div class="skeleton" style="width:75%;height:16px;margin-bottom:12px"></div>
+          <div class="skeleton" style="width:100%;height:12px;margin-bottom:8px"></div>
+          <div class="skeleton" style="width:80%;height:12px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6: QUICK ACTIONS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="section-heading animate-fade-in"><i class="fas fa-bolt"></i> <span data-i18n="dash.quick_actions">Quick Actions</span></div>
+<div class="quick-grid mb-8">
+  <a href="{{ url_for('health.disease_prediction') }}" class="quick-card animate-fade-in anim-delay-1">
+    <div class="quick-icon teal"><i class="fas fa-stethoscope"></i></div>
+    <h4 data-i18n="nav.disease">Disease Prediction</h4>
+    <p data-i18n="qa.disease_sub">Check symptoms with ML</p>
+  </a>
+  <a href="{{ url_for('health.ai_assistant') }}" class="quick-card animate-fade-in anim-delay-2">
+    <div class="quick-icon purple"><i class="fas fa-robot"></i></div>
+    <h4 data-i18n="nav.ai">Ask AI Assistant</h4>
+    <p data-i18n="qa.ai_sub">Get personalised advice</p>
+  </a>
+  <a href="{{ url_for('health.health_page') }}" class="quick-card animate-fade-in anim-delay-3">
+    <div class="quick-icon red"><i class="fas fa-heart-pulse"></i></div>
+    <h4 data-i18n="qa.log">Log Health Data</h4>
+    <p data-i18n="qa.log_sub">Track daily vitals</p>
+  </a>
+  <a href="{{ url_for('health.reports') }}" class="quick-card animate-fade-in anim-delay-4">
+    <div class="quick-icon blue"><i class="fas fa-chart-bar"></i></div>
+    <h4 data-i18n="nav.reports">View Reports</h4>
+    <p data-i18n="qa.reports_sub">Analytics &amp; trends</p>
+  </a>
+  <a href="{{ url_for('health.health_page') }}" class="quick-card animate-fade-in">
+    <div class="quick-icon amber"><i class="fas fa-pills"></i></div>
+    <h4 data-i18n="qa.meds">Medications</h4>
+    <p data-i18n="qa.meds_sub">Reminders &amp; tracking</p>
+  </a>
+  <a href="{{ url_for('health.emergency') }}" class="quick-card animate-fade-in">
+    <div class="quick-icon red"><i class="fas fa-kit-medical"></i></div>
+    <h4 data-i18n="nav.emergency" data-i18n="qa.emergency">Emergency</h4>
+    <p data-i18n="qa.emergency_sub">SOS &amp; contacts</p>
+  </a>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+
+  /* ── Chart instances ──────────────────────────────────────────────────── */
+  var sleepChartInstance = null;
+  var activityChartInstance = null;
+
+  /* ── Helpers ──────────────────────────────────────────────────────────── */
+  function dayLabels(n) {
+    var labels = [];
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for (var i = n - 1; i >= 0; i--) {
+      var d = new Date();
+      d.setDate(d.getDate() - i);
+      labels.push(days[d.getDay()]);
+    }
+    return labels;
+  }
+
+  function setTrend(elId, direction) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    el.className = 'metric-trend ' + direction;
+    var icons = { up: 'fa-arrow-up', down: 'fa-arrow-down', flat: 'fa-minus' };
+    var labels = { up: 'Up', down: 'Down', flat: 'Stable' };
+    el.innerHTML = '<i class="fas ' + (icons[direction] || icons.flat) + '"></i> ' + (labels[direction] || 'Stable');
+  }
+
+
+  /* ── 1. Load Health Summary ───────────────────────────────────────────── */
+  function loadHealthSummary() {
+    fetch('/api/v1/health/summary')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { applyHealthData(d); })
+      .catch(function() {
+        applyHealthData({
+          has_data: false,
+          sleep: null, steps: null, water: null, bmi: null,
+          bmi_category: null, sleep_trend: 'flat', steps_trend: 'flat', water_trend: 'flat',
+          sleep_history: [], steps_history: []
+        });
+      });
+  }
+
+  function applyHealthData(d) {
+    var noData = !d.has_data;
+    document.getElementById('sleep-val').textContent = d.sleep != null ? d.sleep : '--';
+    document.getElementById('steps-val').textContent = d.steps != null ? d.steps.toLocaleString() : '--';
+    document.getElementById('water-val').textContent = d.water != null ? d.water : '--';
+    document.getElementById('bmi-val').textContent = d.bmi != null ? d.bmi : '--';
+    document.getElementById('bmi-status').textContent = d.bmi_category || (noData ? 'No data' : 'Normal');
+
+    /* Progress bars */
+    document.getElementById('sleep-progress').style.width = d.sleep != null ? Math.min(100, (d.sleep / 9) * 100) + '%' : '0%';
+    document.getElementById('steps-progress').style.width = d.steps != null ? Math.min(100, (d.steps / 10000) * 100) + '%' : '0%';
+    document.getElementById('water-progress').style.width = d.water != null ? Math.min(100, (d.water / 2.5) * 100) + '%' : '0%';
+
+    /* Trends */
+    setTrend('sleep-trend', d.sleep_trend);
+    setTrend('steps-trend', d.steps_trend);
+    setTrend('water-trend', d.water_trend);
+
+    /* ── Source indicators (manual vs google_fit) ────────────────────────── */
+    _setSourceBadge('sleep-source-badge', d.sleep_source);
+    _setSourceBadge('steps-source-badge', d.steps_source);
+    _setSourceBadge('water-source-badge', d.water_source);
+    _setSourceBadge('hr-source-badge',    d.heart_rate_source);
+
+    /* Dynamic Personalization Engine Insights */
+    var insightsContainer = document.getElementById('dynamic-ai-insights-container');
+    if (insightsContainer) {
+      if (d.personalization_insights && d.personalization_insights.length > 0) {
+        insightsContainer.innerHTML = '';
+        var pLimit = Math.min(3, d.personalization_insights.length);
+        for (var i = 0; i < pLimit; i++) {
+          var pInsight = d.personalization_insights[i];
+          var level_cls = pInsight.risk_level === 'High' ? 'danger' : (pInsight.risk_level === 'Medium' ? 'warning' : 'good');
+          var icon_cls = pInsight.risk_level === 'High' ? 'fa-circle-xmark' : (pInsight.risk_level === 'Medium' ? 'fa-triangle-exclamation' : 'fa-circle-check');
+          var heading_text = pInsight.risk_level === 'High' ? 'Critical Alert' : (pInsight.risk_level === 'Medium' ? 'Needs Attention' : 'Health Insight');
+          
+          insightsContainer.insertAdjacentHTML('beforeend', 
+            '<div class="insight-card ' + level_cls + '">' +
+              '<div class="insight-icon"><i class="fas ' + icon_cls + '"></i></div>' +
+              '<div class="insight-body">' +
+                '<div class="insight-title">' + heading_text + ' <span class="badge badge-' + (level_cls==='good'?'success':level_cls) + ' ml-2" style="font-size:0.6rem;padding:2px 6px">Based on Data</span></div>' +
+                '<div class="insight-desc">' + pInsight.insight + ' <br><strong style="opacity:0.8">' + pInsight.recommendation + '</strong></div>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+      } else {
+        insightsContainer.innerHTML = 
+          '<div class="insight-card info">' +
+            '<div class="insight-icon"><i class="fas fa-circle-info"></i></div>' +
+            '<div class="insight-body">' +
+              '<div class="insight-title">Getting Started</div>' +
+              '<div class="insight-desc">Start logging your health data to receive personalised AI insights.</div>' +
+            '</div>' +
+          '</div>';
+      }
+    }
+
+    /* Init charts with this data */
+    buildCharts(d.sleep_history || [], d.steps_history || []);
+  }
+
+  /* ── Source badge helper ── */
+  function _setSourceBadge(elId, source) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    if (!source) { el.style.display = 'none'; return; }
+    el.style.display = 'inline-flex';
+    if (source === 'manual') {
+      el.innerHTML = '<i class="fas fa-pen" style="font-size:0.55rem"></i> Manual';
+      el.style.background = 'rgba(16,185,129,0.15)';
+      el.style.color = '#059669';
+    } else {
+      el.innerHTML = '<i class="fas fa-watch" style="font-size:0.55rem"></i> Google Fit';
+      el.style.background = 'rgba(59,130,246,0.15)';
+      el.style.color = '#2563eb';
+    }
+  }
+
+
+  /* ── 2. Load Risk Score ───────────────────────────────────────────────── */
+  function loadRiskScore() {
+    fetch('/api/v1/health/risk-score')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { applyRiskData(d); })
+      .catch(function() {
+        applyRiskData({ score: 0, level: 'unknown', reasons: ['Start logging health data for accurate risk scoring.'], factors: {} });
+      });
+  }
+
+  function applyRiskData(d) {
+    var scoreEl = document.getElementById('risk-score-val');
+    var labelEl = document.getElementById('risk-level-label');
+    var indEl   = document.getElementById('risk-indicator');
+    var listEl  = document.getElementById('risk-reasons');
+
+    var score = d.score >= 0 ? d.score : 0;
+    var level = d.level || 'unknown';
+
+    scoreEl.textContent = score;
+    scoreEl.className = 'risk-score-display ' + level;
+    labelEl.textContent = level.charAt(0).toUpperCase() + level.slice(1) + ' Risk';
+    labelEl.className = 'risk-label mt-2 ' + level;
+    indEl.style.left = Math.min(100, Math.max(0, score)) + '%';
+
+    listEl.innerHTML = '';
+    var reasons = d.reasons || [];
+    reasons.slice(0, 4).forEach(function(r) {
+      var li = document.createElement('li');
+      li.innerHTML = '<i class="fas fa-circle-dot"></i><span>' + r + '</span>';
+      listEl.appendChild(li);
+    });
+  }
+
+
+  /* ── 3. Load Habit Tips ───────────────────────────────────────────────── */
+  function loadHabitTips() {
+    var container = document.getElementById('habit-tips-container');
+    fetch('/api/v1/habits/tips')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { renderHabitTips(d.tips || []); })
+      .catch(function() {
+        renderHabitTips([]);
+      });
+  }
+
+  function renderHabitTips(tips) {
+    var container = document.getElementById('habit-tips-container');
+    container.innerHTML = '';
+    var show = tips.slice(0, 3);
+    if (show.length === 0) show = [
+      { category: 'general', priority: 'low', title: 'All Good!',
+        tip: 'Keep maintaining your current healthy habits.', reason: 'No issues detected.' }
+    ];
+    show.forEach(function(tip) {
+      var prio = tip.priority || 'low';
+      var cat = tip.category || 'general';
+      var badgeCls = prio === 'high' ? 'badge-danger' : (prio === 'medium' ? 'badge-warning' : 'badge-success');
+      var html =
+        '<div class="habit-card">' +
+          '<div class="habit-priority-bar ' + prio + '"></div>' +
+          '<div class="habit-card-content">' +
+            '<div class="habit-title">' + tip.title + '</div>' +
+            '<div class="habit-tip">' + tip.tip + '</div>' +
+            '<div class="habit-reason">' + (tip.reason || '') + '</div>' +
+            '<span class="badge ' + badgeCls + ' mt-2">' + cat + '</span>' +
+          '</div>' +
+        '</div>';
+      container.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+
+  /* ── 4. Init Charts ───────────────────────────────────────────────────── */
+  function buildCharts(sleepData, stepsData) {
+    var labels = dayLabels(Math.max(sleepData.length, stepsData.length, 7));
+
+    /* Pad arrays to 7 */
+    while (sleepData.length < 7) sleepData.unshift(0);
+    while (stepsData.length < 7) stepsData.unshift(0);
+    sleepData = sleepData.slice(-7);
+    stepsData = stepsData.slice(-7);
+
+    var base = {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: "'Plus Jakarta Sans'", size: 11 } } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: "'Plus Jakarta Sans'", size: 11 } }, beginAtZero: true }
+      }
+    };
+
+    /* Sleep – line */
+    if (sleepChartInstance) sleepChartInstance.destroy();
+    var ctx1 = document.getElementById('sleepChart').getContext('2d');
+    sleepChartInstance = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: labels.slice(-7),
+        datasets: [{
+          data: sleepData,
+          borderColor: '#0a7a6b',
+          backgroundColor: 'rgba(10,122,107,.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#0a7a6b',
+          borderWidth: 2,
+        }]
+      },
+      options: Object.assign({}, base, {
+        scales: Object.assign({}, base.scales, { y: Object.assign({}, base.scales.y, { max: 10 }) })
+      })
+    });
+
+    /* Activity – bar */
+    if (activityChartInstance) activityChartInstance.destroy();
+    var ctx2 = document.getElementById('activityChart').getContext('2d');
+    activityChartInstance = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: labels.slice(-7),
+        datasets: [{
+          data: stepsData,
+          backgroundColor: 'rgba(16,185,129,.55)',
+          borderColor: '#10B981',
+          borderWidth: 1,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: base
+    });
+  }
+
+  function loadCharts(days) {
+    document.getElementById('chart-7d').className  = 'btn btn-sm ' + (days === 7  ? 'btn-primary' : 'btn-secondary');
+    document.getElementById('chart-30d').className = 'btn btn-sm ' + (days === 30 ? 'btn-primary' : 'btn-secondary');
+    /* Re-fetch fires chart rebuild via applyHealthData */
+    loadHealthSummary();
+  }
+  window.loadCharts = loadCharts;
+
+
+  /* ── 5. Refresh Habits ────────────────────────────────────────────────── */
+  var refreshBtn = document.getElementById('refresh-habits-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function () {
+      var container = document.getElementById('habit-tips-container');
+      container.innerHTML =
+        '<div class="habit-card"><div class="habit-priority-bar medium"></div><div class="habit-card-content">' +
+        '<div class="skeleton" style="width:70%;height:16px;margin-bottom:12px"></div>' +
+        '<div class="skeleton" style="width:100%;height:12px;margin-bottom:8px"></div>' +
+        '<div class="skeleton" style="width:85%;height:12px"></div></div></div>'.repeat(3);
+      setTimeout(loadHabitTips, 300);
+    });
+  }
+
+
+  /* ── 6. Update Karuna Message ─────────────────────────────────────────── */
+  function updateKarunaMessage() {
+    var el = document.getElementById('karuna-says');
+    if (!el) return;
+    /* Pull the first insight from the already-rendered insight cards */
+    var firstInsight = document.querySelector('.insight-desc');
+    var text = (firstInsight && firstInsight.textContent.trim())
+             ? firstInsight.textContent.trim()
+             : 'Your health data looks stable today.';
+    el.innerHTML = text + '<span class="karuna-pulse"></span>';
+  }
+
+
+  /* ── 7. DOMContentLoaded ──────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function () {
+    loadHealthSummary();
+    loadRiskScore();
+    loadHabitTips();
+    updateKarunaMessage();
+    initGoogleFit();        /* Google Fit card init */
+
+    /* ── Show any pending Google Fit message from server redirects ─── */
+    var msgEl = document.getElementById('gfit-server-msg');
+    if (msgEl && msgEl.dataset.text) {
+      showToast(msgEl.dataset.type || 'info', msgEl.dataset.text);
+      msgEl.remove();
+    }
+  });
+
+
+  /* ── 8. Google Fit Integration (Hardened) ──────────────────────────────── */
+  var _gfitSyncing = false;  /* global lock to prevent double-sync */
+
+  function initGoogleFit() {
+    fetch('/auth/google/status?t=' + Date.now())
+      .then(function(r) { return r.json(); })
+      .then(function(d) { renderGfitCard(d); })
+      .catch(function() { renderGfitCard({ connected: false }); });
+  }
+
+  function _relativeTime(isoStr) {
+    if (!isoStr) return 'Never synced';
+    
+    // Force UTC parsing to prevent local time offset bugs
+    if (!isoStr.endsWith('Z')) isoStr += 'Z';
+    
+    var diff = Math.max(0, Date.now() - new Date(isoStr).getTime());
+    var secs = Math.floor(diff / 1000);
+    if (secs < 60) return 'Just now';
+    var mins = Math.floor(secs / 60);
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  function renderGfitCard(status) {
+    var actions = document.getElementById('gfit-actions');
+    var subtitle = document.getElementById('gfit-subtitle');
+    if (!actions) return;
+
+    if (status.connected) {
+      /* Build subtitle: email + last sync relative time */
+      var emailStr = status.google_email ? status.google_email : 'Google Account';
+      var syncStr = _relativeTime(status.last_sync);
+      subtitle.innerHTML = '<strong>' + emailStr + '</strong> &mdash; Last sync: ' + syncStr;
+      if (status.sync_count) subtitle.innerHTML += ' &bull; ' + status.sync_count + ' syncs total';
+
+      actions.innerHTML =
+        '<span class="gfit-status-badge connected"><i class="fas fa-circle" style="font-size:.5rem"></i> Connected</span>' +
+        '<button class="gfit-btn gfit-btn-sync" id="gfit-sync-btn" onclick="syncGoogleFit()">' +
+          '<i class="fas fa-arrows-rotate"></i> Sync Data' +
+        '</button>' +
+        '<button class="gfit-btn gfit-btn-disconnect" onclick="disconnectGoogleFit()">' +
+          '<i class="fas fa-unlink"></i> Disconnect' +
+        '</button>' +
+        '<button class="gfit-btn gfit-btn-connect" style="background:transparent;border:1px solid var(--primary);color:var(--primary);margin-left:5px;" onclick="verifyFit()">' +
+          '<i class="fas fa-check-circle"></i> Verify Google Fit' +
+        '</button>';
+
+      /* ── Auto-sync on login if last sync > 1 hour ago ── */
+      if (!status.last_sync || (Date.now() - new Date(status.last_sync).getTime()) > 3600000) {
+        setTimeout(function() { syncGoogleFit(true); }, 2000);
+      }
+    } else {
+      subtitle.textContent = 'Connect your wearable for real-time health data';
+      actions.innerHTML =
+        '<span class="gfit-status-badge disconnected"><i class="fas fa-circle" style="font-size:.5rem"></i> Not Connected</span>' +
+        '<a href="/auth/google" class="gfit-btn gfit-btn-connect" ' +
+           'onclick="this.innerHTML=\'<i class=\\\'fas fa-spinner fa-spin\\\'></i> Connecting...\'; this.style.pointerEvents=\'none\';">' +
+          '<i class="fab fa-google"></i> Connect Google Fit' +
+        '</a>' +
+        '<button class="gfit-btn gfit-btn-connect" style="background:transparent;border:1px solid var(--primary);color:var(--primary);margin-left:5px;" onclick="verifyFit()">' +
+          '<i class="fas fa-check-circle"></i> Verify Google Fit' +
+        '</button>';
+    }
+  }
+
+  window.verifyFit = function() {
+    fetch('/api/v1/google-fit/final-check')
+      .then(res => res.json())
+      .then(data => {
+        console.log("Final Validation Result:", data);
+        alert("Check console for verification result");
+      })
+      .catch(err => {
+        console.error("Verification failed:", err);
+        alert("Verification API error. Check console.");
+      });
+  };
+
+  window.syncGoogleFit = function(silent) {
+    /* Prevent double-sync */
+    if (_gfitSyncing) return;
+    _gfitSyncing = true;
+
+    var btn = document.getElementById('gfit-sync-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="gfit-spinner"></span> Syncing\u2026';
+    }
+    fetch('/api/v1/google-fit/sync')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        _gfitSyncing = false;
+        var data = d.data || d;
+        if (data.synced) {
+          if (!silent) {
+            var msg = 'Google Fit synced \u2014 ';
+            msg += (data.steps_new||0) + ' new + ' + (data.steps_updated||0) + ' updated steps, ';
+            msg += (data.heart_rate_new||0) + ' new + ' + (data.heart_rate_updated||0) + ' updated HR';
+            showToast('success', msg);
+          }
+          loadHealthSummary();  /* refresh dashboard cards */
+          initGoogleFit();      /* refresh status badge */
+        } else {
+          /* Rate limit or other non-error skip */
+          if (!silent) showToast('info', data.message || 'Sync skipped');
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Sync Data'; }
+        }
+        /* Handle typed errors from API */
+        if (d.error) {
+          if (d.error.type === 'RATE_LIMITED') {
+            var wait = d.error.details ? d.error.details.wait_seconds : 120;
+            if (!silent) showToast('warning', 'Rate limited \u2014 try again in ' + wait + 's');
+          } else if (d.error.type === 'TOKEN_REVOKED') {
+            if (!silent) showToast('error', 'Google Fit access revoked. Please reconnect.');
+          } else if (d.error.type === 'NOT_CONNECTED') {
+            /* Already disconnected; refresh card */
+            initGoogleFit();
+          } else {
+            if (!silent) showToast('error', d.error.message || 'Sync error');
+          }
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Sync Data'; }
+        }
+      })
+      .catch(function(err) {
+        _gfitSyncing = false;
+        if (!silent) showToast('error', 'Google Fit sync failed. Check your connection.');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Sync Data'; }
+      });
+  };
+
+  window.disconnectGoogleFit = function() {
+    if (!confirm('Disconnect Google Fit?\n\nYour previously synced health data will remain in MediCare AI.')) return;
+    fetch('/auth/google/disconnect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin'
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.disconnected) {
+          showToast('info', 'Google Fit disconnected');
+          initGoogleFit();
+        }
+      })
+      .catch(function() { showToast('error', 'Failed to disconnect. Try again.'); });
+  };
+
+  /* Lightweight toast notification system */
+  function showToast(type, msg) {
+    var container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+      document.body.appendChild(container);
+    }
+    var colors = { success: '#059669', error: '#dc2626', info: '#2563eb', warning: '#d97706' };
+    var icons  = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info', warning: 'fa-triangle-exclamation' };
+    var toast = document.createElement('div');
+    toast.style.cssText = 'background:' + (colors[type]||colors.info) + ';color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);min-width:280px;max-width:420px;pointer-events:auto;transform:translateX(110%);transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .3s;';
+    toast.innerHTML = '<i class="fas ' + (icons[type]||icons.info) + '"></i> ' + msg;
+    container.appendChild(toast);
+    /* Slide in */
+    requestAnimationFrame(function() { toast.style.transform = 'translateX(0)'; });
+    /* Auto-dismiss after 4.5s */
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(110%)';
+      setTimeout(function() { toast.remove(); }, 400);
+    }, 4500);
+  }
+
+})();
+</script>
+{% if needs_daily_log %}
+<div id="daily-log-prompt" class="modal-overlay" style="display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+   <div class="card animate-scale-in" style="max-width:400px; width:90%; padding:2rem; text-align:center; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+       <div style="font-size:3.5rem; color:var(--primary); margin-bottom:1rem;"><i class="fas fa-clipboard-check"></i></div>
+       <h3 style="margin-bottom:1rem; font-size:1.5rem; color:var(--text-color);">Daily Health Log</h3>
+       <p style="color:var(--text-muted); margin-bottom:1.5rem; font-size:0.95rem;">You haven't logged your health data for today. Tracking daily metrics like sleep and water improves MediCare AI's insights.</p>
+       <div style="display:flex; gap:1rem; justify-content:center;">
+           <button class="btn btn-outline" onclick="document.getElementById('daily-log-prompt').style.display='none'">Maybe Later</button>
+           <a href="{{ url_for('health.health_page') }}" class="btn btn-primary">Log Now</a>
+       </div>
+   </div>
+</div>
+{% endif %}
+
+{% endblock %}

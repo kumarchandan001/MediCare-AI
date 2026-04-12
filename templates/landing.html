@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 1: HEAD
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MediCare AI — Your Intelligent Personal Health Assistant. AI-powered health monitoring, disease prediction and smart alerts.">
+  <title>MediCare AI — Your Intelligent Health Companion</title>
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/medicare.css') }}">
+  <!-- Font Awesome 6.5.1 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    /* ── Landing-specific overrides ──────────────────────────────────────── */
+    body { background: #fff; }
+
+    /* ── NAV ─────────────────────────────────────────────────────────────── */
+    .landing-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+      background: rgba(255,255,255,.82);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid transparent;
+      transition: var(--transition);
+    }
+    .landing-nav.scrolled {
+      border-bottom-color: var(--border);
+      box-shadow: 0 2px 20px rgba(0,0,0,.06);
+    }
+    .nav-brand { display: flex; align-items: center; gap: .75rem; text-decoration: none; }
+    .nav-brand .brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-300));
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(10,122,107,.3);
+    }
+    .nav-brand .brand-name {
+      font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: var(--text);
+    }
+    .nav-brand .brand-name span { color: var(--primary); }
+    .nav-links { display: flex; align-items: center; gap: var(--space-6); }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: var(--text-secondary); transition: var(--transition); }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-links .btn { padding: .55rem 1.4rem; font-size: .85rem; }
+    .nav-hamburger {
+      display: none; width: 40px; height: 40px;
+      align-items: center; justify-content: center;
+      border-radius: var(--radius-md); font-size: 1.2rem; color: var(--text-secondary); cursor: pointer;
+    }
+
+    /* ── HERO ────────────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 100px clamp(1.25rem, 5vw, 4rem) 60px;
+      background: linear-gradient(165deg, #f4faf9 0%, #e6f5f2 35%, #fff 70%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -30%; right: -10%;
+      width: 650px; height: 650px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(10,122,107,.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -20%; left: -5%;
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(240,165,0,.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 1260px; margin: 0 auto; width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-12); align-items: center;
+      position: relative; z-index: 1;
+    }
+
+    /* Hero text */
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: var(--radius-full);
+      background: var(--success-bg); border: 1px solid #bbf7d0;
+      font-size: .78rem; font-weight: 600; color: var(--success);
+      margin-bottom: var(--space-6);
+    }
+    .hero-badge .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--success);
+      animation: pulseDot 1.6s infinite;
+    }
+    @keyframes pulseDot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%     { opacity: .5; transform: scale(1.5); }
+    }
+    .hero-title {
+      font-family: var(--font-display); font-weight: 800; font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      line-height: 1.12; color: var(--text); margin-bottom: var(--space-6);
+    }
+    .hero-title .highlight { color: var(--primary); }
+    .hero-sub {
+      font-size: 1.05rem; line-height: 1.75; color: var(--text-secondary);
+      max-width: 520px; margin-bottom: var(--space-8);
+    }
+    .hero-ctas { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-8); }
+    .hero-ctas .btn { padding: .75rem 2rem; font-size: .95rem; }
+    .hero-trust {
+      display: flex; gap: var(--space-8); flex-wrap: wrap;
+    }
+    .trust-item { display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--text-muted); }
+    .trust-item i { color: var(--primary); font-size: .7rem; }
+
+    /* Hero preview card */
+    .hero-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2xl);
+      box-shadow: 0 20px 60px rgba(10,122,107,.08), 0 1px 3px rgba(0,0,0,.04);
+      overflow: hidden; border-top: 3px solid var(--primary);
+      animation: floatCard 5s ease-in-out infinite;
+    }
+    @keyframes floatCard {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-8px); }
+    }
+    .hero-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border-light);
+    }
+    .hero-card-head h4 {
+      font-family: var(--font-display); font-weight: 600; font-size: .95rem;
+    }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: var(--radius-full);
+      background: var(--success-bg); color: var(--success);
+      font-size: .7rem; font-weight: 600;
+    }
+    .live-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulseDot 1.6s infinite; }
+    .preview-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);
+      padding: var(--space-5) var(--space-6);
+    }
+    .preview-metric {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg); background: var(--surface-2);
+    }
+    .pm-icon {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; font-size: .9rem;
+    }
+    .pm-icon.blue   { background: #eff6ff; color: #2563eb; }
+    .pm-icon.green  { background: #ecfdf5; color: #10B981; }
+    .pm-icon.cyan   { background: #ecfeff; color: #0891b2; }
+    .pm-icon.teal   { background: var(--primary-50); color: var(--primary); }
+    .pm-val { font-family: var(--font-display); font-weight: 700; font-size: 1rem; line-height: 1.15; }
+    .pm-lbl { font-size: .7rem; color: var(--text-muted); }
+
+    .ai-insight-box {
+      margin: 0 var(--space-6) var(--space-5);
+      padding: var(--space-4); border-radius: var(--radius-lg);
+      background: var(--primary-50); display: flex; gap: var(--space-3);
+      align-items: flex-start;
+    }
+    .ai-insight-box .ai-icon {
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0;
+    }
+    .ai-insight-box p { font-size: .78rem; color: var(--primary-700); line-height: 1.55; }
+    .ai-insight-box strong { color: var(--primary-800); }
+
+    .hero-card-foot {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--border-light);
+    }
+    .hcf-stat {
+      padding: var(--space-4) var(--space-6); display: flex; align-items: center; gap: var(--space-3);
+    }
+    .hcf-stat + .hcf-stat { border-left: 1px solid var(--border-light); }
+    .hcf-num {
+      font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: #fff;
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hcf-num.green { background: var(--success); }
+    .hcf-num.teal  { background: var(--primary); }
+    .hcf-meta span { display: block; }
+    .hcf-meta .label { font-size: .72rem; color: var(--text-muted); }
+    .hcf-meta .value { font-weight: 600; font-size: .82rem; color: var(--text); }
+
+    /* ── FEATURES ────────────────────────────────────────────────────────── */
+    .section { padding: 100px clamp(1.25rem, 5vw, 4rem); }
+    .section-center { max-width: 1200px; margin: 0 auto; text-align: center; }
+    .section-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: var(--radius-full);
+      background: var(--primary-50); color: var(--primary);
+      font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: var(--space-4);
+    }
+    .section-title {
+      font-family: var(--font-display); font-weight: 800; font-size: clamp(1.6rem, 3vw, 2.2rem);
+      color: var(--text); margin-bottom: var(--space-4); line-height: 1.2;
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--text-secondary); max-width: 580px; margin: 0 auto var(--space-12);
+      line-height: 1.7;
+    }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6);
+      text-align: left;
+    }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
+      padding: var(--space-8) var(--space-6);
+      transition: all 350ms var(--ease); position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-300));
+      transform: scaleX(0); transform-origin: left; transition: transform 350ms var(--ease);
+    }
+    .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .feature-card:hover::before { transform: scaleX(1); }
+    .feature-icon {
+      width: 52px; height: 52px; border-radius: var(--radius-lg);
+      background: var(--primary-50); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: var(--space-5);
+      transition: var(--transition);
+    }
+    .feature-card:hover .feature-icon { background: var(--primary); color: #fff; }
+    .feature-card h3 {
+      font-family: var(--font-display); font-weight: 600; font-size: 1.05rem;
+      margin-bottom: var(--space-3);
+    }
+    .feature-card p { font-size: .88rem; color: var(--text-secondary); line-height: 1.65; }
+
+    /* ── HOW IT WORKS ────────────────────────────────────────────────────── */
+    .how-section { background: var(--bg); }
+    .steps-row {
+      display: flex; justify-content: center; gap: 0; position: relative; max-width: 960px; margin: 0 auto;
+    }
+    .step-card {
+      flex: 1; text-align: center; padding: var(--space-6);
+      position: relative; z-index: 1;
+    }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%; margin: 0 auto var(--space-5);
+      background: linear-gradient(135deg, var(--primary), var(--primary-400));
+      color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 1.3rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 20px rgba(10,122,107,.25); position: relative; z-index: 2;
+    }
+    .step-card h3 {
+      font-family: var(--font-display); font-weight: 600; font-size: 1.05rem;
+      margin-bottom: var(--space-3);
+    }
+    .step-card p { font-size: .88rem; color: var(--text-secondary); line-height: 1.65; max-width: 260px; margin: 0 auto; }
+
+    /* connector line */
+    .steps-row::before {
+      content: ''; position: absolute; top: 28px;
+      left: calc(16.67% + 28px); right: calc(16.67% + 28px);
+      height: 3px; background: var(--primary-100); z-index: 0;
+      border-radius: 2px;
+    }
+
+    /* ── STATS BAR ───────────────────────────────────────────────────────── */
+    .stats-section {
+      background: linear-gradient(135deg, var(--primary-800), var(--primary));
+      padding: 60px clamp(1.25rem, 5vw, 4rem);
+    }
+    .stats-grid {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-8);
+      text-align: center;
+    }
+    .stat-item .stat-val {
+      font-family: var(--font-display); font-weight: 800; font-size: 2rem;
+      color: #fff; line-height: 1.1; margin-bottom: var(--space-2);
+    }
+    .stat-item .stat-label { font-size: .85rem; color: rgba(255,255,255,.7); }
+
+    /* ── CTA ─────────────────────────────────────────────────────────────── */
+    .cta-section {
+      background: linear-gradient(160deg, var(--primary-900), var(--primary-700));
+      padding: 100px clamp(1.25rem, 5vw, 4rem); text-align: center;
+    }
+    .cta-section .section-title { color: #fff; }
+    .cta-section .section-sub  { color: rgba(255,255,255,.7); }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: var(--space-3);
+      padding: .9rem 2.5rem; border-radius: var(--radius-md);
+      background: #fff; color: var(--primary); font-weight: 700; font-size: 1rem;
+      font-family: var(--font-display);
+      box-shadow: 0 6px 24px rgba(0,0,0,.15); transition: var(--transition);
+    }
+    .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.2); color: var(--primary); }
+    .cta-note { font-size: .8rem; color: rgba(255,255,255,.5); margin-top: var(--space-5); }
+
+    /* ── FOOTER ──────────────────────────────────────────────────────────── */
+    .landing-footer {
+      background: #0d1f1c; color: rgba(255,255,255,.7);
+      padding: 60px clamp(1.25rem, 5vw, 4rem) 0;
+    }
+    .footer-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--space-10);
+      padding-bottom: 48px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: .7rem; margin-bottom: var(--space-4); }
+    .footer-brand .f-icon {
+      width: 34px; height: 34px; border-radius: var(--radius-md);
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: .9rem;
+    }
+    .footer-brand .f-name { font-family: var(--font-display); font-weight: 700; color: #fff; font-size: 1.05rem; }
+    .footer-brand .f-name span { color: var(--primary-300); }
+    .footer-tagline { font-size: .85rem; line-height: 1.6; max-width: 300px; }
+    .footer-col h5 {
+      font-family: var(--font-display); font-weight: 600; font-size: .85rem; color: #fff;
+      margin-bottom: var(--space-4); text-transform: uppercase; letter-spacing: .06em;
+    }
+    .footer-col a {
+      display: block; font-size: .85rem; color: rgba(255,255,255,.55);
+      padding: 4px 0; transition: var(--transition);
+    }
+    .footer-col a:hover { color: var(--primary-300); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding: var(--space-5) 0; text-align: center; font-size: .78rem; color: rgba(255,255,255,.35);
+      max-width: 1200px; margin: 0 auto;
+    }
+
+    /* ── Scroll-reveal ───────────────────────────────────────────────────── */
+    .animate-on-scroll {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 600ms var(--ease), transform 600ms var(--ease);
+    }
+    .animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
+    .anim-d1 { transition-delay: 80ms; }
+    .anim-d2 { transition-delay: 160ms; }
+    .anim-d3 { transition-delay: 240ms; }
+    .anim-d4 { transition-delay: 320ms; }
+    .anim-d5 { transition-delay: 400ms; }
+    .anim-d6 { transition-delay: 480ms; }
+
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; gap: var(--space-10); }
+      .hero-card  { max-width: 480px; margin: 0 auto; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .nav-links .link-item { display: none; }
+      .nav-hamburger { display: flex; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-row { flex-direction: column; gap: var(--space-4); }
+      .steps-row::before { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-6); }
+      .footer-grid { grid-template-columns: 1fr; gap: var(--space-8); }
+      .hero-trust { gap: var(--space-4); }
+      .preview-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .hero-ctas { flex-direction: column; }
+      .hero-ctas .btn { width: 100%; }
+      .hero-card-foot { grid-template-columns: 1fr; }
+      .hcf-stat + .hcf-stat { border-left: none; border-top: 1px solid var(--border-light); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 2: LANDING NAVBAR
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <nav class="landing-nav" id="landing-nav">
+    <a href="{{ url_for('home') }}" class="nav-brand">
+      <div class="brand-icon"><i class="fas fa-heart-pulse"></i></div>
+      <div class="brand-name">MediCare<span>AI</span></div>
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="link-item" data-i18n="land.features">Features</a>
+      <a href="#how-it-works" class="link-item" data-i18n="land.how_works">How It Works</a>
+      {% if is_authenticated %}
+        <a href="{{ url_for('home') }}" class="link-item" style="font-weight:600;color:var(--text)" data-i18n="nav.dashboard">Dashboard</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-primary" data-i18n="nav.logout">Logout</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="link-item" style="font-weight:600;color:var(--text)" data-i18n="land.login">Login</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary" data-i18n="land.signup">Sign Up Free</a>
+      {% endif %}
+    </div>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 3: HERO
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-inner">
+
+      <!-- Left – copy -->
+      <div class="hero-text">
+        <div class="hero-badge animate-on-scroll">
+          <span class="pulse-dot"></span>
+          <span data-i18n="land.hero_badge">AI-Powered Health Intelligence</span>
+        </div>
+
+        <h1 class="hero-title animate-on-scroll anim-d1">
+          <span data-i18n="land.hero_t1">Your Health,</span><br>
+          <span class="highlight" data-i18n="land.intelligently">Intelligently</span><br>
+          <span data-i18n="land.monitored">Monitored</span>
+        </h1>
+
+        <p class="hero-sub animate-on-scroll anim-d2" data-i18n="land.hero_sub">
+          MediCare AI acts like a caring parent and a smart doctor — monitoring
+          your health 24/7, predicting risks before they become problems, and
+          guiding you to a healthier life.
+        </p>
+
+        <div class="hero-ctas animate-on-scroll anim-d3">
+          {% if is_authenticated %}
+            <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+              <i class="fas fa-rocket"></i> <span data-i18n="land.go_dash">Go to Dashboard</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-lg">
+              <i class="fas fa-sign-out-alt"></i> <span data-i18n="nav.logout">Logout</span>
+            </a>
+          {% else %}
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg">
+              <i class="fas fa-rocket"></i> <span data-i18n="land.get_started">Get Started Free</span>
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">
+              <i class="fas fa-right-to-bracket"></i> <span data-i18n="land.signin">Sign In</span>
+            </a>
+          {% endif %}
+        </div>
+
+        <div class="hero-trust animate-on-scroll anim-d4">
+          <span class="trust-item"><i class="fas fa-circle-check"></i> <span data-i18n="land.trust1">10+ AI Features</span></span>
+          <span class="trust-item"><i class="fas fa-circle-check"></i> <span data-i18n="land.trust2">Real-time Alerts</span></span>
+          <span class="trust-item"><i class="fas fa-circle-check"></i> <span data-i18n="land.trust3">ML Predictions</span></span>
+        </div>
+      </div>
+
+      <!-- Right – preview card -->
+      <div class="animate-on-scroll anim-d3">
+        <div class="hero-card">
+          <div class="hero-card-head">
+            <h4><i class="fas fa-chart-simple" style="color:var(--primary);margin-right:6px"></i> <span data-i18n="land.daily_summary">Daily Health Summary</span></h4>
+            <span class="live-badge"><span class="dot"></span> <span data-i18n="land.live">Live</span></span>
+          </div>
+
+          <div class="preview-grid">
+            <div class="preview-metric">
+              <div class="pm-icon blue"><i class="fas fa-moon"></i></div>
+              <div><div class="pm-val">7.5<span data-i18n="metric.hrs">h</span></div><div class="pm-lbl" data-i18n="health.sleep">Sleep</div></div>
+            </div>
+            <div class="preview-metric">
+              <div class="pm-icon green"><i class="fas fa-shoe-prints"></i></div>
+              <div><div class="pm-val">8,240</div><div class="pm-lbl" data-i18n="health.steps">Steps</div></div>
+            </div>
+            <div class="preview-metric">
+              <div class="pm-icon cyan"><i class="fas fa-droplet"></i></div>
+              <div><div class="pm-val">2.1<span data-i18n="metric.litres">L</span></div><div class="pm-lbl" data-i18n="metric.water">Water Intake</div></div>
+            </div>
+            <div class="preview-metric">
+              <div class="pm-icon teal"><i class="fas fa-weight-scale"></i></div>
+              <div><div class="pm-val">22.4</div><div class="pm-lbl" data-i18n="metric.bmi">Body Mass Index</div></div>
+            </div>
+          </div>
+
+          <div class="ai-insight-box">
+            <div class="ai-icon"><i class="fas fa-brain"></i></div>
+            <p><strong data-i18n="land.medicare_says">MediCare says:</strong> <span data-i18n="land.preview_insight">Your sleep improved 15% this week!
+            Consider increasing water intake to reach your 2.5L goal.</span></p>
+          </div>
+
+          <div class="hero-card-foot">
+            <div class="hcf-stat">
+              <div class="hcf-num green">28</div>
+              <div class="hcf-meta">
+                <span class="value">Low Risk</span>
+                <span class="label">Risk Score</span>
+              </div>
+            </div>
+            <div class="hcf-stat">
+              <div class="hcf-num teal">3</div>
+              <div class="hcf-meta">
+                <span class="value">Today</span>
+                <span class="label">AI Insights</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 4: FEATURES
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section" id="features">
+    <div class="section-center">
+      <span class="section-tag animate-on-scroll"><i class="fas fa-sparkles"></i> <span data-i18n="land.features">Features</span></span>
+      <h2 class="section-title animate-on-scroll" data-i18n="land.f_title">Everything You Need to Stay Healthy</h2>
+      <p class="section-sub animate-on-scroll" data-i18n="land.f_sub">
+        A complete AI health ecosystem that thinks, predicts, and cares — all in one place.
+      </p>
+
+      <div class="features-grid">
+        <div class="feature-card animate-on-scroll anim-d1">
+          <div class="feature-icon"><i class="fas fa-brain"></i></div>
+          <h3 data-i18n="land.f1_title">AI Insights &amp; Trends</h3>
+          <p data-i18n="land.f1_desc">Detects patterns in your health data and tells you what matters before it becomes a problem.</p>
+        </div>
+        <div class="feature-card animate-on-scroll anim-d2">
+          <div class="feature-icon"><i class="fas fa-stethoscope"></i></div>
+          <h3 data-i18n="land.f2_title">Disease Prediction</h3>
+          <p data-i18n="land.f2_desc">Select your symptoms, get ML-powered disease predictions with confidence scores and reasons.</p>
+        </div>
+        <div class="feature-card animate-on-scroll anim-d3">
+          <div class="feature-icon"><i class="fas fa-robot"></i></div>
+          <h3 data-i18n="land.f3_title">Context-Aware Chatbot</h3>
+          <p data-i18n="land.f3_desc">Ask MediCare anything. It knows your health history and gives personalised answers.</p>
+        </div>
+        <div class="feature-card animate-on-scroll anim-d4">
+          <div class="feature-icon"><i class="fas fa-triangle-exclamation"></i></div>
+          <h3 data-i18n="land.f4_title">Smart Alerts</h3>
+          <p data-i18n="land.f4_desc">Get notified for low sleep, high risk, missed medications and critical health warnings.</p>
+        </div>
+        <div class="feature-card animate-on-scroll anim-d5">
+          <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+          <h3 data-i18n="land.f5_title">Health Reports</h3>
+          <p data-i18n="land.f5_desc">Weekly and monthly reports with trend graphs, AI summaries and downloadable PDF exports.</p>
+        </div>
+        <div class="feature-card animate-on-scroll anim-d6">
+          <div class="feature-icon"><i class="fas fa-kit-medical"></i></div>
+          <h3 data-i18n="land.f6_title">Emergency Support</h3>
+          <p data-i18n="land.f6_desc">One-click SOS, emergency contacts and AI critical alerts when your health signals danger.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 5: HOW IT WORKS
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section how-section" id="how-it-works">
+    <div class="section-center">
+      <span class="section-tag animate-on-scroll"><i class="fas fa-route"></i> <span data-i18n="land.process">Process</span></span>
+      <h2 class="section-title animate-on-scroll" data-i18n="land.hw_title">How MediCare AI Works</h2>
+      <p class="section-sub animate-on-scroll" data-i18n="land.hw_sub">
+        Simple three steps from data to intelligent health guidance.
+      </p>
+
+      <div class="steps-row">
+        <div class="step-card animate-on-scroll anim-d1">
+          <div class="step-num">1</div>
+          <h3 data-i18n="land.s1_title">Track Your Health Daily</h3>
+          <p data-i18n="land.s1_desc">Log sleep, water, steps, vitals and medications. Takes just 2 minutes a day.</p>
+        </div>
+        <div class="step-card animate-on-scroll anim-d2">
+          <div class="step-num">2</div>
+          <h3 data-i18n="land.s2_title">AI Analyzes Your Data</h3>
+          <p data-i18n="land.s2_desc">Our AI engine processes your data, detects trends and calculates your personalised risk score.</p>
+        </div>
+        <div class="step-card animate-on-scroll anim-d3">
+          <div class="step-num">3</div>
+          <h3 data-i18n="land.s3_title">Get Guided &amp; Stay Healthy</h3>
+          <p data-i18n="land.s3_desc">Receive insights, alerts and personalised advice like having a doctor in your pocket.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 6: STATS
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item animate-on-scroll anim-d1">
+        <div class="stat-val">7+</div>
+        <div class="stat-label" data-i18n="land.stat1">Health Metrics Tracked</div>
+      </div>
+      <div class="stat-item animate-on-scroll anim-d2">
+        <div class="stat-val">10+</div>
+        <div class="stat-label" data-i18n="land.stat2">AI-Powered Features</div>
+      </div>
+      <div class="stat-item animate-on-scroll anim-d3">
+        <div class="stat-val" data-i18n="land.rt">Real-time</div>
+        <div class="stat-label" data-i18n="land.stat3">Smart Alert System</div>
+      </div>
+      <div class="stat-item animate-on-scroll anim-d4">
+        <div class="stat-val">ML</div>
+        <div class="stat-label" data-i18n="land.stat4">Disease Prediction Engine</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 7: CTA
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="cta-section">
+    <div class="section-center">
+      <h2 class="section-title animate-on-scroll" data-i18n="land.cta_title">Start Your Health Journey Today</h2>
+      <p class="section-sub animate-on-scroll" style="color:rgba(255,255,255,.7)" data-i18n="land.cta_sub">
+        Join MediCare AI and let intelligent technology care for your health.
+      </p>
+      {% if is_authenticated %}
+      <a href="{{ url_for('home') }}" class="cta-btn animate-on-scroll anim-d2">
+        <span data-i18n="land.cta_btn1">Enter Dashboard</span> <i class="fas fa-arrow-right"></i>
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.signup') }}" class="cta-btn animate-on-scroll anim-d2">
+        <span data-i18n="land.cta_btn2">Create Free Account</span> <i class="fas fa-arrow-right"></i>
+      </a>
+      {% endif %}
+      <div class="cta-note animate-on-scroll anim-d3" data-i18n="land.cta_note">Free forever &bull; No credit card required</div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 8: FOOTER
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <footer class="landing-footer">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <div class="f-icon"><i class="fas fa-heart-pulse"></i></div>
+          <div class="f-name">MediCare<span>AI</span></div>
+        </div>
+        <p class="footer-tagline" data-i18n="land.footer_tag">Your Intelligent Personal Health Assistant.<br>Built for health, powered by AI.</p>
+      </div>
+      <div class="footer-col">
+        <h5 data-i18n="land.ql">Quick Links</h5>
+        <a href="{{ url_for('home') }}" data-i18n="nav.dashboard">Dashboard</a>
+        <a href="{{ url_for('health.health_page') }}" data-i18n="nav.health_section">Health</a>
+        <a href="{{ url_for('health.reports') }}" data-i18n="nav.reports">Reports</a>
+        <a href="{{ url_for('health.emergency') }}" data-i18n="nav.emergency" data-i18n="qa.emergency">Emergency</a>
+      </div>
+      <div class="footer-col">
+        <h5 data-i18n="land.features">Features</h5>
+        <a href="{{ url_for('health.disease_prediction') }}" data-i18n="nav.disease">Disease Prediction</a>
+        <a href="{{ url_for('health.ai_assistant') }}" data-i18n="nav.ai">AI Assistant</a>
+        <a href="{{ url_for('health.profile') }}" data-i18n="nav.profile">Profile</a>
+        <a href="#features" data-i18n="land.all_feat">All Features</a>
+      </div>
+    </div>
+    <div class="footer-bottom" data-i18n="land.copyright">
+      &copy; 2024 MediCare AI — An AI-Based Personal Health Assistant
+    </div>
+  </footer>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 9: JAVASCRIPT
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <script>
+  (function () {
+
+    /* ── 1. Scroll-reveal (IntersectionObserver) ──────────────────────── */
+    var targets = document.querySelectorAll('.animate-on-scroll');
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+      targets.forEach(function (el) { observer.observe(el); });
+    } else {
+      targets.forEach(function (el) { el.classList.add('visible'); });
+    }
+
+    /* ── 2. Smooth scroll for anchor links ────────────────────────────── */
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var id = this.getAttribute('href');
+        if (id.length < 2) return;
+        var target = document.querySelector(id);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    /* ── 3. Navbar shadow on scroll ───────────────────────────────────── */
+    var nav = document.getElementById('landing-nav');
+    window.addEventListener('scroll', function () {
+      if (!nav) return;
+      nav.classList.toggle('scrolled', window.scrollY > 50);
+    }, { passive: true });
+
+  })();
+  </script>
+
+</body>
+</html>

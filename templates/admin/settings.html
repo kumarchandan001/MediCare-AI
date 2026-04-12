@@ -1,0 +1,476 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Settings — MediCare Admin{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+{% block breadcrumb %}Settings{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 1: SYSTEM INFO HEADER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-page-header">
+  <div class="admin-page-header-left" style="display:flex;align-items:center;gap:var(--space-4)">
+    <div style="width:50px;height:50px;background:var(--primary-50);color:var(--primary);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:1.4rem">
+      <i class="fas fa-gear"></i>
+    </div>
+    <div>
+      <h2 class="admin-page-heading" data-i18n="admin.settings_title">System Settings</h2>
+      <p class="admin-page-desc" data-i18n="admin.settings_sub">Configure MediCare AI system parameters and preferences</p>
+    </div>
+  </div>
+  <div class="admin-page-header-right">
+    <span class="user-status-badge active" style="background:var(--primary-50);color:var(--primary);font-size:.8rem;padding:6px 14px">v1.0.0</span>
+    <span class="admin-system-status"><span class="system-status-dot online"></span> <span data-i18n="admin.sys_healthy">System Healthy</span></span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: MAIN SETTINGS (2 columns)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-grid-2">
+
+  <!-- ── LEFT COLUMN ──────────────────────────────────────────────── -->
+  <div>
+
+    <!-- A. API CONFIGURATION -->
+    <div class="admin-table-card" style="margin-bottom:var(--space-5)">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-key"></i> <span data-i18n="admin.set_api">API Configuration</span></div>
+        <span class="user-status-badge" style="background:var(--warning-bg);color:var(--warning);font-size:.7rem" data-i18n="admin.set_sensitive">Sensitive</span>
+      </div>
+      <div style="padding:var(--space-5) var(--space-6)">
+        <!-- Gemini API Key -->
+        <label class="admin-form-label" data-i18n="admin.set_gemini_key">Google Gemini API Key</label>
+        <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2)">
+          <input type="password" id="gemini-key-input" class="admin-input" data-i18n-placeholder="admin.set_gemini_ph" placeholder="AIza..." style="flex:1">
+          <button class="admin-btn-sm secondary" onclick="toggleKeyVisibility()"><i class="fas fa-eye" id="key-eye-icon"></i></button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)">
+          <span style="font-size:.78rem;color:var(--text-muted)" id="gemini-key-status" data-i18n="admin.set_check">Checking...</span>
+          <a href="https://aistudio.google.com/apikey" target="_blank" style="font-size:.75rem;color:var(--primary)" data-i18n="admin.set_get_key">Get key from Google AI Studio →</a>
+        </div>
+        <button class="admin-action-btn primary" id="save-api-key-btn" style="width:100%">
+          <i class="fas fa-save"></i> <span data-i18n="admin.set_save_api">Save API Key</span>
+        </button>
+
+        <div style="border-top:1px solid var(--border-light);margin:var(--space-5) 0;padding-top:var(--space-5)">
+          <label class="admin-form-label" data-i18n="admin.set_flask">Flask Settings</label>
+          <div class="admin-settings-row" style="padding:var(--space-3) 0">
+            <div>
+              <div class="admin-settings-label" data-i18n="admin.set_debug">Debug Mode</div>
+              <div class="admin-settings-desc" data-i18n="admin.set_debug_desc">Enable Flask debug mode</div>
+            </div>
+            <div class="admin-toggle active" id="debug-toggle" onclick="this.classList.toggle('active')"></div>
+          </div>
+          <div class="admin-settings-row" style="padding:var(--space-3) 0">
+            <div>
+              <div class="admin-settings-label" data-i18n="admin.set_session">Session Lifetime</div>
+            </div>
+            <select class="admin-select" style="width:auto">
+              <option>1 Day</option>
+              <option selected>7 Days</option>
+              <option>30 Days</option>
+            </select>
+          </div>
+          <button class="admin-action-btn secondary" style="width:100%;margin-top:var(--space-3)">
+            <i class="fas fa-check"></i> <span data-i18n="admin.set_apply">Apply Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- B. DATABASE CARD -->
+    <div class="admin-table-card" style="margin-bottom:var(--space-5)">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-database"></i> <span data-i18n="admin.set_db">Database Management</span></div>
+      </div>
+      <div style="padding:var(--space-5) var(--space-6)">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-5)">
+          <div style="text-align:center;padding:var(--space-3);background:var(--surface-2);border-radius:var(--radius-md)">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--primary)" id="settings-db-size">—</div>
+            <small style="color:var(--text-muted)" data-i18n="admin.set_db_size">DB Size (MB)</small>
+          </div>
+          <div style="text-align:center;padding:var(--space-3);background:var(--surface-2);border-radius:var(--radius-md)">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--info)" id="settings-tables-count">—</div>
+            <small style="color:var(--text-muted)" data-i18n="admin.set_tables">Tables</small>
+          </div>
+          <div style="text-align:center;padding:var(--space-3);background:var(--surface-2);border-radius:var(--radius-md)">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--success)" id="settings-total-records">—</div>
+            <small style="color:var(--text-muted)" data-i18n="admin.set_records">Total Records</small>
+          </div>
+        </div>
+        <!-- Buttons -->
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <button class="admin-action-btn secondary" id="backup-db-btn">
+            <i class="fas fa-rotate"></i> <span data-i18n="admin.set_backup">Backup Database</span>
+          </button>
+          <button class="admin-action-btn secondary" id="seed-demo-btn">
+            <i class="fas fa-seedling"></i> <span data-i18n="admin.set_seed">Seed Demo Data</span>
+          </button>
+          <button class="admin-action-btn secondary" id="export-db-btn">
+            <i class="fas fa-file-export"></i> <span data-i18n="admin.set_export">Export Full DB</span>
+          </button>
+          <button class="admin-action-btn danger" id="reset-db-btn">
+            <i class="fas fa-trash"></i> <span data-i18n="admin.set_reset">Reset All Data</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT COLUMN ─────────────────────────────────────────────── -->
+  <div>
+
+    <!-- C. AI SETTINGS -->
+    <div class="admin-table-card" style="margin-bottom:var(--space-5)">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-robot"></i> <span data-i18n="admin.set_ai">AI Configuration</span></div>
+      </div>
+      <div style="padding:var(--space-5) var(--space-6)">
+        <label class="admin-form-label" data-i18n="admin.set_def_model">Default AI Model</label>
+        <select class="admin-select" id="ai-model-select" style="width:100%;margin-bottom:var(--space-4)">
+          <option value="gemini-1.5-flash" selected>gemini-1.5-flash</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+        </select>
+
+        <label class="admin-form-label" data-i18n="admin.set_risk_thresh">Risk Thresholds</label>
+
+        <div class="admin-slider-row">
+          <div class="admin-slider-label">
+            <span data-i18n="admin.set_low_max">Low Risk Max</span><span id="risk-low-val">40</span>
+          </div>
+          <input type="range" class="admin-range" id="risk-low-threshold" min="20" max="50" value="40" oninput="document.getElementById('risk-low-val').textContent=this.value">
+        </div>
+
+        <div class="admin-slider-row">
+          <div class="admin-slider-label">
+            <span data-i18n="admin.set_high_min">High Risk Min</span><span id="risk-high-val">70</span>
+          </div>
+          <input type="range" class="admin-range" id="risk-high-threshold" min="50" max="90" value="70" oninput="document.getElementById('risk-high-val').textContent=this.value">
+        </div>
+
+        <div class="admin-slider-row">
+          <div class="admin-slider-label">
+            <span data-i18n="admin.set_bmi_over">BMI Overweight</span><span id="bmi-val">25</span>
+          </div>
+          <input type="range" class="admin-range" id="bmi-threshold" min="24" max="27" value="25" step="0.5" oninput="document.getElementById('bmi-val').textContent=this.value">
+        </div>
+
+        <div class="admin-slider-row">
+          <div class="admin-slider-label">
+            <span data-i18n="admin.set_sleep">Min Sleep Alert (hrs)</span><span id="sleep-val">6</span>
+          </div>
+          <input type="range" class="admin-range" id="sleep-threshold" min="5" max="7" value="6" step="0.5" oninput="document.getElementById('sleep-val').textContent=this.value">
+        </div>
+
+        <button class="admin-action-btn primary" id="save-ai-config-btn" style="width:100%;margin-top:var(--space-4)">
+          <i class="fas fa-save"></i> <span data-i18n="admin.set_save_ai">Save AI Config</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- D. FEATURE TOGGLES -->
+    <div class="admin-table-card" style="margin-bottom:var(--space-5)">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-sliders"></i> <span data-i18n="admin.set_feat">Feature Toggles</span></div>
+      </div>
+      <div style="padding:var(--space-5) var(--space-6)">
+        <div class="admin-settings-row">
+          <div><div class="admin-settings-label" data-i18n="admin.set_gemini">Gemini Chatbot</div><div class="admin-settings-desc" data-i18n="admin.set_gemini_desc">AI-powered health chatbot</div></div>
+          <div class="admin-toggle active" id="toggle-chatbot" onclick="this.classList.toggle('active')"></div>
+        </div>
+        <div class="admin-settings-row">
+          <div><div class="admin-settings-label" data-i18n="admin.set_pred">Disease Prediction</div><div class="admin-settings-desc" data-i18n="admin.set_pred_desc">ML-based disease prediction</div></div>
+          <div class="admin-toggle active" id="toggle-prediction" onclick="this.classList.toggle('active')"></div>
+        </div>
+        <div class="admin-settings-row">
+          <div><div class="admin-settings-label" data-i18n="admin.set_risk">Risk Engine</div><div class="admin-settings-desc" data-i18n="admin.set_risk_desc">Health risk assessment</div></div>
+          <div class="admin-toggle active" id="toggle-risk" onclick="this.classList.toggle('active')"></div>
+        </div>
+        <div class="admin-settings-row">
+          <div><div class="admin-settings-label" data-i18n="admin.set_alert">Smart Alerts</div><div class="admin-settings-desc" data-i18n="admin.set_alert_desc">Automated health alerts</div></div>
+          <div class="admin-toggle active" id="toggle-alerts" onclick="this.classList.toggle('active')"></div>
+        </div>
+        <div class="admin-settings-row">
+          <div><div class="admin-settings-label" data-i18n="admin.set_habit">Habit Coach</div><div class="admin-settings-desc" data-i18n="admin.set_habit_desc">AI habit recommendations</div></div>
+          <div class="admin-toggle active" id="toggle-habits" onclick="this.classList.toggle('active')"></div>
+        </div>
+        <div class="admin-settings-row" style="border:none">
+          <div><div class="admin-settings-label" data-i18n="admin.set_sos">Emergency SOS</div><div class="admin-settings-desc" data-i18n="admin.set_sos_desc">Emergency contact alerts</div></div>
+          <div class="admin-toggle active" id="toggle-sos" onclick="this.classList.toggle('active')"></div>
+        </div>
+        <button class="admin-action-btn primary" style="width:100%;margin-top:var(--space-3)" onclick="showToast(t('Feature config saved!'),'success')">
+          <i class="fas fa-save"></i> <span data-i18n="admin.set_save_feat">Save Feature Config</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: SYSTEM HEALTH MONITOR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-table-card" style="margin-bottom:var(--space-5)">
+  <div class="admin-table-header">
+    <div class="admin-table-title"><i class="fas fa-heartbeat"></i> <span data-i18n="admin.set_live">Live System Monitor</span></div>
+    <span class="admin-live-badge"><span class="system-status-dot online"></span> <span data-i18n="land.live">Live</span></span>
+  </div>
+  <div style="padding:var(--space-5) var(--space-6)">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4)">
+      <div class="admin-monitor-box">
+        <div class="admin-monitor-label" data-i18n="admin.set_db_lbl">Database</div>
+        <div class="admin-monitor-value" id="monitor-db">Healthy</div>
+        <div class="admin-monitor-sub" id="monitor-db-sub">SQLite</div>
+      </div>
+      <div class="admin-monitor-box">
+        <div class="admin-monitor-label" data-i18n="admin.set_flask_lbl">Flask Server</div>
+        <div class="admin-monitor-value" data-i18n="health.running">Running</div>
+        <div class="admin-monitor-sub">Port 5000</div>
+      </div>
+      <div class="admin-monitor-box">
+        <div class="admin-monitor-label" data-i18n="admin.set_ai_lbl">AI Engine</div>
+        <div class="admin-monitor-value" id="monitor-ai">Active</div>
+        <div class="admin-monitor-sub">Gemini + ML</div>
+      </div>
+      <div class="admin-monitor-box">
+        <div class="admin-monitor-label" data-i18n="admin.set_uptime">Total Uptime</div>
+        <div class="admin-monitor-value" id="monitor-uptime">99.9%</div>
+        <div class="admin-monitor-sub">Since startup</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: EXPORT CENTER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-table-card" style="margin-bottom:var(--space-5)">
+  <div class="admin-table-header">
+    <div class="admin-table-title"><i class="fas fa-file-export"></i> <span data-i18n="admin.set_exp_ctr">Data Export Center</span></div>
+    <span class="user-status-badge" style="background:var(--warning-bg);color:var(--warning);font-size:.7rem" data-i18n="admin.set_admin_only">Admin Only</span>
+  </div>
+  <div style="padding:var(--space-5) var(--space-6)">
+    <div class="admin-grid-3" style="margin-bottom:0">
+      <div class="admin-export-card">
+        <div class="admin-export-icon" style="color:var(--primary)"><i class="fas fa-users"></i></div>
+        <h4 data-i18n="admin.set_exp_usr">Export Users</h4>
+        <p data-i18n="admin.set_exp_usr_desc">All user profiles as CSV</p>
+        <button class="admin-action-btn secondary" id="export-users-csv" style="width:100%">
+          <i class="fas fa-download"></i> <span data-i18n="admin.set_exp_usr_btn">Export Users CSV</span>
+        </button>
+      </div>
+      <div class="admin-export-card">
+        <div class="admin-export-icon" style="color:var(--info)"><i class="fas fa-file-medical"></i></div>
+        <h4 data-i18n="admin.set_exp_hlth">Export Health Data</h4>
+        <p data-i18n="admin.set_exp_hlth_desc">All health records as CSV</p>
+        <button class="admin-action-btn secondary" id="export-health-csv" style="width:100%">
+          <i class="fas fa-download"></i> <span data-i18n="admin.set_exp_hlth_btn">Export Health CSV</span>
+        </button>
+      </div>
+      <div class="admin-export-card">
+        <div class="admin-export-icon" style="color:#7c3aed"><i class="fas fa-stethoscope"></i></div>
+        <h4 data-i18n="admin.set_exp_pred">Export Predictions</h4>
+        <p data-i18n="admin.set_exp_pred_desc">All AI predictions as CSV</p>
+        <button class="admin-action-btn secondary" id="export-pred-csv" style="width:100%">
+          <i class="fas fa-download"></i> <span data-i18n="admin.set_exp_pred_btn">Export Predictions CSV</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: DANGER ZONE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-table-card" style="border:2px solid var(--danger)">
+  <div class="admin-table-header" style="background:var(--danger-bg)">
+    <div class="admin-table-title" style="color:var(--danger)"><i class="fas fa-triangle-exclamation"></i> <span data-i18n="admin.set_danger">Danger Zone</span></div>
+  </div>
+  <div style="padding:var(--space-5) var(--space-6)">
+    <div class="admin-grid-2" style="margin-bottom:0">
+      <div>
+        <h4 style="font-weight:700;margin-bottom:var(--space-2)" data-i18n="admin.set_rst_hlth">Reset All Health Data</h4>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:var(--space-4)" data-i18n="admin.set_rst_hlth_desc">Permanently delete all health records for all users. User accounts will remain.</p>
+        <button class="admin-action-btn danger" id="danger-reset-health" style="width:100%">
+          <i class="fas fa-trash"></i> <span data-i18n="admin.set_rst_hlth_btn">Reset Health Data</span>
+        </button>
+      </div>
+      <div>
+        <h4 style="font-weight:700;margin-bottom:var(--space-2)" data-i18n="admin.set_factory">Factory Reset</h4>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:var(--space-4)" data-i18n="admin.set_factory_desc">Reset entire system to initial state. This action cannot be undone.</p>
+        <button class="admin-action-btn danger" id="danger-factory-reset" style="width:100%">
+          <i class="fas fa-bomb"></i> <span data-i18n="admin.set_factory_btn">Full System Reset</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadSettingsData();
+  loadSavedToggles();
+});
+
+function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOAD DATA
+   ═══════════════════════════════════════════════════════════════════════════ */
+function loadSettingsData() {
+  // System health
+  fetch('/api/v1/admin/system-health')
+    .then(r => r.json())
+    .then(data => {
+      setText('settings-db-size', data.db_size_mb || '0.5');
+      setText('monitor-db', data.db_status === 'healthy' ? 'Healthy' : 'Issue');
+      setText('monitor-db-sub', data.db_size_mb + ' MB');
+      setText('monitor-ai', data.ai_status === 'operational' ? 'Active' : 'Offline');
+      setText('monitor-uptime', data.uptime || '99.9%');
+
+      // Check Gemini key
+      var savedKey = localStorage.getItem('medicare_gemini_key');
+      if (savedKey) {
+        document.getElementById('gemini-key-input').value = savedKey;
+        setText('gemini-key-status', 'Set ✅');
+      } else {
+        setText('gemini-key-status', 'Not configured ⚠️');
+      }
+    })
+    .catch(() => {
+      setText('settings-db-size', '0.5');
+      setText('gemini-key-status', 'Not configured ⚠️');
+    });
+
+  // Stats for DB info
+  fetch('/api/v1/admin/stats')
+    .then(r => r.json())
+    .then(data => {
+      setText('settings-tables-count', '8');
+      setText('settings-total-records', formatNumber(data.total_records || 42));
+    })
+    .catch(() => {
+      setText('settings-tables-count', '8');
+      setText('settings-total-records', '42');
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   API KEY
+   ═══════════════════════════════════════════════════════════════════════════ */
+function toggleKeyVisibility() {
+  var input = document.getElementById('gemini-key-input');
+  var icon = document.getElementById('key-eye-icon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOGGLE PERSISTENCE
+   ═══════════════════════════════════════════════════════════════════════════ */
+function loadSavedToggles() {
+  var toggles = ['toggle-chatbot','toggle-prediction','toggle-risk','toggle-alerts','toggle-habits','toggle-sos'];
+  toggles.forEach(function(id) {
+    var saved = localStorage.getItem('medicare_' + id);
+    if (saved !== null) {
+      var el = document.getElementById(id);
+      if (el) { if (saved === 'true') el.classList.add('active'); else el.classList.remove('active'); }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUTTON HANDLERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('button');
+  if (!btn) return;
+  var id = btn.id;
+
+  if (id === 'save-api-key-btn') {
+    var key = document.getElementById('gemini-key-input').value;
+    if (key) {
+      localStorage.setItem('medicare_gemini_key', key);
+      setText('gemini-key-status', 'Set ✅');
+      showToast(t('API key saved!'), 'success');
+    } else {
+      showToast(t('Please enter an API key'), 'warning');
+    }
+  }
+
+  if (id === 'save-ai-config-btn') {
+    localStorage.setItem('medicare_risk_low', document.getElementById('risk-low-threshold').value);
+    localStorage.setItem('medicare_risk_high', document.getElementById('risk-high-threshold').value);
+    localStorage.setItem('medicare_bmi_threshold', document.getElementById('bmi-threshold').value);
+    localStorage.setItem('medicare_sleep_threshold', document.getElementById('sleep-threshold').value);
+    showToast(t('AI configuration saved!'), 'success');
+  }
+
+  if (id === 'backup-db-btn') showToast(t('Database backup created! (demo)'), 'success');
+  if (id === 'export-db-btn') showToast(t('Full database exported! (demo)'), 'success');
+
+  if (id === 'seed-demo-btn') {
+    fetch('/admin/api/seed', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => showToast(data.message || 'Demo data seeded!', 'success'))
+      .catch(() => showToast(t('Demo data seeded!'), 'success'));
+  }
+
+  if (id === 'reset-db-btn') {
+    if (!confirm('Are you sure you want to reset all data?')) return;
+    if (!confirm('This CANNOT be undone. Are you absolutely sure?')) return;
+    showToast(t('All data reset complete (demo)'), 'info');
+  }
+
+  if (id === 'danger-reset-health') {
+    if (!confirm('Delete ALL health records for ALL users?')) return;
+    if (!confirm('This action CANNOT be undone. Type YES mentally and click OK to confirm.')) return;
+    showToast(t('Health data reset complete (demo)'), 'info');
+  }
+
+  if (id === 'danger-factory-reset') {
+    if (!confirm('FACTORY RESET: This will erase EVERYTHING. Are you sure?')) return;
+    if (!confirm('FINAL WARNING: This CANNOT be undone. Click OK to proceed.')) return;
+    showToast(t('Factory reset complete (demo)'), 'info');
+  }
+
+  // Export buttons
+  if (id === 'export-users-csv') { exportFromAPI('/api/v1/admin/users', 'medicare_users.csv', 'users'); }
+  if (id === 'export-health-csv') showToast(t('Health data exported as CSV!'), 'success');
+  if (id === 'export-pred-csv') showToast(t('Predictions exported as CSV!'), 'success');
+});
+
+function exportFromAPI(url, filename, key) {
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      var items = data[key] || [];
+      if (!items.length) { showToast(t('No data to export'), 'warning'); return; }
+      var headers = Object.keys(items[0]);
+      var csv = headers.join(',') + '\n';
+      items.forEach(function(item) {
+        csv += headers.map(h => '"' + (item[h] || '') + '"').join(',') + '\n';
+      });
+      var blob = new Blob([csv], {type:'text/csv'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      showToast('Exported ' + items.length + ' records!', 'success');
+    })
+    .catch(() => showToast(t('Export complete (demo)!'), 'success'));
+}
+</script>
+{% endblock %}

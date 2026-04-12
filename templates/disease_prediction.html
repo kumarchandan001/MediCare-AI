@@ -1,0 +1,1823 @@
+{% extends "base.html" %}
+
+{% block title %}Disease Prediction — MediCare AI{% endblock %}
+{% block page_title %}Disease Prediction{% endblock %}
+{% block breadcrumb %}Disease Prediction{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Intro bar ────────────────────────────────────────────────────────── */
+  .pred-intro {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--space-8);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-6);
+  }
+
+  .pred-intro-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    background: var(--primary-50);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .pred-intro-text {
+    flex: 1;
+  }
+
+  .pred-intro-text h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+  }
+
+  .pred-intro-text p {
+    font-size: .88rem;
+    color: var(--text-secondary);
+    max-width: 480px;
+  }
+
+  .pred-intro-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-3);
+    flex-shrink: 0;
+  }
+
+  .pred-warning {
+    font-size: .75rem;
+    color: var(--warning);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+    text-align: right;
+  }
+
+  /* ── Category tabs ────────────────────────────────────────────────────── */
+  .category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: var(--space-5);
+  }
+
+  .category-tab {
+    padding: 7px 16px;
+    border-radius: var(--radius-full);
+    font-size: .8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .category-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .category-tab.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .category-tab.active i {
+    color: #fff;
+  }
+
+  .category-tab i {
+    font-size: .72rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Symptom search ───────────────────────────────────────────────────── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: var(--space-5);
+  }
+
+  .search-wrap i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: .85rem;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: .88rem;
+    color: var(--text);
+    background: var(--surface);
+    transition: var(--transition);
+  }
+
+  .search-wrap input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 122, 107, .1);
+  }
+
+  /* ── Symptoms grid ────────────────────────────────────────────────────── */
+  .symptoms-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  .symptom-tag {
+    padding: 7px 14px;
+    border-radius: var(--radius-full);
+    font-size: .8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    transition: all 200ms var(--ease);
+    user-select: none;
+  }
+
+  .symptom-tag:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-50);
+  }
+
+  .symptom-tag.selected {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(10, 122, 107, .25);
+  }
+
+  .symptom-tag.hidden {
+    display: none;
+  }
+
+  /* ── Selected bar ─────────────────────────────────────────────────────── */
+  .selected-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: var(--space-4);
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    margin-top: var(--space-5);
+    min-height: 48px;
+  }
+
+  .selected-bar .label {
+    font-size: .78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .sel-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 500;
+  }
+
+  .sel-tag .x {
+    cursor: pointer;
+    opacity: .7;
+    font-size: .65rem;
+  }
+
+  .sel-tag .x:hover {
+    opacity: 1;
+  }
+
+  /* ── Analyze button area ──────────────────────────────────────────────── */
+  .analyze-area {
+    text-align: center;
+    margin-top: var(--space-6);
+  }
+
+  .analyze-area .btn {
+    min-width: 280px;
+  }
+
+  .analyze-area .btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+
+  /* ── Result & Consult section ─────────────────────────────────────────── */
+  .result-section,
+  .consult-section {
+    display: none;
+  }
+
+  .result-section.show,
+  .consult-section.show {
+    display: block;
+  }
+
+  .result-card {
+    border-top: 3px solid var(--primary);
+  }
+
+  .result-disease {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--primary);
+    line-height: 1.15;
+    margin-bottom: var(--space-3);
+  }
+
+  .result-desc {
+    font-size: .9rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* Confidence meter */
+  .conf-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    margin: var(--space-6) 0;
+  }
+
+  .conf-card {
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    text-align: center;
+  }
+
+  .conf-card .conf-label {
+    font-size: .72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: var(--space-2);
+  }
+
+  .conf-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+
+  .confidence-meter {
+    height: 8px;
+    background: var(--surface-3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: var(--space-3);
+  }
+
+  .confidence-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .8s var(--ease);
+  }
+
+  .confidence-fill.high {
+    background: var(--danger);
+  }
+
+  .confidence-fill.medium {
+    background: var(--warning);
+  }
+
+  .confidence-fill.low {
+    background: var(--success);
+  }
+
+  .risk-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: .9rem;
+    margin-top: var(--space-2);
+  }
+
+  .risk-badge.high {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+
+  .risk-badge.medium {
+    background: var(--warning-bg);
+    color: var(--warning);
+  }
+
+  .risk-badge.low {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  /* Explanation box */
+  .explain-box {
+    background: var(--primary-50);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin: var(--space-5) 0;
+    border-left: 4px solid var(--primary);
+  }
+
+  .explain-box .explain-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--primary);
+    margin-bottom: var(--space-3);
+  }
+
+  .explain-box p {
+    font-size: .85rem;
+    color: var(--primary-700);
+    line-height: 1.6;
+  }
+
+  .top-symptoms-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: var(--space-3);
+  }
+
+  .top-symptoms-tags .ts-tag {
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 500;
+  }
+
+  /* Precautions list */
+  .precautions-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .precautions-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: var(--space-3) 0;
+    font-size: .88rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .precautions-list li:last-child {
+    border-bottom: none;
+  }
+
+  .precautions-list li i {
+    color: var(--success);
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Action panel cards */
+  .action-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .action-card {
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    text-align: center;
+  }
+
+  .action-card .ac-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary-50);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin: 0 auto var(--space-3);
+  }
+
+  .action-card h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .95rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .action-card p {
+    font-size: .78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: var(--space-4);
+  }
+
+  .disclaimer-card {
+    background: var(--warning-bg);
+    border: 1px solid #fde68a;
+    text-align: left;
+  }
+
+  .disclaimer-card h4 {
+    color: var(--warning);
+  }
+
+  .disclaimer-card p {
+    color: #92400e;
+  }
+
+  .ctx-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: .8rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .ctx-row:last-child {
+    border-bottom: none;
+  }
+
+  .ctx-val {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  /* ── History table ────────────────────────────────────────────────────── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+  }
+
+  .data-table th {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-weight: 600;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+  }
+
+  .data-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .data-table tr:hover td {
+    background: var(--surface-2);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--space-8);
+    color: var(--text-muted);
+    font-size: .88rem;
+  }
+
+  .empty-state i {
+    font-size: 2rem;
+    margin-bottom: var(--space-3);
+    display: block;
+    opacity: .4;
+  }
+
+  /* ── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .pred-intro {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .pred-intro-right {
+      align-items: flex-start;
+    }
+
+    .conf-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: PAGE INTRO BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="pred-intro animate-fade-in">
+  <div class="pred-intro-icon"><i class="fas fa-stethoscope"></i></div>
+  <div class="pred-intro-text">
+    <h2 data-i18n="nav.disease">AI Disease Prediction</h2>
+    <p data-i18n="disease.intro_desc">Select your symptoms and let our ML model analyze possible conditions with
+      explanations.</p>
+  </div>
+  <div class="pred-intro-right">
+    <div class="flex gap-2">
+      <span class="badge badge-primary"><i class="fas fa-microchip"></i> <span data-i18n="disease.ml_powered">ML
+          Powered</span></span>
+      <span class="badge badge-success"><i class="fas fa-brain"></i> <span
+          data-i18n="disease.explainable_ai">Explainable AI</span></span>
+    </div>
+    <div class="pred-warning">
+      <i class="fas fa-triangle-exclamation"></i>
+      <span data-i18n="disease.warning">Not a medical diagnosis. Always consult a doctor.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Medical Disclaimer Banner (Req #1 — Ethics) -->
+<div class="medical-disclaimer animate-fade-in" id="medical-disclaimer">
+  <i class="fas fa-triangle-exclamation"></i>
+  <div>
+    <strong>Medical Disclaimer:</strong>
+    This system provides AI-based health insights and predictions for informational purposes only and does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical concerns.
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: SYMPTOM SELECTION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-list-check"></i> <span data-i18n="disease.select_symptoms">Select Your
+        Symptoms</span></div>
+    <div class="flex gap-3 items-center">
+      <span class="text-sm text-muted" id="symptom-count-label">0 symptoms selected</span>
+      <button class="btn btn-sm btn-secondary" id="clear-symptoms-btn"><i class="fas fa-xmark"></i> <span
+          data-i18n="disease.clear_all">Clear All</span></button>
+    </div>
+  </div>
+  <div class="card-body">
+
+    <!-- Category Tabs -->
+    <div class="category-tabs" id="category-tabs">
+      <div class="category-tab active" data-category="all" data-i18n="disease.all_symptoms">All Symptoms</div>
+      <div class="category-tab" data-category="general"><i class="fas fa-thermometer"></i> <span
+          data-i18n="disease.general">General</span></div>
+      <div class="category-tab" data-category="respiratory"><i class="fas fa-lungs"></i> <span
+          data-i18n="disease.respiratory">Respiratory</span></div>
+      <div class="category-tab" data-category="digestive"><i class="fas fa-stomach"></i> <span
+          data-i18n="disease.digestive">Digestive</span></div>
+      <div class="category-tab" data-category="neurological"><i class="fas fa-brain"></i> <span
+          data-i18n="disease.neurological">Neurological</span></div>
+      <div class="category-tab" data-category="skin"><i class="fas fa-hand-dots"></i> <span
+          data-i18n="disease.skin">Skin</span></div>
+      <div class="category-tab" data-category="musculoskeletal"><i class="fas fa-bone"></i> <span
+          data-i18n="disease.musculoskeletal">Musculoskeletal</span></div>
+      <div class="category-tab" data-category="psychological"><i class="fas fa-head-side-brain"></i> <span
+          data-i18n="disease.psychological">Psychological</span></div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <i class="fas fa-magnifying-glass"></i>
+      <input type="text" id="symptom-search" data-i18n-placeholder="disease.search" placeholder="Search symptoms...">
+    </div>
+
+    <!-- Symptoms Grid -->
+    <div class="symptoms-container" id="symptoms-grid"></div>
+
+    <!-- Selected bar -->
+    <div class="selected-bar">
+      <span class="label" data-i18n="disease.selected">Selected: </span>
+      <div id="selected-tags-container"></div>
+    </div>
+
+    <!-- Analyze button -->
+    <div class="analyze-area">
+      <button class="btn btn-primary btn-lg" id="analyze-btn" disabled>
+        <i class="fas fa-wand-magic-sparkles"></i> Select symptoms first
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: AI ANALYSIS RESULT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="result-section" id="result-section">
+  <div class="card result-card mb-6 animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-microscope"></i> <span data-i18n="disease.ai_result">AI Analysis
+          Result</span></div>
+      <div class="flex gap-3 items-center">
+        <span class="badge badge-primary" data-i18n="disease.ai_generated">AI Generated</span>
+        <span class="badge" style="background:var(--primary-100);color:var(--primary-700)"
+          id="result-model-name"></span>
+        <button class="btn btn-sm btn-secondary" id="new-analysis-btn"><i class="fas fa-arrows-rotate"></i> <span
+            data-i18n="disease.new_analysis">New Analysis</span></button>
+      </div>
+    </div>
+    <div class="card-body" style="padding: 2.5rem;">
+
+      <!-- Top: Disease & Description -->
+      <div style="text-align: center; margin-bottom: 3rem; padding: 0 1rem;">
+        <div class="mb-3"><span class="badge badge-primary px-3 py-1"
+            style="background: var(--primary-50); color: var(--primary-700); letter-spacing: 0.1em; font-weight: 700; text-transform: uppercase;"
+            data-i18n="disease.predicted_condition">Predicted Condition</span></div>
+        <div class="result-disease" id="result-disease"
+          style="font-size: 2.8rem; color: var(--primary-800); margin-bottom: 1rem;">—</div>
+        <p class="result-desc" id="result-description"
+          style="max-width: 750px; margin: 0 auto; font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6;">
+          —</p>
+      </div>
+
+      <!-- Middle: Metrics Grid (Confidence, Risk, Context) -->
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+
+        <!-- Confidence -->
+        <div class="conf-card"
+          style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1.5rem;">
+          <div class="conf-label" data-i18n="disease.confidence">Confidence Score</div>
+          <div class="conf-num" id="result-confidence">--</div>
+          <div id="confidence-label-badge" class="confidence-label-badge" style="display:none;"></div>
+          <div id="confidence-explanation-text" class="confidence-explanation-text" style="display:none;"></div>
+          <div class="confidence-meter" style="width: 80%; margin: 1rem auto 0;">
+            <div class="confidence-fill" id="confidence-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Risk Level -->
+        <div class="conf-card"
+          style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1.5rem;">
+          <div class="conf-label" data-i18n="disease.risk">Risk Level</div>
+          <div>
+            <div class="risk-badge" id="result-risk-level" style="margin-top: 0">—</div>
+          </div>
+          <div class="text-xs text-muted mt-3" id="result-risk-explain">—</div>
+        </div>
+
+        <!-- Health Context -->
+        <div class="conf-card"
+          style="background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-xl); text-align: left; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1.5rem;">
+          <h4
+            style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1.25rem; text-align: center;">
+            <i class="fas fa-heart-pulse" style="color:var(--primary)"></i> <span
+              data-i18n="disease.health_context">Health Context</span></h4>
+          <div class="ctx-row"><span data-i18n="health.sleep_hours"
+              style="color: var(--text-secondary);">Sleep</span><span class="ctx-val" id="ctx-sleep">—</span></div>
+          <div class="ctx-row"><span data-i18n="metric.steps_unit" data-i18n="health.steps"
+              style="color: var(--text-secondary);">Steps</span><span class="ctx-val" id="ctx-steps">—</span></div>
+          <div class="ctx-row" style="border: none;"><span data-i18n="dash.risk_score"
+              style="color: var(--text-secondary);">Risk Score</span><span class="ctx-val" id="ctx-risk">—</span></div>
+        </div>
+
+      </div>
+
+      <!-- Bottom: Explanation & Precautions -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+
+        <!-- Explainable AI -->
+        <div class="explain-box"
+          style="margin: 0; background: #f0fdfa; border: 1px solid #ccfbf1; border-left: 4px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+          <div class="explain-head"><i class="fas fa-microchip"></i> <span data-i18n="disease.why_prediction">AI
+              Reasoning Pattern</span></div>
+          <p id="result-explanation">—</p>
+          <div class="top-symptoms-tags" id="result-top-symptoms" style="margin-bottom:var(--space-4)"></div>
+          <div id="personalization-insight-box" style="display:none; padding:12px; background:white; border-radius:8px; border-left:3px solid var(--primary); margin-top:8px;">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--text); margin-bottom:4px;" id="pi-title"><i class="fas fa-user-doctor" style="color:var(--primary)"></i> Personalized Focus</div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;" id="pi-message"></p>
+          </div>
+        </div>
+
+        <!-- Precautions -->
+        <div
+          style="background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+          <h4 class="text-sm font-semibold mb-3"
+            style="display: flex; align-items: center; gap: 8px; color: var(--text);"><i class="fas fa-shield-heart"
+              style="color:var(--success)"></i> <span data-i18n="disease.precautions">Recommended Precautions</span>
+          </h4>
+          <ul class="precautions-list" id="result-precautions"></ul>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           XAI EXPLAINABILITY SECTION
+           ═══════════════════════════════════════════════════════════════════ -->
+
+      <!-- QUICK SUMMARY BANNER (Req #1) -->
+      <div class="xai-quick-summary hidden" id="xai-quick-summary">
+        <div class="xai-quick-icon"><i class="fas fa-lightbulb"></i></div>
+        <p id="xai-plain-explanation"></p>
+      </div>
+
+      <!-- LOW CONFIDENCE WARNING (edge case) -->
+      <div class="low-confidence-warning hidden" id="low-confidence-warning">
+        <div class="lcw-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <p id="low-confidence-warning-text"></p>
+      </div>
+
+      <!-- XAI TABS NAVIGATION -->
+      <div class="xai-tabs hidden" id="xai-tabs">
+        <button class="xai-tab active" data-tab="explanation" onclick="switchXAITab('explanation',this)">
+          <i class="fas fa-brain"></i> AI Explanation
+        </button>
+        <button class="xai-tab" data-tab="contributions" onclick="switchXAITab('contributions',this)">
+          <i class="fas fa-chart-bar"></i> Symptom Impact
+        </button>
+        <button class="xai-tab" data-tab="alternatives" onclick="switchXAITab('alternatives',this)">
+          <i class="fas fa-list-check"></i> Alternatives
+        </button>
+        <button class="xai-tab" data-tab="risk" onclick="switchXAITab('risk',this)">
+          <i class="fas fa-triangle-exclamation"></i> Risk Factors
+        </button>
+      </div>
+
+      <!-- TAB PANEL 1: AI Explanation -->
+      <div class="xai-panel active" id="panel-explanation">
+        <!-- Evidence Strength Meter -->
+        <div class="evidence-strength-card" id="evidence-card">
+          <div class="evidence-strength-header">
+            <span class="evidence-label">Evidence Strength</span>
+            <span class="evidence-value" id="evidence-strength-text">Calculating...</span>
+          </div>
+          <div class="evidence-bar">
+            <div class="evidence-fill" id="evidence-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- XAI Summary Box -->
+        <div class="xai-summary-box">
+          <div class="xai-summary-header">
+            <div class="xai-brain-icon"><i class="fas fa-brain"></i></div>
+            <div>
+              <strong>Why this prediction?</strong>
+              <span>AI Model Reasoning</span>
+            </div>
+          </div>
+          <p class="xai-summary-text" id="xai-summary-text">Generating explanation...</p>
+        </div>
+
+        <!-- Confidence Breakdown Grid -->
+        <div class="confidence-breakdown-grid" id="confidence-breakdown-grid">
+          <div class="conf-metric-card">
+            <div class="conf-metric-value" id="cb-overall">&mdash;</div>
+            <div class="conf-metric-label">Overall Confidence</div>
+          </div>
+          <div class="conf-metric-card">
+            <div class="conf-metric-value" id="cb-symptom">&mdash;</div>
+            <div class="conf-metric-label">Symptom Match</div>
+          </div>
+          <div class="conf-metric-card">
+            <div class="conf-metric-value" id="cb-pattern">&mdash;</div>
+            <div class="conf-metric-label">Pattern Strength</div>
+          </div>
+          <div class="conf-metric-card">
+            <div class="conf-metric-value" id="cb-severity">&mdash;</div>
+            <div class="conf-metric-label">Severity Score</div>
+          </div>
+        </div>
+      </div><!-- end panel-explanation -->
+
+      <!-- TAB PANEL 2: Symptom Impact Chart -->
+      <div class="xai-panel hidden" id="panel-contributions">
+
+        <!-- Top 3 Key Symptoms Summary (Req #3) -->
+        <div class="top-symptoms-summary hidden" id="top-symptoms-summary">
+          <h4><i class="fas fa-star"></i> Key symptoms influencing prediction:</h4>
+          <ul id="top-symptoms-summary-list"></ul>
+        </div>
+
+        <div class="contributions-layout">
+          <div class="chart-container-xai">
+            <canvas id="symptomContributionChart" height="280"></canvas>
+          </div>
+          <div class="contributions-table-wrap">
+            <div class="contributions-table-header">
+              <span>Symptom</span>
+              <span>Severity</span>
+              <span>Impact</span>
+            </div>
+            <div id="contributions-table-body"></div>
+          </div>
+        </div>
+      </div><!-- end panel-contributions -->
+
+      <!-- TAB PANEL 3: Alternatives -->
+      <div class="xai-panel hidden" id="panel-alternatives">
+        <div class="alternatives-intro">
+          <i class="fas fa-circle-info"></i>
+          <p>These are other possible conditions the AI considered based on your symptom pattern.</p>
+        </div>
+        <div class="primary-diagnosis-bar">
+          <span class="primary-label">Primary Prediction</span>
+          <div class="alt-diagnosis-row primary">
+            <div class="alt-disease-name" id="alt-primary-name">&mdash;</div>
+            <div class="alt-bar-container">
+              <div class="alt-bar primary-bar" id="alt-primary-bar" style="width:0%"></div>
+            </div>
+            <div class="alt-pct" id="alt-primary-pct">&mdash;</div>
+          </div>
+        </div>
+        <div class="alternatives-list" id="alternatives-list"></div>
+        <div class="alternatives-note">
+          <i class="fas fa-stethoscope"></i>
+          Only a qualified doctor can confirm the actual diagnosis through proper examination and tests.
+        </div>
+      </div><!-- end panel-alternatives -->
+
+      <!-- TAB PANEL 4: Risk Factors -->
+      <div class="xai-panel hidden" id="panel-risk">
+        <div id="risk-factors-container"></div>
+        <div class="no-risk-msg hidden" id="no-risk-msg">
+          <i class="fas fa-circle-check"></i>
+          <p>No high-risk symptoms detected in your selection. Good sign!</p>
+        </div>
+      </div><!-- end panel-risk -->
+
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- ═══ CONSULT A DOCTOR SECTION ═══════════════════════════════════════════ -->
+<div class="consult-section" id="consult-section">
+
+  <!-- Section Header -->
+  <div class="consult-header">
+    <div class="consult-header-left">
+      <div class="consult-icon-circle"><i class="fas fa-user-doctor"></i></div>
+      <div>
+        <h2 class="consult-title">Consult a Doctor</h2>
+        <p class="consult-subtitle">Get professional medical advice from qualified healthcare providers</p>
+      </div>
+    </div>
+    <div class="consult-header-badge"><i class="fas fa-shield-heart"></i> Professional Medical Care</div>
+  </div>
+
+  <!-- Disclaimer Banner -->
+  <div class="consult-disclaimer">
+    <i class="fas fa-circle-info"></i>
+    <p>AI predictions are <strong>NOT</strong> a substitute for professional medical diagnosis. Always consult a
+      qualified doctor for proper treatment.</p>
+  </div>
+
+  <!-- Hospital Cards Grid -->
+  <div class="consult-cards-grid">
+
+    <!-- Card 1: Jain Global Campus -->
+    <div class="hospital-card" id="card-jain">
+      <div class="hospital-card-header jain-header">
+        <div class="hospital-card-icon"><i class="fas fa-hospital-user"></i></div>
+        <div class="hospital-status-badge"><span class="consult-status-dot"></span> Open Now</div>
+      </div>
+      <div class="hospital-card-body">
+        <div class="hospital-type-tag">Campus Health Centre</div>
+        <h3 class="hospital-name">Jain Global Campus</h3>
+        <p class="hospital-location"><i class="fas fa-location-dot"></i> Jain University Campus, Bengaluru</p>
+        <div class="hospital-divider"></div>
+        <div class="hospital-info-rows">
+          <div class="hospital-info-row">
+            <div class="info-icon-box teal"><i class="fas fa-clock"></i></div>
+            <div class="info-text"><span class="info-label">OPD Timings</span><span class="info-value timing">10:00 AM —
+                5:00 PM</span></div>
+          </div>
+          <div class="hospital-info-row">
+            <div class="info-icon-box green"><i class="fas fa-calendar-days"></i></div>
+            <div class="info-text"><span class="info-label">Available Days</span><span class="info-value">Monday to
+                Saturday</span></div>
+          </div>
+          <div class="hospital-info-row">
+            <div class="info-icon-box amber"><i class="fas fa-house-medical"></i></div>
+            <div class="info-text"><span class="info-label">Location</span><span class="info-value">Himalaya Hostel
+                Block</span></div>
+          </div>
+        </div>
+        <div class="hospital-card-actions">
+          <a href="https://maps.google.com/maps?q=Jain+Global+Campus+Bengaluru" target="_blank"
+            class="btn btn-outline btn-sm hospital-btn"><i class="fas fa-map-location-dot"></i> Directions</a>
+          <button class="btn btn-primary btn-sm hospital-btn" onclick="showHospitalDetails('jain')"><i
+              class="fas fa-circle-info"></i> More Info</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Dayananda Sagar Hospital -->
+    <div class="hospital-card" id="card-dayananda">
+      <div class="hospital-card-header dayananda-header">
+        <div class="hospital-card-icon"><i class="fas fa-hospital"></i></div>
+        <div class="hospital-status-badge"><span class="consult-status-dot"></span> Open Now</div>
+      </div>
+      <div class="hospital-card-body">
+        <div class="hospital-type-tag purple">Multi-Specialty Hospital</div>
+        <h3 class="hospital-name">Dayananda Sagar Hospital</h3>
+        <p class="hospital-location"><i class="fas fa-location-dot"></i> Shavige Malleshwara Hills, Bengaluru — 560078
+        </p>
+        <div class="hospital-divider"></div>
+        <div class="hospital-info-rows">
+          <div class="hospital-info-row">
+            <div class="info-icon-box teal"><i class="fas fa-clock"></i></div>
+            <div class="info-text"><span class="info-label">OPD Timings</span><span class="info-value timing">8:00 AM —
+                8:00 PM</span></div>
+          </div>
+          <div class="hospital-info-row">
+            <div class="info-icon-box green"><i class="fas fa-calendar-days"></i></div>
+            <div class="info-text"><span class="info-label">Available Days</span><span class="info-value">Monday to
+                Sunday</span></div>
+          </div>
+          <div class="hospital-info-row">
+            <div class="info-icon-box blue"><i class="fas fa-stethoscope"></i></div>
+            <div class="info-text"><span class="info-label">Specialities</span><span class="info-value">General ·
+                Cardiology · Ortho · Neuro</span></div>
+          </div>
+        </div>
+        <div class="hospital-card-actions">
+          <a href="https://maps.google.com/maps?q=Dayananda+Sagar+Hospital+Bengaluru" target="_blank"
+            class="btn btn-outline btn-sm hospital-btn"><i class="fas fa-map-location-dot"></i> Directions</a>
+          <button class="btn btn-primary btn-sm hospital-btn" onclick="showHospitalDetails('dayananda')"><i
+              class="fas fa-circle-info"></i> More Info</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Find Nearby Doctors -->
+    <div class="hospital-card" id="card-nearby">
+      <div class="hospital-card-header nearby-header">
+        <div class="hospital-card-icon nearby-icon"><i class="fas fa-location-crosshairs"></i></div>
+        <div class="hospital-status-badge"><span class="consult-live-dot consult-status-dot"></span> Live Search</div>
+      </div>
+      <div class="hospital-card-body">
+        <div class="hospital-type-tag blue">AI-Powered Search</div>
+        <h3 class="hospital-name">Find Nearby Doctors</h3>
+        <p class="hospital-location"><i class="fas fa-satellite-dish"></i> Based on your current location</p>
+        <div class="hospital-divider"></div>
+        <div class="nearby-features-list">
+          <div class="nearby-feature"><i class="fas fa-circle-check"></i> Doctors near your location</div>
+          <div class="nearby-feature"><i class="fas fa-circle-check"></i> Ratings and reviews</div>
+          <div class="nearby-feature"><i class="fas fa-circle-check"></i> Distance and directions</div>
+          <div class="nearby-feature"><i class="fas fa-circle-check"></i> Contact numbers</div>
+          <div class="nearby-feature"><i class="fas fa-circle-check"></i> Specialist filters</div>
+        </div>
+        <div class="hospital-card-actions">
+          <a href="{{ url_for('health.nearby_doctors') }}" class="nearby-main-btn" style="width:100%">
+            <i class="fas fa-location-crosshairs"></i> Find Nearby Doctors
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end consult-cards-grid -->
+
+</div><!-- end consult-section -->
+
+<!-- Hospital Detail Modal -->
+<div id="hospital-modal-overlay" class="modal-overlay hidden" onclick="closeHospitalModal()"></div>
+<div id="hospital-modal" class="hospital-modal hidden">
+  <button class="modal-close-btn" onclick="closeHospitalModal()"><i class="fas fa-xmark"></i></button>
+  <div id="hospital-modal-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: PREDICTION HISTORY
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-8 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-clock-rotate-left"></i> <span data-i18n="disease.prev_predictions">Previous
+        Predictions</span></div>
+    <span class="text-sm text-muted" id="pred-history-count">0 records</span>
+  </div>
+  <div class="card-body" style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th data-i18n="health.date">Date</th>
+          <th data-i18n="disease.symptoms">Symptoms</th>
+          <th data-i18n="disease.prediction">Prediction</th>
+          <th data-i18n="disease.confidence">Confidence</th>
+        </tr>
+      </thead>
+      <tbody id="prediction-history-table">
+        <tr>
+          <td colspan="4" class="empty-state"><i class="fas fa-clock"></i>No previous predictions yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+  /* ─── Hospital Modal & Status ──────────────────────────────────────────────── */
+  (function () {
+    'use strict';
+
+    function updateHospitalStatus() {
+      var now = new Date();
+      var mins = now.getHours() * 60 + now.getMinutes();
+      // Jain: 10:00(600) – 17:00(1020) Mon–Sat (getDay 1-6)
+      var day = now.getDay();
+      var jainOpen = (day >= 1 && day <= 6) && (mins >= 600 && mins <= 1020);
+      // Dayananda: 8:00(480) – 20:00(1200) every day
+      var dayanandaOpen = (mins >= 480 && mins <= 1200);
+
+      function setStatus(cardId, isOpen) {
+        var card = document.getElementById(cardId);
+        if (!card) return;
+        var badge = card.querySelector('.hospital-status-badge');
+        if (!badge) return;
+        if (isOpen) {
+          badge.innerHTML = '<span class="consult-status-dot"></span> Open Now';
+          badge.style.background = 'rgba(255,255,255,0.2)';
+        } else {
+          badge.innerHTML = '<span class="consult-status-dot" style="background:#f87171"></span> Closed';
+          badge.style.background = 'rgba(0,0,0,0.25)';
+        }
+      }
+      setStatus('card-jain', jainOpen);
+      setStatus('card-dayananda', dayanandaOpen);
+    };
+
+    /* ─── Hospital Detail Modal ─────────────────────────────────────────────── */
+    var HOSPITAL_DATA = {
+      jain: {
+        name: 'Jain Global Campus Health Centre',
+        badge: 'Campus Healthcare',
+        address: 'Himalaya Hostel Block, Jain Global Campus, Bengaluru',
+        timing: '10:00 AM — 5:00 PM',
+        days: 'Monday to Saturday',
+        specialities: ['General Medicine', 'First Aid', 'Health Checkup'],
+        phone: null,
+        headerGradient: 'linear-gradient(135deg,#0a7a6b 0%,#12a090 100%)',
+        icon: 'fa-hospital-user',
+        mapQuery: 'Jain+Global+Campus+Bengaluru',
+        note: 'For students and staff of Jain University campus.'
+      },
+      dayananda: {
+        name: 'Dayananda Sagar Hospital',
+        badge: 'Multi-Specialty',
+        address: 'Shavige Malleshwara Hills, Bengaluru — 560078',
+        timing: '8:00 AM — 8:00 PM',
+        days: 'Monday to Sunday (7 days)',
+        specialities: ['General Medicine', 'Cardiology', 'Orthopaedics', 'Neurology', 'Gynaecology', 'Paediatrics', 'ENT', 'Dermatology'],
+        phone: '080-2272 1000',
+        headerGradient: 'linear-gradient(135deg,#1e40af 0%,#3b82f6 100%)',
+        icon: 'fa-hospital',
+        mapQuery: 'Dayananda+Sagar+Hospital+Bengaluru',
+        note: 'Extended hours OPD available including weekends.'
+      }
+    };
+
+    window.showHospitalDetails = function (id) {
+      var h = HOSPITAL_DATA[id];
+      if (!h) return;
+      var specsHtml = h.specialities.map(function (s) {
+        return '<span style="display:inline-block;background:#e6f7f5;color:#0a7a6b;border-radius:999px;padding:3px 10px;font-size:0.78rem;font-weight:600;margin:3px 2px;border:1px solid #d1e8e5">' + s + '</span>';
+      }).join('');
+      var phoneHtml = h.phone ? '<div style="background:#eff6ff;border-radius:0.875rem;padding:0.875rem;border:1px solid #bfdbfe;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem"><i class="fas fa-phone" style="color:#2563eb;font-size:1.1rem"></i><div><div style="font-size:0.7rem;color:#6b8e89;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">Phone</div><a href="tel:' + h.phone + '" style="font-size:1rem;font-weight:700;color:#2563eb;text-decoration:none">' + h.phone + '</a></div></div>' : '';
+
+      document.getElementById('hospital-modal-content').innerHTML =
+        '<div style="background:' + h.headerGradient + ';padding:2rem;border-radius:1.5rem 1.5rem 0 0;position:relative">' +
+        '<div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:0.875rem;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:white;margin-bottom:1rem"><i class="fas ' + h.icon + '"></i></div>' +
+        '<div style="display:inline-block;background:rgba(255,255,255,0.2);color:white;border-radius:999px;padding:3px 12px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.75rem">' + h.badge + '</div>' +
+        '<h2 style="font-family:Plus Jakarta Sans,sans-serif;font-size:1.4rem;font-weight:800;color:white;margin:0 0 0.4rem">' + h.name + '</h2>' +
+        '<p style="color:rgba(255,255,255,0.8);font-size:0.875rem;margin:0;display:flex;align-items:center;gap:0.4rem"><i class="fas fa-location-dot"></i>' + h.address + '</p>' +
+        '</div>' +
+        '<div style="padding:1.5rem">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:1.25rem">' +
+        '<div style="background:#f4f9f8;border-radius:0.875rem;padding:0.875rem;border:1px solid #d1e8e5"><div style="font-size:0.7rem;color:#6b8e89;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem"><i class="fas fa-clock" style="color:#0a7a6b;margin-right:4px"></i>OPD Timings</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-size:1rem;font-weight:800;color:#0a7a6b">' + h.timing + '</div></div>' +
+        '<div style="background:#f4f9f8;border-radius:0.875rem;padding:0.875rem;border:1px solid #d1e8e5"><div style="font-size:0.7rem;color:#6b8e89;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem"><i class="fas fa-calendar" style="color:#10B981;margin-right:4px"></i>Days Open</div><div style="font-size:0.9rem;font-weight:700;color:#0d1f1c">' + h.days + '</div></div>' +
+        '</div>' +
+        phoneHtml +
+        '<div style="margin-bottom:1.25rem"><div style="font-size:0.75rem;font-weight:700;color:#6b8e89;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.6rem">Specialities Available</div><div>' + specsHtml + '</div></div>' +
+        '<div style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:0.5rem;padding:0.75rem 1rem;font-size:0.82rem;color:#92400e;margin-bottom:1.25rem"><i class="fas fa-info-circle" style="color:#f59e0b;margin-right:6px"></i>' + h.note + '</div>' +
+        '<div style="display:flex;gap:0.75rem">' +
+        '<a href="https://maps.google.com/maps?q=' + h.mapQuery + '" target="_blank" class="btn btn-outline" style="flex:1;justify-content:center;gap:0.5rem"><i class="fas fa-map-location-dot"></i> Get Directions</a>' +
+        '<button onclick="closeHospitalModal()" class="btn btn-secondary" style="flex:1;justify-content:center;gap:0.5rem"><i class="fas fa-xmark"></i> Close</button>' +
+        '</div>' +
+        '</div>';
+
+      document.getElementById('hospital-modal').classList.remove('hidden');
+      document.getElementById('hospital-modal-overlay').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.closeHospitalModal = function () {
+      document.getElementById('hospital-modal').classList.add('hidden');
+      document.getElementById('hospital-modal-overlay').classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') window.closeHospitalModal();
+    });
+
+    /* Run status check on load */
+    updateHospitalStatus();
+
+  })();
+
+  /* ─── Symptom Prediction App ───────────────────────────────────────────────── */
+  (function () {
+    'use strict';
+
+    /* ─── 1. Symptom Data ──────────────────────────────────────────────────── */
+    var SYMPTOMS = {
+      general: ['fever', 'fatigue', 'weight_loss', 'weight_gain', 'lethargy', 'malaise', 'chills', 'sweating', 'dehydration', 'loss_of_appetite', 'high_fever', 'mild_fever'],
+      respiratory: ['cough', 'breathlessness', 'chest_pain', 'wheezing', 'phlegm', 'mucoid_sputum', 'throat_irritation', 'runny_nose', 'congestion', 'sinus_pressure'],
+      digestive: ['nausea', 'vomiting', 'diarrhoea', 'constipation', 'stomach_pain', 'acidity', 'indigestion', 'loss_of_balance', 'abdominal_pain', 'belly_pain', 'stomach_bleeding', 'distention_of_abdomen'],
+      neurological: ['headache', 'dizziness', 'weakness_in_limbs', 'altered_sensorium', 'lack_of_concentration', 'unsteadiness', 'spinning_movements', 'loss_of_smell', 'slurred_speech', 'visual_disturbances'],
+      skin: ['itching', 'skin_rash', 'nodal_skin_eruptions', 'dischromic_patches', 'skin_peeling', 'silver_like_dusting', 'blister', 'red_sore_around_nose', 'yellow_crust_ooze', 'pus_filled_pimples'],
+      musculoskeletal: ['joint_pain', 'muscle_weakness', 'back_pain', 'neck_pain', 'knee_pain', 'hip_joint_pain', 'muscle_wasting', 'painful_walking'],
+      psychological: ['anxiety', 'depression', 'irritability', 'mood_swings', 'restlessness', 'excessive_hunger']
+    };
+
+    var allSymptoms = [];
+    Object.keys(SYMPTOMS).forEach(function (cat) {
+      SYMPTOMS[cat].forEach(function (s) { if (allSymptoms.indexOf(s) === -1) allSymptoms.push(s); });
+    });
+    SYMPTOMS.all = allSymptoms;
+
+    var selectedSymptoms = new Set();
+    var currentResult = null;
+
+    function prettyName(s) { return s.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+
+    /* ─── Render symptoms grid ─────────────────────────────────────────────── */
+    function renderSymptoms(category) {
+      var grid = document.getElementById('symptoms-grid');
+      grid.innerHTML = '';
+      var list = category === 'all' ? SYMPTOMS.all : (SYMPTOMS[category] || []);
+      list.forEach(function (s) {
+        var cat = 'all';
+        Object.keys(SYMPTOMS).forEach(function (c) { if (c !== 'all' && SYMPTOMS[c].indexOf(s) !== -1) cat = c; });
+        var div = document.createElement('div');
+        div.className = 'symptom-tag' + (selectedSymptoms.has(s) ? ' selected' : '');
+        div.dataset.symptom = s;
+        div.dataset.category = cat;
+        div.textContent = prettyName(s);
+        div.addEventListener('click', function () { toggleSymptom(this); });
+        grid.appendChild(div);
+      });
+    }
+
+    /* ─── 2. Toggle Symptom ────────────────────────────────────────────────── */
+    function toggleSymptom(el) {
+      var s = el.dataset.symptom;
+      if (selectedSymptoms.has(s)) {
+        selectedSymptoms.delete(s);
+        el.classList.remove('selected');
+      } else {
+        selectedSymptoms.add(s);
+        el.classList.add('selected');
+      }
+      updateSelectedBar();
+      updateAnalyzeBtn();
+      updateCounter();
+    }
+
+    /* ─── 3. Update Selected Bar ───────────────────────────────────────────── */
+    function updateSelectedBar() {
+      var container = document.getElementById('selected-tags-container');
+      container.innerHTML = '';
+      selectedSymptoms.forEach(function (s) {
+        var tag = document.createElement('span');
+        tag.className = 'sel-tag';
+        tag.innerHTML = prettyName(s) + ' <span class="x" data-symptom="' + s + '">&times;</span>';
+        tag.querySelector('.x').addEventListener('click', function () {
+          selectedSymptoms.delete(s);
+          var gridTag = document.querySelector('.symptom-tag[data-symptom="' + s + '"]');
+          if (gridTag) gridTag.classList.remove('selected');
+          updateSelectedBar();
+          updateAnalyzeBtn();
+          updateCounter();
+        });
+        container.appendChild(tag);
+      });
+    }
+
+    function updateCounter() {
+      var n = selectedSymptoms.size;
+      document.getElementById('symptom-count-label').textContent = n + ' symptom' + (n !== 1 ? 's' : '') + ' selected';
+    }
+
+    /* ─── 4. Filter by Category ────────────────────────────────────────────── */
+    document.getElementById('category-tabs').addEventListener('click', function (e) {
+      var tab = e.target.closest('.category-tab');
+      if (!tab) return;
+      document.querySelectorAll('.category-tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      renderSymptoms(tab.dataset.category);
+      document.getElementById('symptom-search').value = '';
+    });
+
+    /* ─── 5. Symptom Search ────────────────────────────────────────────────── */
+    document.getElementById('symptom-search').addEventListener('input', function () {
+      var q = this.value.toLowerCase();
+      document.querySelectorAll('.symptom-tag').forEach(function (tag) {
+        tag.classList.toggle('hidden', q.length > 0 && tag.textContent.toLowerCase().indexOf(q) === -1);
+      });
+    });
+
+    /* ─── 6. Clear All ─────────────────────────────────────────────────────── */
+    document.getElementById('clear-symptoms-btn').addEventListener('click', function () {
+      selectedSymptoms.clear();
+      document.querySelectorAll('.symptom-tag.selected').forEach(function (t) { t.classList.remove('selected'); });
+      updateSelectedBar();
+      updateAnalyzeBtn();
+      updateCounter();
+    });
+
+    /* ─── 7. Update Analyze Button ─────────────────────────────────────────── */
+    function updateAnalyzeBtn() {
+      var btn = document.getElementById('analyze-btn');
+      if (selectedSymptoms.size === 0) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Select symptoms first';
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Run AI Analysis (' + selectedSymptoms.size + ' symptoms)';
+      }
+    }
+
+    /* ─── 8. Run Prediction ────────────────────────────────────────────────── */
+    document.getElementById('analyze-btn').addEventListener('click', function () {
+      if (selectedSymptoms.size === 0) return;
+      var btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+      var body = {};
+      selectedSymptoms.forEach(function (s) { body[s] = true; });
+
+      fetch('/api/v1/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          btn.disabled = false;
+          updateAnalyzeBtn();
+          if (data.error) {
+            showToast(data.error, 'error');
+            return;
+          }
+          currentResult = data;
+          showResult(data);
+        })
+        .catch(function () {
+          btn.disabled = false;
+          updateAnalyzeBtn();
+          showToast(t('Prediction failed. Please try again.'), 'error');
+        });
+    });
+
+    function showResult(data) {
+      var sec = document.getElementById('result-section');
+      sec.classList.add('show');
+
+      /* Disease, model name, & description */
+      document.getElementById('result-disease').textContent = data.predicted_disease || '—';
+      var mName = data.model_name || 'LightGBM';
+      document.getElementById('result-model-name').innerHTML = '<i class="fas fa-microchip"></i> Powered by ' + mName;
+      document.getElementById('result-description').textContent = data.description || '';
+
+      /* Confidence — rescale raw ML probability for user-friendly display */
+      var rawConf = data.confidence || 0;
+      var confPct;
+
+      // Use top_3_predictions to compute dominance-based confidence
+      if (data.top_3_predictions && data.top_3_predictions.length >= 2) {
+        var p1 = data.top_3_predictions[0].probability;
+        var p2 = data.top_3_predictions[1].probability;
+        var dominance = (p1 + p2 > 0) ? p1 / (p1 + p2) : 0.5;
+        var nSymptoms = selectedSymptoms.size || 3;
+        var symptomFactor = Math.min(nSymptoms / 8.0, 1.0);
+        var base = 0.10 + dominance * 0.70;
+        var boosted = base + symptomFactor * 0.15;
+        var rawBonus = Math.min(p1 * 0.5, 0.15);
+        var scaled = boosted + rawBonus;
+        confPct = Math.round(Math.max(40, Math.min(95, scaled * 100)));
+      } else if (rawConf > 0.35) {
+        // Backend already sent a decent confidence
+        confPct = Math.round(rawConf * 100);
+      } else {
+        // Fallback simple rescaling
+        confPct = Math.round(Math.max(40, Math.min(95, (0.40 + rawConf * 0.58) * 100)));
+      }
+
+      document.getElementById('result-confidence').textContent = confPct + '%';
+      var fill = document.getElementById('confidence-fill');
+      fill.style.width = confPct + '%';
+      fill.className = 'confidence-fill ' + (confPct >= 80 ? 'high' : (confPct >= 50 ? 'medium' : 'low'));
+
+      /* Risk level */
+      var riskLvl, riskCls, riskExplain;
+      if (confPct >= 80) { riskLvl = 'High'; riskCls = 'high'; riskExplain = 'High confidence match — consult a doctor promptly.'; }
+      else if (confPct >= 50) { riskLvl = 'Moderate'; riskCls = 'medium'; riskExplain = 'Moderate match — monitor symptoms and seek advice if they persist.'; }
+      else { riskLvl = 'Low'; riskCls = 'low'; riskExplain = 'Low confidence — symptoms may overlap with many conditions.'; }
+      var rlEl = document.getElementById('result-risk-level');
+      rlEl.textContent = riskLvl;
+      rlEl.className = 'risk-badge ' + riskCls;
+      document.getElementById('result-risk-explain').textContent = riskExplain;
+
+      /* Explanation */
+      var sympNames = [];
+      selectedSymptoms.forEach(function (s) { sympNames.push(prettyName(s)); });
+      document.getElementById('result-explanation').textContent =
+        'Based on your symptoms (' + sympNames.join(', ') + '), the system identified patterns commonly associated with ' + data.predicted_disease + '.';
+
+      /* Top symptoms badges */
+      var tsContainer = document.getElementById('result-top-symptoms');
+      tsContainer.innerHTML = '';
+      (data.top_symptoms || []).forEach(function (ts) {
+        tsContainer.insertAdjacentHTML('beforeend', '<span class="ts-tag">' + ts.symptom + '</span>');
+      });
+
+      /* Precautions */
+      var precList = document.getElementById('result-precautions');
+      precList.innerHTML = '';
+      (data.precautions || []).forEach(function (p) {
+        precList.insertAdjacentHTML('beforeend', '<li><i class="fas fa-circle-check"></i><span>' + p + '</span></li>');
+      });
+
+      /* Load health context */
+      loadHealthContext();
+
+      /* Load prediction history */
+      loadPredictionHistory();
+
+      /* Render XAI explainability section */
+      renderXAI(data);
+      
+      /* Render Personalized Insight */
+      var piBox = document.getElementById('personalization-insight-box');
+      if (data.xai && data.xai.personalization_insight) {
+        var piData = data.xai.personalization_insight;
+        var pLevel = piData.level || 'Info';
+        var bColor = '#0a7a6b';
+        if (pLevel === 'High') { bColor = 'var(--danger)'; }
+        else if (pLevel === 'Medium') { bColor = 'var(--warning)'; }
+        
+        piBox.style.borderLeftColor = bColor;
+        document.getElementById('pi-title').innerHTML = '<i class="fas fa-hand-holding-medical" style="color:'+bColor+'"></i> Personalized Insight';
+        document.getElementById('pi-message').textContent = piData.message;
+        piBox.style.display = 'block';
+      } else {
+        piBox.style.display = 'none';
+      }
+
+      /* Show Consult a Doctor section */
+      var consultSec = document.getElementById('consult-section');
+      if (consultSec) {
+        consultSec.classList.add('show');
+      }
+
+      /* Scroll to result */
+      sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+
+    /* ─── 10. New Analysis ─────────────────────────────────────────────────── */
+    document.getElementById('new-analysis-btn').addEventListener('click', function () {
+      document.getElementById('result-section').classList.remove('show');
+      var consultSec = document.getElementById('consult-section');
+      if (consultSec) consultSec.classList.remove('show');
+      selectedSymptoms.clear();
+      document.querySelectorAll('.symptom-tag.selected').forEach(function (t) { t.classList.remove('selected'); });
+      updateSelectedBar();
+      updateAnalyzeBtn();
+      updateCounter();
+      document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* ─── 11. Load Prediction History ──────────────────────────────────────── */
+    function loadPredictionHistory() {
+      fetch('/api/v1/predict/history')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var tbody = document.getElementById('prediction-history-table');
+          var preds = d.predictions || [];
+          document.getElementById('pred-history-count').textContent = preds.length + ' record' + (preds.length !== 1 ? 's' : '');
+          if (preds.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><i class="fas fa-clock"></i>No previous predictions yet.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = '';
+          preds.slice(0, 5).forEach(function (p) {
+            var date = p.predicted_at ? p.predicted_at.split(' ')[0] : '—';
+            var syms = Array.isArray(p.symptoms) ? p.symptoms.map(prettyName).join(', ') : p.symptoms;
+            var conf = p.confidence_score != null ? Math.round(p.confidence_score * 100) + '%' : '—';
+            tbody.insertAdjacentHTML('beforeend',
+              '<tr><td>' + date + '</td><td style="max-width:260px;white-space:normal">' + syms + '</td><td><strong>' + p.predicted_disease + '</strong></td><td>' + conf + '</td></tr>'
+            );
+          });
+        })
+        .catch(function () { });
+    }
+
+    /* ─── 12. Load Health Context ──────────────────────────────────────────── */
+    function loadHealthContext() {
+      fetch('/api/v1/health/summary')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          document.getElementById('ctx-sleep').textContent = (d.sleep || '—') + 'h';
+          document.getElementById('ctx-steps').textContent = (d.steps || 0).toLocaleString();
+        }).catch(function () { });
+      fetch('/api/v1/health/risk-score')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var score = d.score >= 0 ? d.score + '/100' : '—';
+          document.getElementById('ctx-risk').textContent = score;
+        }).catch(function () { });
+    }
+
+    /* ─── Init ─────────────────────────────────────────────────────────────── */
+    renderSymptoms('all');
+    updateAnalyzeBtn();
+    loadPredictionHistory();
+
+  })();
+
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     XAI ENGINE -- FRONTEND  (v2.0 Enhanced)
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var xaiData = null;
+  var contributionChart = null;
+
+  /* ── Tab Switcher ──────────────────────────────────────── */
+  window.switchXAITab = function(tabName, el) {
+    document.querySelectorAll('.xai-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.xai-panel').forEach(function(p) {
+      p.classList.add('hidden');
+      p.classList.remove('active');
+    });
+    el.classList.add('active');
+    var panel = document.getElementById('panel-' + tabName);
+    if (panel) {
+      panel.classList.remove('hidden');
+      panel.classList.add('active');
+      if (tabName === 'contributions' && xaiData) {
+        renderContributionChart(xaiData);
+      }
+    }
+  };
+
+  /* ── Main: Render XAI from result ──────────────────────── */
+  function renderXAI(result) {
+    if (!result || !result.xai) return;
+    xaiData = result.xai;
+
+    /* Show quick summary banner (Req #1) */
+    var qsBanner = document.getElementById('xai-quick-summary');
+    var qsText = document.getElementById('xai-plain-explanation');
+    if (qsBanner && qsText) {
+      var plainText = result.plain_explanation || xaiData.plain_explanation || '';
+      if (plainText) {
+        qsText.textContent = plainText;
+        qsBanner.classList.remove('hidden');
+      }
+    }
+
+    /* Show confidence label badge (Req #3) */
+    var clBadge = document.getElementById('confidence-label-badge');
+    if (clBadge) {
+      var cLabel = result.confidence_label || xaiData.confidence_label || 'Medium';
+      var cColor = result.confidence_color || xaiData.confidence_color || '#d97706';
+      clBadge.textContent = cLabel + ' Confidence';
+      clBadge.style.display = 'inline-block';
+      clBadge.style.background = cColor + '18';
+      clBadge.style.color = cColor;
+      clBadge.style.borderColor = cColor + '44';
+    }
+
+    /* Show confidence explanation (Req #2) */
+    var ceText = document.getElementById('confidence-explanation-text');
+    if (ceText) {
+      var explanation = result.confidence_explanation || xaiData.confidence_explanation || '';
+      if (explanation) {
+        ceText.textContent = explanation;
+        ceText.style.display = 'block';
+      }
+    }
+
+    /* Show low confidence warning (edge case) */
+    var lcwBanner = document.getElementById('low-confidence-warning');
+    var lcwText = document.getElementById('low-confidence-warning-text');
+    if (lcwBanner && lcwText && result.low_confidence_warning) {
+      lcwText.textContent = result.low_confidence_warning;
+      lcwBanner.classList.remove('hidden');
+    } else if (lcwBanner) {
+      lcwBanner.classList.add('hidden');
+    }
+
+    renderExplanationPanel(xaiData);
+    renderTopSymptomsSummary(xaiData);
+    renderContributionsTable(xaiData);
+    renderAlternatives(result, xaiData);
+    renderRiskFactors(xaiData);
+
+    // Show XAI tabs
+    var tabs = document.getElementById('xai-tabs');
+    if (tabs) tabs.classList.remove('hidden');
+  }
+
+  /* ── Panel 1: Explanation ──────────────────────────────── */
+  function renderExplanationPanel(xai) {
+    /* Use actual backend pct if available, else fallback map */
+    var strengthPct = xai.evidence_strength_pct;
+    if (strengthPct === undefined || strengthPct === null) {
+      var strengthMap = {
+        'Very Strong': 95, 'Strong': 78, 'Moderate': 60, 'Weak': 38, 'Very Weak': 20
+      };
+      strengthPct = strengthMap[xai.evidence_strength] || 60;
+    }
+
+    var esText = document.getElementById('evidence-strength-text');
+    if (esText) esText.textContent = xai.evidence_strength + ' (' + Math.round(strengthPct) + '%)';
+
+    setTimeout(function() {
+      var eFill = document.getElementById('evidence-fill');
+      if (eFill) eFill.style.width = strengthPct + '%';
+    }, 300);
+
+    var sumText = document.getElementById('xai-summary-text');
+    if (sumText) sumText.textContent = xai.xai_summary || 'Prediction complete.';
+
+    var cb = xai.confidence_breakdown;
+    if (cb) {
+      var cbO = document.getElementById('cb-overall');
+      var cbS = document.getElementById('cb-symptom');
+      var cbP = document.getElementById('cb-pattern');
+      var cbV = document.getElementById('cb-severity');
+      if (cbO) cbO.textContent = (cb.overall || '--') + '%';
+      if (cbS) cbS.textContent = (cb.symptom_match || '--') + '%';
+      if (cbP) cbP.textContent = (cb.pattern_strength || '--') + '%';
+      if (cbV) cbV.textContent = (cb.severity_alignment || '--') + '%';
+    }
+  }
+
+  /* ── Top 3 Key Symptoms Summary (Req #3) ──────────────── */
+  function renderTopSymptomsSummary(xai) {
+    var t3 = xai.top_3_key_symptoms || [];
+    var container = document.getElementById('top-symptoms-summary');
+    var list = document.getElementById('top-symptoms-summary-list');
+    if (!container || !list) return;
+
+    if (t3.length === 0) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    list.innerHTML = t3.map(function(s) {
+      return '<li>' +
+        '<span class="tss-name">' + s.name + '</span>' +
+        '<span class="severity-pill ' + s.severity_label.toLowerCase() + '">' + s.severity_label + '</span>' +
+        '<span class="tss-pct">' + s.contribution_pct + '%</span>' +
+      '</li>';
+    }).join('');
+    container.classList.remove('hidden');
+  }
+
+  /* ── Panel 2: Contributions Table (enhanced with bars + tooltips) ── */
+  function renderContributionsTable(xai) {
+    var fc = xai.feature_contributions || [];
+    var body = document.getElementById('contributions-table-body');
+    if (!body) return;
+
+    if (fc.length === 0) {
+      body.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">No data</div>';
+      return;
+    }
+
+    var isTop = true;
+    body.innerHTML = fc.map(function(f, idx) {
+      var topMark = (idx === 0) ? ' <span class="top-contributor-mark" title="Highest contributing symptom"><i class="fas fa-arrow-up"></i></span>' : '';
+      var normBar = '<div class="contrib-norm-bar"><div class="contrib-norm-fill" style="width:' + (f.normalized_score || f.contribution_pct) + '%;background:' + _severityColor(f.severity_label) + '"></div></div>';
+      return '<div class="contribution-row' + (idx === 0 ? ' top-row' : '') + '" title="Severity: ' + f.severity_score + '/7 | Contribution: ' + f.contribution_pct + '% | Normalized: ' + (f.normalized_score || '--') + '%">' +
+        '<span class="contrib-sym-name">' + f.display_name + topMark + '</span>' +
+        '<span class="severity-pill ' + f.severity_label.toLowerCase() + '">' + f.severity_label + '</span>' +
+        '<span class="contrib-pct">' + f.contribution_pct + '%' + normBar + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  function _severityColor(label) {
+    return {'Critical':'#F43F5E','High':'#F97316','Moderate':'#F59E0B','Low':'#10B981'}[label] || '#0a7a6b';
+  }
+
+  /* ── Panel 2: Contribution Chart (enhanced tooltips) ──── */
+  function renderContributionChart(xai) {
+    var fc = xai.feature_contributions || [];
+    if (fc.length === 0) return;
+
+    var canvas = document.getElementById('symptomContributionChart');
+    if (!canvas) return;
+
+    if (contributionChart) contributionChart.destroy();
+
+    var labels = fc.map(function(f) { return f.display_name; });
+    var data = fc.map(function(f) { return f.severity_score; });
+    var pcts = fc.map(function(f) { return f.contribution_pct; });
+    var norms = fc.map(function(f) { return f.normalized_score || 0; });
+
+    var colorMap = { 'Critical': '#F43F5E', 'High': '#F97316', 'Moderate': '#F59E0B', 'Low': '#10B981' };
+    var colors = fc.map(function(f) { return colorMap[f.severity_label] || '#0a7a6b'; });
+
+    contributionChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Severity Score',
+          data: data,
+          backgroundColor: colors.map(function(c) { return c + '33'; }),
+          borderColor: colors,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(30,41,59,0.95)',
+            titleFont: { weight: '700' },
+            bodyFont: { size: 13 },
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              title: function(items) { return items[0].label; },
+              label: function(ctx) {
+                var i = ctx.dataIndex;
+                return [
+                  'Severity: ' + ctx.raw + '/7',
+                  'Contribution: ' + pcts[i] + '%',
+                  'Normalized: ' + norms[i] + '%'
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 7,
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: {
+              callback: function(v) { return v + '/7'; },
+              color: '#6b8e89'
+            }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#3d5c57', font: { weight: '600' } }
+          }
+        }
+      }
+    });
+  }
+
+  /* ── Panel 3: Alternatives (enhanced with reasoning) ──── */
+  function renderAlternatives(result, xai) {
+    var alts = xai.alternative_diagnoses || [];
+
+    var pName = document.getElementById('alt-primary-name');
+    var pPct = document.getElementById('alt-primary-pct');
+    if (pName) pName.textContent = result.predicted_disease || '--';
+
+    var displayConf = (xai.confidence_breakdown && xai.confidence_breakdown.overall) || 0;
+    if (pPct) pPct.textContent = displayConf + '%';
+    setTimeout(function() {
+      var pBar = document.getElementById('alt-primary-bar');
+      if (pBar) pBar.style.width = displayConf + '%';
+    }, 400);
+
+    var list = document.getElementById('alternatives-list');
+    if (!list) return;
+
+    if (alts.length === 0) {
+      list.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;padding:0.5rem 0;">No significant alternatives detected.</p>';
+      return;
+    }
+
+    var altColors = ['#0a7a6b', '#2563eb', '#7c3aed'];
+    list.innerHTML = alts.map(function(alt, i) {
+      var confBadge = alt.confidence
+        ? '<span class="alt-conf-badge" style="color:' + (alt.confidence_color || altColors[i]) + ';background:' + (alt.confidence_color || altColors[i]) + '15">' + alt.confidence + '</span>'
+        : '';
+      return '<div class="alt-diagnosis-row">' +
+        '<div class="alt-disease-name">' + alt.disease + confBadge +
+          '<div class="alt-reason-text">' + alt.reason + '</div>' +
+        '</div>' +
+        '<div class="alt-bar-container">' +
+          '<div class="alt-bar" id="alt-bar-' + i + '" style="width:0%;background:' + (altColors[i] || '#6b8e89') + ';"></div>' +
+        '</div>' +
+        '<div class="alt-pct" style="color:' + (altColors[i] || '#6b8e89') + '">' + alt.probability + '%</div>' +
+      '</div>';
+    }).join('');
+
+    setTimeout(function() {
+      alts.forEach(function(alt, i) {
+        var bar = document.getElementById('alt-bar-' + i);
+        if (bar) bar.style.width = alt.probability + '%';
+      });
+    }, 200);
+  }
+
+  /* ── Panel 4: Risk Factors (enhanced with detail) ──────── */
+  function renderRiskFactors(xai) {
+    var rf = xai.risk_factors || [];
+    var container = document.getElementById('risk-factors-container');
+    var noRisk = document.getElementById('no-risk-msg');
+
+    if (!container) return;
+
+    if (rf.length === 0) {
+      container.innerHTML = '';
+      if (noRisk) noRisk.classList.remove('hidden');
+      return;
+    }
+
+    if (noRisk) noRisk.classList.add('hidden');
+
+    container.innerHTML = rf.map(function(r) {
+      var detailHtml = r.detail ? '<div class="risk-detail">' + r.detail + '</div>' : '';
+      var urgencyDots = '';
+      if (r.urgency) {
+        var filled = Math.min(Math.round(r.urgency / 2), 5);
+        for (var d = 0; d < 5; d++) {
+          urgencyDots += '<span class="urgency-dot' + (d < filled ? ' filled' : '') + '"></span>';
+        }
+        urgencyDots = '<div class="urgency-meter" title="Urgency: ' + r.urgency + '/10">' + urgencyDots + '</div>';
+      }
+      return '<div class="risk-factor-card ' + r.level + '">' +
+        '<div class="risk-icon-circle"><i class="fas ' + r.icon + '"></i></div>' +
+        '<div style="flex:1">' +
+          '<div class="risk-symptom-display">' + r.display + '</div>' +
+          '<div class="risk-message">' + r.message + '</div>' +
+          detailHtml +
+          urgencyDots +
+        '</div>' +
+        '<div class="risk-level-badge">' + r.level + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+</script>
+{% endblock %}

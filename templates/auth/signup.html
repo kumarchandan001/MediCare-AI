@@ -1,0 +1,346 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Sign Up — MediCare AI{% endblock %}
+{% block body %}
+<div class="auth-page">
+
+  <!-- Brand Panel -->
+  <div class="auth-brand-panel">
+    <div class="auth-brand-content">
+      <div class="auth-brand-logo">
+        <div class="auth-brand-logo-icon">🏥</div>
+        <h1>MediCare AI</h1>
+      </div>
+      <h2 class="auth-brand-headline">Your health journey starts here</h2>
+      <p class="auth-brand-sub">
+        Join thousands managing their health with AI-powered insights,
+        disease prediction, and personalised guidance.
+      </p>
+      <div class="auth-feature-list">
+        <div class="auth-feature-item"><div class="auth-feat-icon">🧠</div><span>AI Disease Prediction with XAI</span></div>
+        <div class="auth-feature-item"><div class="auth-feat-icon">📊</div><span>Real-time Health Analytics</span></div>
+        <div class="auth-feature-item"><div class="auth-feat-icon">💬</div><span>Gemini AI Health Chatbot</span></div>
+        <div class="auth-feature-item"><div class="auth-feat-icon">🌐</div><span>English, Tamil &amp; Hindi Support</span></div>
+        <div class="auth-feature-item"><div class="auth-feat-icon">🚨</div><span>Emergency SOS System</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Panel -->
+  <div class="auth-form-panel">
+    <div class="auth-form-box">
+
+      <!-- Mobile Logo (visible only on small screens) -->
+      <div class="mobile-brand">
+        <div class="mobile-brand-icon">🏥</div>
+        <span>MediCare AI</span>
+      </div>
+
+      <!-- Header -->
+      <div class="auth-form-header" style="text-align:center;">
+        <div class="signup-avatar">
+          <i class="fas fa-user-plus"></i>
+        </div>
+        <h2>Create your account</h2>
+        <p>Start your personalised health journey today</p>
+      </div>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="flash-msg {{ cat }}"><span>{{ msg }}</span></div>
+        {% endfor %}
+      {% endwith %}
+
+      {% if errors and errors.general %}
+      <div class="flash-msg error"><i class="fas fa-circle-xmark"></i> {{ errors.general }}</div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('auth.signup') }}" id="signup-form" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Two-column: Username + Email -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <div class="input-group">
+              <i class="fas fa-user input-icon"></i>
+              <input type="text" name="username" class="form-control {% if errors and errors.username %}error{% endif %}"
+                placeholder="Choose a username"
+                value="{{ form_data.username if form_data else '' }}"
+                maxlength="50" autocomplete="username" autofocus required>
+            </div>
+            {% if errors and errors.username %}
+            <div class="form-error"><i class="fas fa-circle-xmark"></i> {{ errors.username }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <div class="input-group">
+              <i class="fas fa-envelope input-icon"></i>
+              <input type="email" name="email" class="form-control {% if errors and errors.email %}error{% endif %}"
+                placeholder="you@example.com"
+                value="{{ form_data.email if form_data else '' }}"
+                autocomplete="email" required>
+            </div>
+            {% if errors and errors.email %}
+            <div class="form-error"><i class="fas fa-circle-xmark"></i> {{ errors.email }}</div>
+            {% endif %}
+            <div class="form-hint"><i class="fas fa-info-circle"></i> OTP will be sent here for verification</div>
+          </div>
+        </div>
+
+        <!-- Mobile Number (full width) -->
+        <div class="form-group">
+          <label class="form-label">Mobile Number</label>
+          <div class="input-group">
+            <i class="fas fa-phone input-icon"></i>
+            <input type="tel" name="phone" class="form-control {% if errors and errors.phone %}error{% endif %}"
+              placeholder="+91 9876543210"
+              value="{{ form_data.phone if form_data else '' }}"
+              autocomplete="tel" pattern="[+]?[0-9\s\-]{7,20}">
+          </div>
+          {% if errors and errors.phone %}
+          <div class="form-error"><i class="fas fa-circle-xmark"></i> {{ errors.phone }}</div>
+          {% endif %}
+          <div class="form-hint"><i class="fas fa-info-circle"></i> Optional — for emergency alerts & recovery</div>
+        </div>
+
+        <!-- Two-column: Password + Confirm -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="pw-toggle-wrap">
+              <input type="password" id="password" name="password"
+                class="form-control {% if errors and errors.password %}error{% endif %}"
+                placeholder="Min 8 characters" autocomplete="new-password"
+                oninput="checkPasswordStrength(this.value)" required>
+              <button type="button" class="pw-toggle-btn" onclick="togglePw('password',this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-strength-fill" style="width:0%"></div></div>
+            <div class="pw-strength-text" id="pw-strength-text"></div>
+            {% if errors and errors.password %}
+            <div class="form-error"><i class="fas fa-circle-xmark"></i> {{ errors.password }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="pw-toggle-wrap">
+              <input type="password" id="confirm_password" name="confirm_password"
+                class="form-control {% if errors and errors.confirm_password %}error{% endif %}"
+                placeholder="Repeat password" autocomplete="new-password" required>
+              <button type="button" class="pw-toggle-btn" onclick="togglePw('confirm_password',this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            {% if errors and errors.confirm_password %}
+            <div class="form-error"><i class="fas fa-circle-xmark"></i> {{ errors.confirm_password }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Terms -->
+        <div class="terms-text">
+          <i class="fas fa-shield-check"></i>
+          By creating an account, you agree to our
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block signup-btn">
+          <i class="fas fa-user-plus"></i>
+          <span class="btn-text">Create Account</span>
+        </button>
+      </form>
+
+      <!-- Login link at bottom -->
+      <div class="auth-login-prompt">
+        <div class="login-divider"></div>
+        <p>Already have an account?</p>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-login-link btn-block">
+          <i class="fas fa-right-to-bracket"></i>
+          <span>Sign In Instead</span>
+        </a>
+      </div>
+
+      <div class="auth-footer-security">
+        <i class="fas fa-lock"></i> Your data is secured with end-to-end encryption
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── Signup Avatar ───────────────────────────────────────────────────────── */
+.signup-avatar {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--primary) 0%, #085E52 100%);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: #fff;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(10,122,107,0.3);
+  animation: avatarPulse 2s ease-in-out infinite;
+}
+@keyframes avatarPulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(10,122,107,0.3); }
+  50% { box-shadow: 0 8px 32px rgba(10,122,107,0.5); }
+}
+
+/* ── Mobile Brand ────────────────────────────────────────────────────────── */
+.mobile-brand {
+  display: none;
+  align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 24px;
+  font-size: 1.1rem; font-weight: 800;
+  color: var(--primary);
+}
+.mobile-brand-icon {
+  width: 36px; height: 36px;
+  background: var(--primary-50); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+}
+
+/* ── Two-column form rows ────────────────────────────────────────────────── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── Form hints with icon ────────────────────────────────────────────────── */
+.form-hint i { margin-right: 4px; font-size: 0.65rem; }
+
+/* ── Terms text ──────────────────────────────────────────────────────────── */
+.terms-text {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 18px 0 6px;
+  text-align: center;
+  line-height: 1.5;
+}
+.terms-text i { color: var(--primary); margin-right: 4px; }
+.terms-text a {
+  color: var(--primary); font-weight: 600;
+  text-decoration: none;
+}
+.terms-text a:hover { text-decoration: underline; }
+
+/* ── Signup button ───────────────────────────────────────────────────────── */
+.signup-btn {
+  margin-top: 12px;
+  padding: 14px 24px;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #0F9582 0%, #0A7A6B 100%);
+  box-shadow: 0 4px 16px rgba(10,122,107,0.25);
+}
+.signup-btn:hover {
+  box-shadow: 0 6px 24px rgba(10,122,107,0.35);
+  background: linear-gradient(135deg, #12B09B 0%, #0A7A6B 100%);
+}
+
+/* ── Login prompt (bottom) ───────────────────────────────────────────────── */
+.auth-login-prompt {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.auth-login-prompt p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.btn-login-link {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  padding: 11px 24px;
+  font-size: 0.88rem; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  text-decoration: none;
+}
+.btn-login-link:hover {
+  background: var(--primary); color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(10,122,107,0.2);
+}
+
+/* ── Footer Security ─────────────────────────────────────────────────────── */
+.auth-footer-security {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.auth-footer-security i { font-size: 0.6rem; }
+
+/* ── Mobile Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mobile-brand { display: flex; }
+  .signup-avatar { width: 52px; height: 52px; font-size: 1.1rem; margin-bottom: 14px; }
+  .auth-form-header h2 { font-size: 1.3rem; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePw(id, btn) {
+  var input = document.getElementById(id);
+  var icon = btn.querySelector('i');
+  if (input.type === 'password') { input.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+  else { input.type = 'password'; icon.className = 'fas fa-eye'; }
+}
+
+function checkPasswordStrength(pw) {
+  var fill = document.getElementById('pw-strength-fill');
+  var text = document.getElementById('pw-strength-text');
+  var score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  var levels = [
+    {w:'0%',c:'transparent',t:''},
+    {w:'20%',c:'#F43F5E',t:'Very Weak'},
+    {w:'40%',c:'#F97316',t:'Weak'},
+    {w:'60%',c:'#F59E0B',t:'Fair'},
+    {w:'80%',c:'#3B82F6',t:'Strong'},
+    {w:'100%',c:'#10B981',t:'Very Strong'},
+  ];
+  var lvl = levels[Math.min(score, 5)];
+  fill.style.width = lvl.w; fill.style.background = lvl.c;
+  text.textContent = lvl.t; text.style.color = lvl.c;
+}
+
+/* Loading state */
+document.getElementById('signup-form').addEventListener('submit', function() {
+  var btn = this.querySelector('button[type="submit"]');
+  btn.classList.add('loading'); btn.disabled = true;
+});
+
+/* Input focus animation */
+document.querySelectorAll('.form-control').forEach(function(el) {
+  el.addEventListener('focus', function() {
+    this.closest('.form-group').classList.add('focused');
+  });
+  el.addEventListener('blur', function() {
+    this.closest('.form-group').classList.remove('focused');
+  });
+});
+</script>
+{% endblock %}

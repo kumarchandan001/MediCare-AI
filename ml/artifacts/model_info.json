@@ -1,0 +1,5 @@
+{
+  "model_name": "LightGBM",
+  "n_features": 131,
+  "n_diseases": 41
+}

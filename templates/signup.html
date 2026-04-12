@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0A7A6B">
+  <title>Sign Up — MediCare AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/medicare.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <style>
+    body { background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 50%, #f0f9ff 100%); display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; font-family:var(--font-body); }
+    .auth-page { display:flex; width:100%; max-width:960px; min-height:580px; border-radius:var(--radius-xl); overflow:hidden; box-shadow:0 25px 50px rgba(0,0,0,.08); }
+    .auth-left { flex:1; background:linear-gradient(135deg,#0a7a6b 0%,#059669 50%,#047857 100%); color:#fff; display:flex; flex-direction:column; justify-content:center; padding:3rem; position:relative; overflow:hidden; }
+    .auth-left::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,.06); }
+    .auth-left::after { content:''; position:absolute; bottom:-80px; left:-40px; width:250px; height:250px; border-radius:50%; background:rgba(255,255,255,.04); }
+    .auth-brand { display:flex; align-items:center; gap:12px; margin-bottom:2rem; position:relative; z-index:1; }
+    .auth-brand-icon { width:48px; height:48px; border-radius:var(--radius-lg); background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
+    .auth-brand h2 { font-family:var(--font-display); font-weight:800; font-size:1.4rem; }
+    .auth-left h1 { font-family:var(--font-display); font-weight:700; font-size:2rem; line-height:1.3; margin-bottom:1rem; position:relative; z-index:1; }
+    .auth-left p { opacity:.85; font-size:.9rem; line-height:1.6; position:relative; z-index:1; }
+    .auth-features { margin-top:2rem; position:relative; z-index:1; }
+    .auth-feat { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:.85rem; opacity:.9; }
+    .auth-feat i { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:.7rem; }
+    .auth-right { flex:1; background:#fff; display:flex; flex-direction:column; justify-content:center; padding:3rem; }
+    .auth-right h2 { font-family:var(--font-display); font-weight:700; font-size:1.5rem; color:var(--text); margin-bottom:6px; }
+    .auth-right .auth-sub { font-size:.85rem; color:var(--text-muted); margin-bottom:1.5rem; }
+    .auth-form .fg { margin-bottom:1rem; }
+    .auth-form .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .auth-form label { display:block; font-size:.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px; }
+    .auth-form input { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:.88rem; transition:var(--transition); box-sizing:border-box; }
+    .auth-form input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,122,107,.1); }
+    .auth-btn { width:100%; padding:12px; background:var(--primary); color:#fff; border:none; border-radius:var(--radius-md); font-family:var(--font-display); font-weight:700; font-size:.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:var(--transition); margin-top:.5rem; }
+    .auth-btn:hover { background:var(--primary-light); transform:translateY(-2px); box-shadow:var(--shadow-primary); }
+    .auth-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .auth-footer { text-align:center; margin-top:1.5rem; font-size:.85rem; color:var(--text-muted); }
+    .auth-footer a { color:var(--primary); font-weight:600; text-decoration:none; }
+    .auth-footer a:hover { text-decoration:underline; }
+    .auth-error { background:var(--danger-bg); color:var(--danger); padding:10px 14px; border-radius:var(--radius-md); font-size:.82rem; margin-bottom:1rem; display:none; }
+    .auth-error.show { display:flex; align-items:center; gap:8px; }
+    .auth-success { background:var(--success-bg); color:var(--success); padding:10px 14px; border-radius:var(--radius-md); font-size:.82rem; margin-bottom:1rem; display:none; }
+    .auth-success.show { display:flex; align-items:center; gap:8px; }
+    .pwd-strength { height:4px; border-radius:4px; background:var(--border); margin-top:6px; overflow:hidden; }
+    .pwd-strength-fill { height:100%; border-radius:4px; transition:width .3s,background .3s; width:0; }
+    @media (max-width:768px) { .auth-page{flex-direction:column;max-width:420px;min-height:auto} .auth-left{padding:2rem} .auth-left h1{font-size:1.4rem} .auth-features{display:none} .auth-form .form-row{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="auth-brand-icon"><i class="fas fa-heart-pulse"></i></div>
+        <h2>MediCare<span style="opacity:.8">AI</span></h2>
+      </div>
+      <h1>Start Your Health Journey Today</h1>
+      <p>Create a free account and unlock AI-powered health monitoring, instant disease predictions, and a personal wellness coach.</p>
+      <div class="auth-features">
+        <div class="auth-feat"><i class="fas fa-shield-heart"></i> Health risk monitoring</div>
+        <div class="auth-feat"><i class="fas fa-stethoscope"></i> ML disease prediction</div>
+        <div class="auth-feat"><i class="fas fa-chart-line"></i> Smart trend reports</div>
+        <div class="auth-feat"><i class="fas fa-robot"></i> Personal AI doctor</div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <h2>Create Account</h2>
+      <p class="auth-sub">Join MediCare AI — it's free!</p>
+      <div class="auth-error" id="signup-error"><i class="fas fa-circle-xmark"></i><span id="signup-error-msg"></span></div>
+      <div class="auth-success" id="signup-success"><i class="fas fa-circle-check"></i><span id="signup-success-msg"></span></div>
+      <form class="auth-form" id="signup-form">
+        <div class="form-row">
+          <div class="fg">
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" name="first_name" data-i18n-placeholder="prof.firstname" placeholder="First name" required autofocus>
+          </div>
+          <div class="fg">
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" name="last_name" data-i18n-placeholder="prof.lastname" placeholder="Last name" required>
+          </div>
+        </div>
+        <div class="fg">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Choose a username" required>
+        </div>
+        <div class="fg">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+        <div class="fg">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Create a strong password" required minlength="6">
+          <div class="pwd-strength"><div class="pwd-strength-fill" id="pwd-fill"></div></div>
+        </div>
+        <div class="fg">
+          <label for="confirm_password">Confirm Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+        </div>
+        <button type="submit" class="auth-btn" id="signup-btn"><i class="fas fa-user-plus"></i> Create Account</button>
+      </form>
+      <div class="auth-footer">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Password strength indicator */
+    document.getElementById('password').addEventListener('input', function() {
+      var pwd = this.value;
+      var fill = document.getElementById('pwd-fill');
+      var strength = 0;
+      if (pwd.length >= 6) strength++;
+      if (pwd.length >= 8) strength++;
+      if (/[A-Z]/.test(pwd)) strength++;
+      if (/[0-9]/.test(pwd)) strength++;
+      if (/[^A-Za-z0-9]/.test(pwd)) strength++;
+      var pct = Math.min(100, strength * 20);
+      var colors = ['#F43F5E','#F97316','#F59E0B','#10B981','#0a7a6b'];
+      fill.style.width = pct + '%';
+      fill.style.background = colors[Math.min(strength, colors.length)-1] || colors[0];
+    });
+
+    /* Signup form */
+    document.getElementById('signup-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('signup-btn');
+      var errBox = document.getElementById('signup-error');
+      var succBox = document.getElementById('signup-success');
+      errBox.classList.remove('show'); succBox.classList.remove('show');
+
+      var pwd = document.getElementById('password').value;
+      var cpwd = document.getElementById('confirm_password').value;
+      if (pwd !== cpwd) {
+        errBox.classList.add('show');
+        document.getElementById('signup-error-msg').textContent = "Passwords don't match!";
+        return;
+      }
+      if (pwd.length < 6) {
+        errBox.classList.add('show');
+        document.getElementById('signup-error-msg').textContent = 'Password must be at least 6 characters';
+        return;
+      }
+
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+
+      var data = {
+        first_name: document.getElementById('first_name').value.trim(),
+        last_name: document.getElementById('last_name').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: pwd
+      };
+
+      fetch('/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(data)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success) {
+          succBox.classList.add('show');
+          document.getElementById('signup-success-msg').textContent = 'Account created! Redirecting to login...';
+          setTimeout(function() { window.location.href = d.redirect || '/login'; }, 1200);
+        } else {
+          errBox.classList.add('show');
+          document.getElementById('signup-error-msg').textContent = d.error || 'Registration failed';
+          btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+        }
+      })
+      .catch(function() {
+        errBox.classList.add('show');
+        document.getElementById('signup-error-msg').textContent = 'Network error. Please try again.';
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+      });
+    });
+  </script>
+</body>
+</html>

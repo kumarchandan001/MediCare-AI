@@ -1,0 +1,35 @@
+# render.yaml — Render Blueprint (IaC)
+# Deploy: Connect your GitHub repo → Render auto-reads this file.
+
+services:
+  - type: web
+    name: medicare-ai
+    runtime: python
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --access-logfile - --error-logfile -"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.14"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: medicare-db
+          property: connectionString
+      - key: GEMINI_API_KEY
+        sync: false   # Set manually in Render Dashboard
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+databases:
+  - name: medicare-db
+    plan: free
+    databaseName: health_assistant

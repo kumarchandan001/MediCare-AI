@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 1: HEAD — Performance-Optimized
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MediCare AI — Your Intelligent Personal Health Assistant">
+  <meta name="theme-color" content="#0A7A6B">
+
+  <title>{% block title %}MediCare AI{% endblock %}</title>
+
+  <!-- Performance: Preconnect to font server -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/medicare.css') }}">
+
+  <!-- Font Awesome 6.5.1 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js 4.4.1 (deferred for performance) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  {% block head %}{% endblock %}
+
+  <!-- Server Lang Init -->
+  <script>window.SERVER_LANG = "{{ session.get('language', '') }}";</script>
+  <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+
+  <!-- CSRF Protection -->
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+    // Global fetch interceptor:
+    // 1) Inject CSRF token into mutating requests
+    // 2) Auto-unwrap /api/v1/ response envelopes so template JS stays unchanged
+    const originalFetch = window.fetch;
+    window.fetch = async function() {
+      let [resource, config] = arguments;
+      if (config && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method ? config.method.toUpperCase() : 'GET')) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        config.headers = config.headers || {};
+        config.headers['X-CSRFToken'] = csrfToken;
+      }
+      const response = await originalFetch(resource, config);
+
+      // For V1 API calls, transparently unwrap the {status, data, meta} envelope
+      // so that response.json() returns the inner .data object directly.
+      // This means existing template JS (d.success, d.medications, etc.) works unchanged.
+      const url = typeof resource === 'string' ? resource : (resource.url || '');
+      if (url.indexOf('/api/v1/') !== -1) {
+        const origJson = response.json.bind(response);
+        let jsonCache = null;
+        response.json = async function() {
+          if (jsonCache !== null) return jsonCache;
+          const envelope = await origJson();
+          // If it's a V1 envelope, return the data payload; otherwise pass through
+          if (envelope && typeof envelope.status === 'string' && 'data' in envelope) {
+            jsonCache = envelope.data;
+          } else {
+            jsonCache = envelope;
+          }
+          return jsonCache;
+        };
+      }
+      return response;
+    };
+
+    /**
+     * apiFetch — V1 API helper that auto-unwraps + throws on error.
+     * Useful for async/await patterns where you want clean error handling.
+     */
+    window.apiFetch = async function(url, opts) {
+      const res = await originalFetch(url, opts || {});
+      const json = await res.json();
+      if (json.status === 'error') {
+        const errMsg = (json.error && json.error.message) ? json.error.message : 'API Error';
+        throw new Error(errMsg);
+      }
+      return json.data;
+    };
+  </script>
+</head>
+
+<body>
+<div class="app-shell">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 2: SIDEBAR — Dark Gradient Premium
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- ── Brand ──────────────────────────────────────────────────────────── -->
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <i class="fas fa-heart-pulse"></i>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">MediCare<span>AI</span></span>
+        <span class="brand-tagline" data-i18n="brand.tagline">Personal Health Assistant</span>
+      </div>
+    </div>
+
+    <!-- ── Navigation ─────────────────────────────────────────────────────── -->
+    <nav class="sidebar-nav">
+
+      <!-- Overview -->
+      <div class="nav-section-label" data-i18n="nav.overview">Overview</div>
+      <a href="{{ url_for('home') }}"
+         class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
+        <i class="fas fa-th-large"></i>
+        <span data-i18n="nav.dashboard">Dashboard</span>
+      </a>
+
+      <!-- Health -->
+      <div class="nav-section-label" data-i18n="nav.health_section">Health</div>
+      <a href="{{ url_for('health.health_page') }}"
+         class="nav-item {% if request.endpoint == 'health.health_page' %}active{% endif %}">
+        <i class="fas fa-heart-pulse"></i>
+        <span data-i18n="nav.health_section">Health</span>
+      </a>
+      <a href="{{ url_for('health.disease_prediction') }}"
+         class="nav-item {% if request.endpoint == 'health.disease_prediction' %}active{% endif %}">
+        <i class="fas fa-stethoscope"></i>
+        <span data-i18n="nav.disease">Disease Prediction</span>
+      </a>
+      <a href="{{ url_for('health.ai_assistant') }}"
+         class="nav-item {% if request.endpoint == 'health.ai_assistant' %}active{% endif %}">
+        <i class="fas fa-robot"></i>
+        <span data-i18n="nav.ai">AI Assistant</span>
+      </a>
+
+      <!-- Analytics -->
+      <div class="nav-section-label" data-i18n="nav.analytics">Analytics</div>
+      <a href="{{ url_for('health.reports') }}"
+         class="nav-item {% if request.endpoint == 'health.reports' %}active{% endif %}">
+        <i class="fas fa-chart-line"></i>
+        <span data-i18n="nav.reports">Reports</span>
+      </a>
+
+      <!-- Safety -->
+      <div class="nav-section-label" data-i18n="nav.safety">Safety</div>
+      <a href="{{ url_for('health.emergency') }}"
+         class="nav-item {% if request.endpoint == 'health.emergency' %}active{% endif %}">
+        <i class="fas fa-kit-medical"></i>
+        <span data-i18n="nav.emergency" data-i18n="qa.emergency">Emergency</span>
+      </a>
+
+      <!-- Admin (only for admins) -->
+      {% if current_user.is_admin %}
+      <div class="nav-section-label">Admin</div>
+      <a href="{{ url_for('admin.dashboard') }}"
+         class="nav-item {% if request.endpoint and request.endpoint.startswith('admin.') %}active{% endif %}"
+         style="color:var(--accent)">
+        <i class="fas fa-shield-halved"></i>
+        <span>Admin Panel</span>
+      </a>
+      {% endif %}
+
+      <!-- Account -->
+      <div class="nav-section-label" data-i18n="nav.account">Account</div>
+      <a href="{{ url_for('health.profile') }}"
+         class="nav-item {% if request.endpoint == 'health.profile' %}active{% endif %}">
+        <i class="fas fa-user-circle"></i>
+        <span data-i18n="nav.profile">Profile</span>
+      </a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-item">
+        <i class="fas fa-right-from-bracket"></i>
+        <span data-i18n="nav.logout">Logout</span>
+      </a>
+
+    </nav>
+
+    <!-- ── Sidebar Footer ─────────────────────────────────────────────────── -->
+    <a href="{{ url_for('health.profile') }}" class="sidebar-footer">
+      {% set display_name = current_user.first_name or session.get('username', 'User') %}
+      <div class="user-avatar">{{ display_name[0] | upper }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ display_name }}</span>
+        <span class="user-role">{% if current_user.is_admin %}System Admin{% else %}Health Member{% endif %}</span>
+      </div>
+    </a>
+
+  </aside><!-- /sidebar -->
+
+  <!-- Overlay for mobile sidebar -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 3: MAIN CONTENT
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="main-content">
+
+    <!-- ── Topbar — Glassmorphism ─────────────────────────────────────────── -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="flex items-center gap-3">
+          <button class="topbar-hamburger" id="menu-toggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="topbar-title">{% block page_title %}MediCare AI{% endblock %}</div>
+            <div class="topbar-breadcrumb">
+              <a href="{{ url_for('home') }}" data-i18n="topbar.medicare">MediCare AI</a>
+              <span class="sep">›</span>
+              {% block breadcrumb %}Dashboard{% endblock %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="topbar-search-wrapper" style="display: flex; align-items: center;">
+          <input type="text" id="global-search-input" placeholder="Search MediCare AI..." autocomplete="off">
+          <button class="topbar-btn" id="search-toggle-btn" aria-label="Search">
+            <i class="fas fa-magnifying-glass"></i>
+          </button>
+        </div>
+
+        <div class="lang-switcher" id="lang-switcher">
+          <button class="lang-btn active" data-lang="en" onclick="switchLanguage('en')" title="English">EN</button>
+          <button class="lang-btn" data-lang="ta" onclick="switchLanguage('ta')" title="Tamil">த</button>
+          <button class="lang-btn" data-lang="hi" onclick="switchLanguage('hi')" title="Hindi">हि</button>
+        </div>
+
+        <a href="{{ url_for('health.emergency') }}" class="topbar-btn" aria-label="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="notification-dot"></span>
+        </a>
+        <a href="{{ url_for('health.profile') }}" class="topbar-avatar" aria-label="Profile">
+          {{ session.get('username', 'User')[0] | upper }}
+        </a>
+      </div>
+    </header>
+
+    <!-- ── Page Content ───────────────────────────────────────────────────── -->
+    <main class="page-content">
+      {% block content %}{% endblock %}
+
+      <!-- Global Medical Disclaimer Footer -->
+      <div class="medical-disclaimer" style="margin-top: auto; border-radius: 0; box-shadow: none; border-left: none; border-right: none; border-bottom: none; border-top: 1px solid var(--warning);">
+        <i class="fas fa-triangle-exclamation"></i>
+        <div>
+          <strong style="display:block; margin-bottom: 2px;">Medical Disclaimer:</strong>
+          AI-generated health insights. Not a substitute for professional medical advice.
+        </div>
+      </div>
+    </main>
+
+  </div><!-- /main-content -->
+
+</div><!-- /app-shell -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: TOAST CONTAINER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: BASE JAVASCRIPT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── 1. Greeting by Time of Day ─────────────────────────────────────── */
+  window.setGreeting = function() {
+    var hour = new Date().getHours();
+    var key;
+    if      (hour >= 5  && hour < 12) key = 'greeting.morning';
+    else if (hour >= 12 && hour < 17) key = 'greeting.afternoon';
+    else if (hour >= 17 && hour < 21) key = 'greeting.evening';
+    else                              key = 'greeting.night';
+
+    var greeting = "Hello";
+    if (typeof t === 'function') {
+        greeting = t(key);
+    } else {
+        if      (hour >= 5  && hour < 12) greeting = 'Good Morning!';
+        else if (hour >= 12 && hour < 17) greeting = 'Good Afternoon!';
+        else if (hour >= 17 && hour < 21) greeting = 'Good Evening!';
+        else                              greeting = 'Good Night!';
+    }
+
+    var userName = "{{ (current_user.first_name or session.get('username', '')).capitalize() }}";
+    if (userName) {
+        greeting += ' ' + userName;
+    }
+
+    var el = document.getElementById('greeting-time');
+    if (el) el.textContent = greeting;
+  };
+  window.setGreeting();
+
+
+
+  /* ── 2. Toast Notifications ─────────────────────────────────────────── */
+  window.showToast = function (message, type) {
+    type = type || 'info';
+    var icons = {
+      success: 'fa-circle-check',
+      error:   'fa-circle-xmark',
+      warning: 'fa-triangle-exclamation',
+      info:    'fa-circle-info'
+    };
+    var icon = icons[type] || icons.info;
+
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.innerHTML = '<i class="fas ' + icon + '"></i><span>' + message + '</span>';
+
+    var container = document.getElementById('toast-container');
+    if (container) container.appendChild(toast);
+
+    setTimeout(function () {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(40px)';
+      setTimeout(function () { toast.remove(); }, 300);
+    }, 4000);
+  };
+
+
+  /* ── 3. Mobile Sidebar Toggle ───────────────────────────────────────── */
+  var sidebar  = document.getElementById('sidebar');
+  var toggle   = document.getElementById('menu-toggle');
+  var overlay  = document.getElementById('sidebar-overlay');
+
+  function openSidebar()  { if (sidebar) sidebar.classList.add('open');    if (overlay) overlay.style.display = 'block'; }
+  function closeSidebar() { if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.style.display = 'none';  }
+
+  if (toggle)  toggle.addEventListener('click', function () {
+    sidebar && sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+
+  /* ── 4. Active Nav Highlight (fallback JS) ──────────────────────────── */
+  var path  = window.location.pathname;
+  var items = document.querySelectorAll('.sidebar-nav .nav-item');
+  items.forEach(function (item) {
+    var href = item.getAttribute('href');
+    if (href && href === path) {
+      items.forEach(function (n) { n.classList.remove('active'); });
+      item.classList.add('active');
+    }
+  });
+
+
+  /* ── 5. Date Display ────────────────────────────────────────────────── */
+  function setDate() {
+    var el = document.getElementById('current-date');
+    if (!el) return;
+    var now  = new Date();
+    var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+    el.textContent = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ' ' + now.getFullYear();
+  }
+  setDate();
+
+  /* ── 6. Search Bar Toggle & Logic ───────────────────────────────────── */
+  var searchBtn = document.getElementById('search-toggle-btn');
+  var searchInput = document.getElementById('global-search-input');
+  
+  if (searchBtn && searchInput) {
+      searchBtn.addEventListener('click', function() {
+          searchInput.classList.toggle('active');
+          if (searchInput.classList.contains('active')) {
+              searchInput.focus();
+          } else {
+              searchInput.value = '';
+          }
+      });
+
+      // Filter sidebar menu or show toast on enter
+      searchInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+              e.preventDefault();
+              var q = searchInput.value.toLowerCase().trim();
+              if (!q) return;
+
+              // Simple search: check sidebar items for matching text
+              var items = document.querySelectorAll('.sidebar-nav .nav-item');
+              var found = false;
+              items.forEach(function(item) {
+                  if (item.textContent.toLowerCase().includes(q)) {
+                      window.location.href = item.getAttribute('href');
+                      found = true;
+                  }
+              });
+
+              if (!found) {
+                  window.showToast("No matches found for '" + searchInput.value + "'", "warning");
+              }
+          } else if (e.key === 'Escape') {
+              searchInput.classList.remove('active');
+              searchInput.blur();
+              searchInput.value = '';
+          }
+      });
+  }
+
+
+  /* ── 7. Scroll Animation Observer (Performance) ─────────────────────── */
+  if ('IntersectionObserver' in window) {
+    var scrollObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          scrollObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
+      scrollObserver.observe(el);
+    });
+  } else {
+    // Fallback: show all elements immediately
+    document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
+      el.classList.add('is-visible');
+    });
+  }
+
+});
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

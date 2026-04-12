@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       ADMIN HEAD
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MediCare AI — Admin Control Panel">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0A7A6B">
+
+  <!-- Performance: Preconnect to font server -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <title>{% block title %}Admin — MediCare AI{% endblock %}</title>
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/medicare.css') }}">
+  <!-- Admin Extensions -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+  <!-- Font Awesome 6.5.1 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js 4.4.1 (deferred for performance) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  {% block head %}{% endblock %}
+
+  <!-- Server Lang Init -->
+  <script>window.SERVER_LANG = "{{ session.get('language', '') }}";</script>
+  <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+  <!-- CSRF Protection -->
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+    // Global fetch interceptor for admin pages:
+    // 1) Inject CSRF token into mutating requests
+    // 2) Auto-unwrap /api/v1/ response envelopes so JS stays unchanged
+    const originalFetch = window.fetch;
+    window.fetch = async function() {
+      let [resource, config] = arguments;
+      if (config && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method ? config.method.toUpperCase() : 'GET')) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+          config.headers = config.headers || {};
+          config.headers['X-CSRFToken'] = csrfToken.getAttribute('content');
+        }
+      }
+      const response = await originalFetch(resource, config);
+
+      // For V1 API calls, transparently unwrap the {status, data, meta} envelope
+      const url = typeof resource === 'string' ? resource : (resource.url || '');
+      if (url.indexOf('/api/v1/') !== -1) {
+        const origJson = response.json.bind(response);
+        let jsonCache = null;
+        response.json = async function() {
+          if (jsonCache !== null) return jsonCache;
+          const envelope = await origJson();
+          if (envelope && typeof envelope.status === 'string' && 'data' in envelope) {
+            jsonCache = envelope.data;
+          } else {
+            jsonCache = envelope;
+          }
+          return jsonCache;
+        };
+      }
+      return response;
+    };
+  </script>
+</head>
+
+<body>
+<div class="admin-shell">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       DARK SIDEBAR
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <aside class="admin-sidebar" id="admin-sidebar">
+
+    <!-- ── Brand ──────────────────────────────────────────────────────────── -->
+    <div class="admin-brand">
+      <div class="admin-brand-icon">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+      <div class="admin-brand-text">
+        <span class="admin-brand-name">MediCare <span style="color:var(--primary-300)">Admin</span></span>
+        <span class="admin-brand-sub">Control Panel</span>
+      </div>
+    </div>
+
+    <!-- ── Navigation ─────────────────────────────────────────────────────── -->
+    <nav class="admin-nav">
+
+      <div class="admin-nav-label" data-i18n="nav.overview">Overview</div>
+      <a href="{{ url_for('admin.dashboard') }}"
+         class="admin-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        <i class="fas fa-chart-pie nav-icon"></i>
+        <span data-i18n="nav.dashboard">Dashboard</span>
+      </a>
+
+      <div class="admin-nav-label">Management</div>
+      <a href="{{ url_for('admin.users') }}"
+         class="admin-nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
+        <i class="fas fa-users nav-icon"></i>
+        <span data-i18n="admin.users_title">User Management</span>
+      </a>
+      <a href="{{ url_for('admin.health_intelligence') }}"
+         class="admin-nav-item {% if request.endpoint == 'admin.health_intelligence' %}active{% endif %}">
+        <i class="fas fa-brain nav-icon"></i>
+        <span data-i18n="admin.health_intel">Health Intelligence</span>
+      </a>
+      <a href="{{ url_for('admin.ai_monitor') }}"
+         class="admin-nav-item {% if request.endpoint == 'admin.ai_monitor' %}active{% endif %}">
+        <i class="fas fa-robot nav-icon"></i>
+        <span data-i18n="admin.ai_monitor">AI Monitor</span>
+      </a>
+
+      <div class="admin-nav-label" data-i18n="nav.reports">Reports</div>
+      <a href="{{ url_for('admin.emergency_reports') }}"
+         class="admin-nav-item {% if request.endpoint == 'admin.emergency_reports' %}active{% endif %}">
+        <i class="fas fa-triangle-exclamation nav-icon"></i>
+        <span data-i18n="admin.emergency">Emergency Reports</span>
+      </a>
+      <a href="{{ url_for('admin.settings') }}"
+         class="admin-nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
+        <i class="fas fa-gear nav-icon"></i>
+        <span data-i18n="admin.settings">Settings</span>
+      </a>
+
+      <!-- Divider + Back link -->
+      <div class="admin-nav-divider"></div>
+      <a href="{{ url_for('home') }}" class="admin-nav-item back-link">
+        <i class="fas fa-arrow-left nav-icon"></i>
+        <span data-i18n="admin.back">Return to Application</span>
+      </a>
+
+    </nav>
+
+    <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+    <div class="admin-footer">
+      <div class="admin-user-row">
+        <div class="admin-avatar">
+          <i class="fas fa-shield-halved" style="font-size:.8rem"></i>
+        </div>
+        <div class="admin-user-info">
+          <span class="admin-user-name">Administrator</span>
+          <span class="admin-user-role">Control Admin</span>
+        </div>
+      </div>
+    </div>
+
+  </aside><!-- /admin-sidebar -->
+
+  <!-- Overlay for mobile sidebar -->
+  <div class="admin-sidebar-overlay" id="admin-sidebar-overlay"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="admin-main">
+
+    <!-- ── Topbar ─────────────────────────────────────────────────────────── -->
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <div class="flex-row">
+          <button class="admin-hamburger" id="admin-menu-toggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="admin-topbar-title">{% block page_title %}Admin Dashboard{% endblock %}</div>
+            <div class="admin-topbar-breadcrumb">
+              <a href="{{ url_for('admin.dashboard') }}">Admin</a>
+              <span class="sep">›</span>
+              {% block breadcrumb %}Dashboard{% endblock %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-topbar-right">
+        <div class="admin-system-status">
+          <span class="system-status-dot online"></span>
+          <span data-i18n="admin.all_ok">All systems operational</span>
+        </div>
+
+        <div class="lang-switcher" id="lang-switcher">
+          <button class="lang-btn active" data-lang="en" onclick="switchLanguage('en')" title="English">EN</button>
+          <button class="lang-btn" data-lang="ta" onclick="switchLanguage('ta')" title="Tamil">த</button>
+          <button class="lang-btn" data-lang="hi" onclick="switchLanguage('hi')" title="Hindi">हि</button>
+        </div>
+
+        <button class="admin-topbar-btn" aria-label="Notifications">
+          <i class="fas fa-bell"></i>
+        </button>
+        <div class="admin-topbar-avatar">A</div>
+      </div>
+    </header>
+
+    <!-- ── Page Content ───────────────────────────────────────────────────── -->
+    <main class="admin-page-content">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div><!-- /admin-main -->
+
+</div><!-- /admin-shell -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TOAST CONTAINER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BASE JAVASCRIPT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── 1. Toast Notifications ─────────────────────────────────────────── */
+  window.showToast = function (message, type) {
+    type = type || 'info';
+    var icons = {
+      success: 'fa-circle-check',
+      error:   'fa-circle-xmark',
+      warning: 'fa-triangle-exclamation',
+      info:    'fa-circle-info'
+    };
+    var icon = icons[type] || icons.info;
+
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.innerHTML = '<i class="fas ' + icon + '"></i><span>' + message + '</span>';
+
+    var container = document.getElementById('toast-container');
+    if (container) container.appendChild(toast);
+
+    setTimeout(function () {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(40px)';
+      setTimeout(function () { toast.remove(); }, 300);
+    }, 4000);
+  };
+
+
+  /* ── 2. Mobile Sidebar Toggle ───────────────────────────────────────── */
+  var sidebar = document.getElementById('admin-sidebar');
+  var toggle  = document.getElementById('admin-menu-toggle');
+  var overlay = document.getElementById('admin-sidebar-overlay');
+
+  function openSidebar() {
+    if (sidebar) sidebar.classList.add('open');
+    if (overlay) overlay.classList.add('active');
+  }
+  function closeSidebar() {
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  if (toggle) toggle.addEventListener('click', function () {
+    sidebar && sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+
+  /* ── 3. Active Nav Highlight (fallback JS) ──────────────────────────── */
+  var path = window.location.pathname;
+  var items = document.querySelectorAll('.admin-nav .admin-nav-item:not(.back-link)');
+  items.forEach(function (item) {
+    var href = item.getAttribute('href');
+    if (href && path === href) {
+      items.forEach(function (n) { n.classList.remove('active'); });
+      item.classList.add('active');
+    }
+  });
+
+
+  /* ── 4. Date/Time Display ───────────────────────────────────────────── */
+  function updateTime() {
+    var el = document.getElementById('admin-datetime');
+    if (!el) return;
+    var now = new Date();
+    var days  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    el.textContent = days[now.getDay()] + ', ' +
+                     months[now.getMonth()] + ' ' + now.getDate() + ' · ' +
+                     now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+  updateTime();
+  setInterval(updateTime, 60000);
+
+
+  /* ── 5. Utility: Format Number with Commas ──────────────────────────── */
+  window.formatNumber = function(n) {
+    return Number(n).toLocaleString();
+  };
+
+});
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

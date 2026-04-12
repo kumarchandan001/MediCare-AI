@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant — MediCare AI{% endblock %}
+{% block page_title %}AI Assistant{% endblock %}
+{% block breadcrumb %}AI Assistant{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Intro gradient bar ───────────────────────────────────────────────── */
+  .ai-intro {
+    background: linear-gradient(135deg, var(--primary), var(--primary-400));
+    color: #fff; border-radius: var(--radius-xl);
+    padding: var(--space-5) var(--space-6);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-5); margin-bottom: var(--space-5);
+    position: relative; overflow: hidden;
+  }
+  .ai-intro::before { content:''; position:absolute; top:-40px; right:-40px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,.07); }
+  .ai-intro-left { display: flex; align-items: center; gap: var(--space-4); }
+  .ai-intro-icon { width:48px; height:48px; border-radius:var(--radius-lg); background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+  .ai-intro-text h2 { font-family:var(--font-display); font-weight:700; font-size:1.15rem; margin-bottom:2px; }
+  .ai-intro-text p { font-size:.8rem; opacity:.85; }
+  .ai-intro-badges { display:flex; gap:8px; margin-top:var(--space-2); }
+  .ai-intro-badges .pill { padding:3px 10px; border-radius:var(--radius-full); background:rgba(255,255,255,.2); font-size:.68rem; font-weight:600; }
+  .ai-ctx-mini {
+    background:rgba(255,255,255,.14); backdrop-filter:blur(10px);
+    border-radius:var(--radius-lg); padding:var(--space-3) var(--space-4);
+    flex-shrink:0; min-width:200px; position:relative; z-index:1;
+  }
+  .ai-ctx-mini h4 { font-size:.72rem; opacity:.8; margin-bottom:var(--space-2); }
+  .ai-ctx-row { display:flex; align-items:center; gap:8px; font-size:.78rem; padding:3px 0; }
+  .ai-ctx-row i { width:16px; text-align:center; font-size:.68rem; opacity:.7; }
+  .ai-ctx-row .ctx-v { margin-left:auto; font-family:var(--font-display); font-weight:700; }
+  .ai-ctx-note { font-size:.62rem; opacity:.55; margin-top:var(--space-1); }
+
+  /* ── Chat interface — the main star ──────────────────────────────────── */
+  .chat-card { display:flex; flex-direction:column; min-height:480px; max-height:600px; margin-bottom:var(--space-5); }
+  .chat-card .card-body { display:flex; flex-direction:column; flex:1; overflow:hidden; padding:0; }
+
+  .chat-header-info { display:flex; align-items:center; gap:var(--space-3); }
+  .chat-avatar { width:34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.85rem; flex-shrink:0; }
+  .chat-avatar.sm { width:26px; height:26px; font-size:.65rem; }
+  .chat-name { font-family:var(--font-display); font-weight:600; font-size:.88rem; }
+  .chat-status { font-size:.7rem; display:flex; align-items:center; gap:4px; }
+  .chat-status .dot { width:6px; height:6px; border-radius:50%; }
+  .chat-status .dot.online { background:#4ade80; }
+  .chat-status .dot.thinking { background:var(--warning); animation:pulseDot 1s infinite; }
+
+  /* Messages area */
+  .chat-messages {
+    flex:1; overflow-y:auto; padding:var(--space-4) var(--space-5);
+    display:flex; flex-direction:column; gap:var(--space-3);
+    scroll-behavior:smooth;
+  }
+
+  .chat-bubble { max-width:75%; padding:var(--space-3) var(--space-4); border-radius:var(--radius-lg); line-height:1.6; font-size:.86rem; position:relative; }
+  .chat-bubble.user {
+    align-self:flex-end; background:var(--primary); color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .chat-bubble.ai {
+    align-self:flex-start; background:var(--surface-2); color:var(--text);
+    border-bottom-left-radius:4px;
+  }
+  .chat-bubble .bubble-row { display:flex; align-items:flex-start; gap:12px; }
+  .chat-bubble .bubble-content { flex:1; word-break: break-word; }
+  .chat-bubble .bubble-content p { margin-bottom:12px; line-height:1.6; }
+  .chat-bubble .bubble-content p:last-of-type { margin-bottom:0; }
+  .chat-bubble .bubble-content ul { padding-left:22px; margin:8px 0 14px 0; list-style-type: disc; }
+  .chat-bubble .bubble-content ol { padding-left:22px; margin:8px 0 14px 0; list-style-type: decimal; }
+  .chat-bubble .bubble-content li { margin-bottom:6px; line-height:1.5; padding-left:4px; }
+  .chat-bubble .bubble-content strong { font-weight:700; color:var(--text); }
+  .chat-bubble.user .bubble-content strong { color:#fff; }
+  .chat-bubble .bubble-time { font-size:.65rem; opacity:.6; margin-top:6px; display:block; text-align:right; }
+  .chat-bubble.ai .bubble-content .recommendation-highlight {
+    background: var(--success-bg);
+    border-left: 3px solid var(--success);
+    padding: var(--space-2) var(--space-3);
+    margin: var(--space-2) 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text);
+  }
+  
+  .chat-bubble.ai .bubble-content .risk-highlight {
+    background: var(--warning-bg);
+    border-left: 3px solid var(--warning);
+    padding: var(--space-2) var(--space-3);
+    margin: var(--space-2) 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text);
+  }
+
+  .ctx-badge { display:inline-flex; align-items:center; gap:4px; font-size:.65rem; padding:3px 10px; border-radius:var(--radius-full); background:var(--primary-50); color:var(--primary); margin-top:8px; font-weight:600; }
+
+  /* Typing */
+  .typing-dots { display:flex; gap:5px; padding:4px 0; }
+  .typing-dot { width:7px; height:7px; border-radius:50%; background:var(--text-muted); animation:typingBounce 1.4s infinite; }
+  .typing-dot:nth-child(2) { animation-delay:.2s; }
+  .typing-dot:nth-child(3) { animation-delay:.4s; }
+  @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  @keyframes pulseDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.6)} }
+
+  /* Input area */
+  .chat-input-area {
+    display:flex; align-items:flex-end; gap:var(--space-3);
+    padding:var(--space-3) var(--space-4);
+    border-top:1px solid var(--border-light);
+    background:var(--surface);
+  }
+  .chat-input {
+    flex:1; padding:10px 14px; border:1px solid var(--border);
+    border-radius:var(--radius-md); font-family:var(--font-body);
+    font-size:.86rem; color:var(--text); background:var(--surface);
+    resize:none; min-height:42px; max-height:100px; line-height:1.5;
+    transition:var(--transition);
+  }
+  .chat-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,122,107,.1); }
+  .chat-send-btn {
+    width:42px; height:42px; border-radius:var(--radius-md);
+    background:var(--primary); color:#fff; border:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem; cursor:pointer; transition:var(--transition);
+    flex-shrink:0;
+  }
+  .chat-send-btn:hover { background:var(--primary-600); }
+  .chat-send-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .chat-disclaimer { font-size:.65rem; color:var(--text-muted); padding:0 var(--space-4) var(--space-2); }
+
+  /* ── Bottom grid: Snapshot + Questions + Advice ─────────────────────── */
+  .bottom-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-5); }
+
+  /* ── Health snapshot ──────────────────────────────────────────────────── */
+  .snap-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border-light); font-size:.8rem; }
+  .snap-row:last-child { border-bottom:none; }
+  .snap-icon { width:26px; height:26px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; font-size:.65rem; flex-shrink:0; }
+  .snap-icon.blue { background:#dbeafe; color:#2563eb; }
+  .snap-icon.green { background:var(--success-bg); color:var(--success); }
+  .snap-icon.red { background:var(--danger-bg); color:var(--danger); }
+  .snap-icon.teal { background:var(--primary-50); color:var(--primary); }
+  .snap-icon.amber { background:var(--warning-bg); color:var(--warning); }
+  .snap-lbl { flex:1; color:var(--text-secondary); }
+  .snap-val { font-family:var(--font-display); font-weight:700; font-size:.82rem; min-width:40px; text-align:right; }
+  .snap-status { font-size:.6rem; font-weight:600; padding:2px 7px; border-radius:var(--radius-full); }
+  .snap-status.good { background:var(--success-bg); color:var(--success); }
+  .snap-status.low, .snap-status.high { background:var(--warning-bg); color:var(--warning); }
+  .snap-status.critical { background:var(--danger-bg); color:var(--danger); }
+  .live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#4ade80; margin-right:4px; animation:pulseDot 1.6s infinite; }
+
+  /* ── Suggested questions ──────────────────────────────────────────────── */
+  .suggested-q {
+    display:flex; align-items:center; gap:6px; padding:8px 12px;
+    border:1px solid var(--border); border-radius:var(--radius-md);
+    font-size:.78rem; color:var(--text-secondary); cursor:pointer;
+    transition:all 200ms var(--ease); margin-bottom:5px;
+  }
+  .suggested-q i { color:var(--primary); font-size:.65rem; flex-shrink:0; transition:transform 200ms; }
+  .suggested-q:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .suggested-q:hover i { color:#fff; transform:translateX(3px); }
+
+  /* ── Advice cards ────────────────────────────────────────────────────── */
+  .advice-card {
+    background:var(--surface-2); border-radius:var(--radius-lg);
+    padding:var(--space-4); display:flex; flex-direction:column; gap:var(--space-2);
+  }
+  .advice-icon { width:36px; height:36px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; font-size:.9rem; margin-bottom:var(--space-1); }
+  .advice-icon.sleep { background:#dbeafe; color:#2563eb; }
+  .advice-icon.activity { background:var(--success-bg); color:var(--success); }
+  .advice-icon.nutrition { background:var(--warning-bg); color:var(--warning); }
+  .advice-icon.general { background:var(--primary-50); color:var(--primary); }
+  .advice-title { font-family:var(--font-display); font-weight:600; font-size:.85rem; }
+  .advice-tip { font-size:.78rem; color:var(--text-secondary); line-height:1.5; }
+  .advice-reason { font-size:.68rem; color:var(--text-muted); font-style:italic; }
+  .advice-col { display:flex; flex-direction:column; gap:var(--space-3); }
+
+  /* ── Skeleton ─────────────────────────────────────────────────────────── */
+  .skeleton { background:linear-gradient(90deg,var(--surface-3) 25%,var(--border-light) 50%,var(--surface-3) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:var(--radius-md); }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* ── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width:1024px) {
+    .bottom-grid { grid-template-columns:1fr 1fr; }
+    .bottom-grid > :last-child { grid-column: 1 / -1; }
+  }
+  @media (max-width:768px) {
+    .ai-intro { flex-direction:column; align-items:flex-start; }
+    .ai-ctx-mini { min-width:auto; width:100%; }
+    .bottom-grid { grid-template-columns:1fr; }
+    .bottom-grid > :last-child { grid-column: auto; }
+    .chat-card { min-height:400px; max-height:500px; }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 1: COMPACT INTRO BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="ai-intro animate-fade-in">
+  <div class="ai-intro-left">
+    <div class="ai-intro-icon"><i class="fas fa-robot"></i></div>
+    <div class="ai-intro-text">
+      <h2 data-i18n="nav.ai">MediCare AI Assistant</h2>
+      <p data-i18n="ai.intro_desc">Context-aware health guidance powered by Google Gemini AI</p>
+      <div class="ai-intro-badges">
+        <span class="pill"><i class="fas fa-microchip"></i> <span data-i18n="ai.powered_by">Powered by Gemini</span></span>
+        <span class="pill"><i class="fas fa-database"></i> <span data-i18n="ai.uses_data">Uses your health data</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="ai-ctx-mini">
+    <h4 data-i18n="disease.health_context">Your Health Context</h4>
+    <div class="ai-ctx-row"><i class="fas fa-moon"></i> <span data-i18n="health.sleep_hours">Sleep</span> <span class="ctx-v" id="ctx-sleep-val">—</span></div>
+    <div class="ai-ctx-row"><i class="fas fa-shield-heart"></i> <span data-i18n="dash.risk_score">Risk</span> <span class="ctx-v" id="ctx-risk-val">—</span></div>
+    <div class="ai-ctx-row"><i class="fas fa-shoe-prints"></i> <span data-i18n="health.steps">Steps</span> <span class="ctx-v" id="ctx-steps-val">—</span></div>
+    <div class="ai-ctx-note" data-i18n="ai.ai_uses_data">AI uses this data to personalize responses</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: CHAT — FULL WIDTH
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card chat-card animate-fade-in">
+  <div class="card-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+      <div>
+        <div class="chat-name">MediCare AI</div>
+        <div class="chat-status" id="ai-status"><span class="dot online"></span> <span data-i18n="ai.online">Online</span></div>
+      </div>
+    </div>
+    <button class="btn btn-sm btn-secondary" id="clear-chat-btn"><i class="fas fa-trash"></i> <span data-i18n="ai.clear">Clear</span></button>
+  </div>
+  <div class="card-body">
+    <div class="chat-messages" id="chat-messages">
+      <!-- Welcome message rendered by JS -->
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chat-input" data-i18n-placeholder="ai.ask_placeholder" placeholder="Ask MediCare AI about your health..." rows="1"></textarea>
+      <button class="chat-send-btn" id="send-btn" disabled><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <div class="chat-disclaimer" data-i18n="ai.disclaimer">This system provides AI-based health insights and predictions for informational purposes only and does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical concerns.</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: BOTTOM GRID — Snapshot, Questions, Advice
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="bottom-grid">
+
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-user-circle"></i> <span data-i18n="ai.snap">Health Snapshot</span></div>
+      <span class="badge badge-success" style="font-size:.65rem"><span class="live-dot"></span> <span data-i18n="ai.live">Live</span></span>
+    </div>
+    <div class="card-body">
+      <div class="snap-row"><div class="snap-icon blue"><i class="fas fa-moon"></i></div><span class="snap-lbl" data-i18n="health.sleep_hours">Sleep</span><span class="snap-val" id="snap-sleep">—</span><span class="snap-status" id="snap-sleep-status">—</span></div>
+      <div class="snap-row"><div class="snap-icon green"><i class="fas fa-shoe-prints"></i></div><span class="snap-lbl" data-i18n="health.steps">Steps</span><span class="snap-val" id="snap-steps">—</span><span class="snap-status" id="snap-steps-status">—</span></div>
+      <div class="snap-row"><div class="snap-icon blue"><i class="fas fa-droplet"></i></div><span class="snap-lbl" data-i18n="health.water_intake">Water</span><span class="snap-val" id="snap-water">—</span><span class="snap-status" id="snap-water-status">—</span></div>
+      <div class="snap-row"><div class="snap-icon red"><i class="fas fa-heart"></i></div><span class="snap-lbl" data-i18n="health.heart_rate">Heart Rate</span><span class="snap-val" id="snap-hr">—</span><span class="snap-status" id="snap-hr-status">—</span></div>
+      <div class="snap-row"><div class="snap-icon teal"><i class="fas fa-weight-scale"></i></div><span class="snap-lbl" data-i18n="dash.bmi">BMI</span><span class="snap-val" id="snap-bmi">—</span><span class="snap-status" id="snap-bmi-status">—</span></div>
+      <div class="snap-row"><div class="snap-icon amber"><i class="fas fa-shield-heart"></i></div><span class="snap-lbl" data-i18n="dash.risk_score">Risk Score</span><span class="snap-val" id="snap-risk">—</span><span class="snap-status" id="snap-risk-status">—</span></div>
+      <a href="{{ url_for('health.health_page') }}" class="btn btn-secondary btn-sm btn-block mt-3"><i class="fas fa-pen"></i> <span data-i18n="ai.update_health">Update Health Data</span> &rarr;</a>
+    </div>
+  </div>
+
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-lightbulb"></i> <span data-i18n="ai.ask_medicare">Ask MediCare AI</span></div>
+      <span class="text-xs text-muted" data-i18n="ai.suggested">Suggested questions</span>
+    </div>
+    <div class="card-body">
+      <div class="suggested-q" data-q="Why do I feel tired?" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_tired">Why do I feel tired?</span></div>
+      <div class="suggested-q" data-q="How can I improve my sleep?" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_sleep">How can I improve my sleep?</span></div>
+      <div class="suggested-q" data-q="What does my risk score mean?" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_risk">What does my risk score mean?</span></div>
+      <div class="suggested-q" data-q="Is my water intake sufficient?" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_water">Is my water intake sufficient?</span></div>
+      <div class="suggested-q" data-q="How can I reduce my BMI?" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_bmi">How can I reduce my BMI?</span></div>
+      <div class="suggested-q" data-q="What exercise is best for my health?" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_exercise">What exercise is best for my health?</span></div>
+      <div class="suggested-q" data-q="Should I be concerned about my heart rate?" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_hr">Should I be concerned about my heart rate?</span></div>
+      <div class="suggested-q" data-q="Give me a health tip for today" onclick="askQuestion(this.dataset.q)"><i class="fas fa-arrow-right"></i> <span data-i18n="ai.q_tip">Give me a health tip for today</span></div>
+    </div>
+  </div>
+
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="ai.advice">Health Advice</span></div>
+      <button class="btn btn-sm btn-secondary" id="refresh-advice-btn"><i class="fas fa-arrows-rotate"></i></button>
+    </div>
+    <div class="card-body">
+      <div class="advice-col" id="advice-container">
+        <div class="advice-card"><div class="skeleton" style="width:36px;height:36px;border-radius:8px;margin-bottom:8px"></div><div class="skeleton" style="width:70%;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:100%;height:10px"></div></div>
+        <div class="advice-card"><div class="skeleton" style="width:36px;height:36px;border-radius:8px;margin-bottom:8px"></div><div class="skeleton" style="width:60%;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:90%;height:10px"></div></div>
+        <div class="advice-card"><div class="skeleton" style="width:36px;height:36px;border-radius:8px;margin-bottom:8px"></div><div class="skeleton" style="width:75%;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:80%;height:10px"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  /* ─── State ────────────────────────────────────────────────────────────── */
+  var chatHistory = [];
+
+  function now() { return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+
+  function formatMarkdown(text) {
+    if (!text) return '';
+    var html = text
+      .replace(/###\s+(.*)/g, '<strong>$1</strong>')
+      .replace(/\*\*(.*(?:Risk|Observation).*)\*\*/g, '<strong class="risk-highlight" style="display:block">$1</strong>')
+      .replace(/\*\*(.*Recommendation.*)\*\*/g, '<strong class="recommendation-highlight" style="display:block">$1</strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^[-•*]\s+(.+)$/gm, '<li>$1</li>')
+      .replace(/^\d+\.\s+(.+)$/gm, '<li class="num">$1</li>');
+
+    html = html.replace(/((?:<li.*?>.*?<\/li>\s*)+)/g, function(match) {
+      if (match.indexOf('class="num"') !== -1) {
+         return '<ol>' + match + '</ol>';
+      }
+      return '<ul>' + match + '</ul>';
+    });
+
+    html = html.split(/\n{2,}/).map(function(p) {
+      p = p.trim();
+      if (!p) return '';
+      if (p.indexOf('<ul>') === 0 || p.indexOf('<ol>') === 0) return p;
+      if (p.indexOf('<strong class="') > -1) return p.replace(/\n/g, '<br>');
+      return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+    return html;
+  }
+
+
+  /* ─── 1. Welcome message ───────────────────────────────────────────────── */
+  function addWelcome() {
+    var welcome = '👋 Hello! I am MediCare AI, your personal health assistant.\n\n' +
+      'I have access to your health data and can provide personalized advice based on:\n' +
+      '- Sleep patterns\n- Activity levels\n- Risk score\n- Health trends\n\n' +
+      'How can I help you today? Ask me anything about your health!';
+    appendMessage('ai', welcome, false);
+  }
+
+
+  /* ─── 2. Send message ──────────────────────────────────────────────────── */
+  function sendMessage() {
+    var input = document.getElementById('chat-input');
+    var msg = input.value.trim();
+    if (!msg) return;
+
+    appendMessage('user', msg);
+    input.value = '';
+    input.style.height = '42px';
+    updateSendBtn();
+
+    showThinking();
+
+    fetch('/api/v1/habits/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: msg})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      hideThinking();
+      appendMessage('ai', d.response || 'No response received.', d.context_used);
+    })
+    .catch(function() {
+      hideThinking();
+      appendMessage('ai', 'There was an error connecting to the service. Please check your internet connection and try again.', false);
+      showToast(t('Connection Error'), 'error');
+    });
+  }
+
+
+  /* ─── 3. Append message ────────────────────────────────────────────────── */
+  function appendMessage(role, text, contextUsed) {
+    var container = document.getElementById('chat-messages');
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + role;
+
+    var inner = '';
+    if (role === 'ai') {
+      inner += '<div class="bubble-row"><div class="chat-avatar sm"><i class="fas fa-robot"></i></div><div class="bubble-content">';
+      inner += formatMarkdown(text);
+      if (contextUsed) inner += '<span class="ctx-badge"><i class="fas fa-check"></i> Personalised response</span>';
+      inner += '<span class="bubble-time">' + now() + '</span>';
+      inner += '</div></div>';
+    } else {
+      inner += '<div class="bubble-content">';
+      inner += text.replace(/\n/g, '<br>');
+      inner += '<span class="bubble-time">' + now() + '</span>';
+      inner += '</div>';
+    }
+    bubble.innerHTML = inner;
+    container.appendChild(bubble);
+    container.scrollTop = container.scrollHeight;
+
+    chatHistory.push({role: role, text: text, time: now()});
+  }
+
+
+  /* ─── 4. Thinking animation ────────────────────────────────────────────── */
+  function showThinking() {
+    var statusEl = document.getElementById('ai-status');
+    statusEl.innerHTML = '<span class="dot thinking"></span> Thinking...';
+
+    var container = document.getElementById('chat-messages');
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ai';
+    bubble.id = 'active-thinking';
+    bubble.innerHTML =
+      '<div class="bubble-row"><div class="chat-avatar sm"><i class="fas fa-robot"></i></div>' +
+      '<div class="bubble-content"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>' +
+      '<span class="text-xs text-muted">MediCare AI is analyzing your health data...</span></div></div>';
+    container.appendChild(bubble);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function hideThinking() {
+    var el = document.getElementById('active-thinking');
+    if (el) el.remove();
+    var statusEl = document.getElementById('ai-status');
+    statusEl.innerHTML = '<span class="dot online"></span> Online';
+  }
+
+
+  /* ─── 5. Ask suggested question ────────────────────────────────────────── */
+  window.askQuestion = function(q) {
+    var input = document.getElementById('chat-input');
+    input.value = q;
+    sendMessage();
+    document.querySelector('.chat-card').scrollIntoView({behavior: 'smooth', block: 'start'});
+  };
+
+
+  /* ─── 6. Enter key handler ─────────────────────────────────────────────── */
+  var chatInput = document.getElementById('chat-input');
+  chatInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  chatInput.addEventListener('input', function() {
+    this.style.height = '42px';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    updateSendBtn();
+  });
+
+
+  /* ─── 7. Clear chat ────────────────────────────────────────────────────── */
+  document.getElementById('clear-chat-btn').addEventListener('click', function() {
+    var container = document.getElementById('chat-messages');
+    container.innerHTML = '';
+    chatHistory = [];
+    addWelcome();
+    showToast(t('Chat cleared'), 'info');
+  });
+
+
+  /* ─── 8. Load health snapshot ──────────────────────────────────────────── */
+  function loadHealthSnapshot() {
+    fetch('/api/v1/health/summary')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        setSnap('sleep', d.sleep, 'h', d.sleep >= 6 && d.sleep <= 9 ? 'Good' : (d.sleep < 6 ? 'Low' : 'High'));
+        setSnap('steps', d.steps, '', d.steps >= 8000 ? 'Active' : (d.steps >= 5000 ? 'Good' : 'Low'));
+        setSnap('water', d.water, 'L', d.water >= 2.0 ? 'Good' : 'Low');
+        setSnap('hr', d.heart_rate, 'bpm', d.heart_rate >= 60 && d.heart_rate <= 100 ? 'Good' : (d.heart_rate > 100 ? 'High' : 'Low'));
+        setSnap('bmi', d.bmi, '', d.bmi >= 18.5 && d.bmi <= 24.9 ? 'Normal' : (d.bmi < 18.5 ? 'Low' : 'High'));
+
+        document.getElementById('ctx-sleep-val').textContent = d.sleep + 'h';
+        document.getElementById('ctx-steps-val').textContent = d.steps.toLocaleString();
+      })
+      .catch(function() {});
+
+    fetch('/api/v1/health/risk-score')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var score = d.score >= 0 ? d.score : 0;
+        var status = score <= 30 ? 'Good' : (score <= 60 ? 'Moderate' : 'High');
+        setSnap('risk', score + '/100', '', status);
+        document.getElementById('ctx-risk-val').textContent = score + '/100';
+      })
+      .catch(function() {});
+  }
+
+  function setSnap(key, val, unit, status) {
+    var valEl = document.getElementById('snap-' + key);
+    var stEl  = document.getElementById('snap-' + key + '-status');
+    if (valEl) valEl.textContent = val + (unit ? unit : '');
+    if (stEl) {
+      stEl.textContent = status;
+      var cls = 'snap-status ';
+      var s = status.toLowerCase();
+      if (s === 'good' || s === 'active' || s === 'normal') cls += 'good';
+      else if (s === 'low' || s === 'high' || s === 'moderate') cls += 'low';
+      else cls += 'critical';
+      stEl.className = cls;
+    }
+  }
+
+
+  /* ─── 9. Load personalised advice ──────────────────────────────────────── */
+  function loadPersonalisedAdvice() {
+    fetch('/api/v1/habits/tips')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var container = document.getElementById('advice-container');
+        var tips = (d.tips || []).slice(0, 3);
+        if (tips.length === 0) {
+          container.innerHTML = '<div class="advice-card"><div class="advice-title">All Good!</div><div class="advice-tip">Keep maintaining your healthy habits.</div></div>';
+          return;
+        }
+        container.innerHTML = '';
+        tips.forEach(function(tip) {
+          var cat = tip.category || 'general';
+          var iconCls = cat === 'sleep' ? 'sleep' : (cat === 'activity' ? 'activity' : (cat === 'nutrition' ? 'nutrition' : 'general'));
+          var icons = {sleep:'fa-moon', activity:'fa-person-running', nutrition:'fa-apple-whole', general:'fa-heart-pulse'};
+          var prio = tip.priority || 'low';
+          var badgeCls = prio === 'high' ? 'badge-danger' : (prio === 'medium' ? 'badge-warning' : 'badge-success');
+          container.insertAdjacentHTML('beforeend',
+            '<div class="advice-card">' +
+              '<div class="advice-icon ' + iconCls + '"><i class="fas ' + (icons[cat] || icons.general) + '"></i></div>' +
+              '<div class="advice-title">' + (tip.title || cat) + '</div>' +
+              '<div class="advice-tip">' + (tip.tip || '') + '</div>' +
+              '<div class="advice-reason">' + (tip.reason || '') + '</div>' +
+              '<span class="badge ' + badgeCls + ' mt-2">' + prio + '</span>' +
+            '</div>'
+          );
+        });
+      })
+      .catch(function() {});
+  }
+
+
+  /* ─── 10. Refresh advice ───────────────────────────────────────────────── */
+  document.getElementById('refresh-advice-btn').addEventListener('click', function() {
+    var c = document.getElementById('advice-container');
+    c.innerHTML = '<div class="advice-card"><div class="skeleton" style="width:36px;height:36px;border-radius:8px;margin-bottom:8px"></div><div class="skeleton" style="width:70%;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:100%;height:10px"></div></div>'.repeat(3);
+    setTimeout(loadPersonalisedAdvice, 300);
+  });
+
+
+  /* ─── 11. Send button state ────────────────────────────────────────────── */
+  function updateSendBtn() {
+    var btn = document.getElementById('send-btn');
+    btn.disabled = !document.getElementById('chat-input').value.trim();
+  }
+  document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+
+  /* ─── 12. Init ─────────────────────────────────────────────────────────── */
+  addWelcome();
+  loadHealthSnapshot();
+  loadPersonalisedAdvice();
+  chatInput.focus();
+  updateSendBtn();
+
+})();
+</script>
+{% endblock %}

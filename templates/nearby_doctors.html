@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% block title %}Find Nearby Doctors — MediCare AI{% endblock %}
+{% block page_title %}Nearby Doctors{% endblock %}
+{% block breadcrumb %}Disease Prediction › Nearby Doctors{% endblock %}
+
+{% block content %}
+<div class="nearby-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="nearby-page-header animate-fade-in">
+    <div class="nearby-page-header-left">
+      <div class="nearby-header-icon"><i class="fas fa-location-crosshairs"></i></div>
+      <div>
+        <h1 class="nearby-page-title">Find Doctors Near You</h1>
+        <p class="nearby-page-sub">Locate qualified doctors and hospitals near your current location</p>
+      </div>
+    </div>
+    <a href="{{ url_for('health.disease_prediction') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Prediction
+    </a>
+  </div>
+
+  <!-- ── Search Filters Bar ──────────────────────────────────────────────── -->
+  <div class="card animate-fade-in">
+    <div class="card-body">
+      <div class="nearby-filters-grid">
+
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Speciality</label>
+          <select class="form-input" id="speciality-filter">
+            <option value="doctor">All Doctors</option>
+            <option value="general+physician">General Physician</option>
+            <option value="cardiologist">Cardiologist</option>
+            <option value="dermatologist">Dermatologist</option>
+            <option value="neurologist">Neurologist</option>
+            <option value="pediatrician">Paediatrician</option>
+            <option value="orthopedic+surgeon">Orthopaedic</option>
+            <option value="gynecologist">Gynaecologist</option>
+            <option value="psychiatrist">Psychiatrist</option>
+            <option value="ent+doctor">ENT Specialist</option>
+            <option value="hospital">Hospitals</option>
+            <option value="clinic">Clinics</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Location</label>
+          <div style="position:relative">
+            <i class="fas fa-location-dot" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;"></i>
+            <input type="text" class="form-input" id="location-input" placeholder="Detecting your location..." style="padding-left:2rem">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Radius</label>
+          <select class="form-input" id="radius-filter">
+            <option value="1000">1 km</option>
+            <option value="2000" selected>2 km</option>
+            <option value="5000">5 km</option>
+            <option value="10000">10 km</option>
+          </select>
+        </div>
+
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary btn-block" id="search-doctors-btn" onclick="searchNearbyDoctors()">
+            <i class="fas fa-magnifying-glass"></i> Search Doctors
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main Content Grid ───────────────────────────────────────────────── -->
+  <div class="nearby-main-grid">
+
+    <!-- Left: Map -->
+    <div class="nearby-map-panel card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-map"></i> Doctors Near You</div>
+        <span class="badge badge-primary" id="map-status-badge">Detecting location...</span>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div id="map-container" style="width:100%;height:460px;border-radius:0 0 var(--radius-xl) var(--radius-xl);overflow:hidden;position:relative;">
+
+          <!-- Loading State -->
+          <div id="map-loading" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface-2);gap:1rem;">
+            <div style="width:64px;height:64px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem;animation:pulse 1.5s infinite;">
+              <i class="fas fa-location-crosshairs"></i>
+            </div>
+            <div style="text-align:center;">
+              <p style="color:var(--text);font-weight:600;font-size:0.95rem;margin-bottom:4px;">Detecting your location...</p>
+              <small style="color:var(--text-muted);">Please allow location access when prompted</small>
+            </div>
+          </div>
+
+          <!-- Map iframe (shown after location) -->
+          <iframe
+            id="google-map-iframe"
+            style="width:100%;height:100%;border:none;display:none;"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"
+            src="">
+          </iframe>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Sidebar -->
+    <div class="nearby-info-panel">
+
+      <!-- Quick Search Links -->
+      <div class="card animate-fade-in">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-bolt"></i> Quick Search</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <button onclick="quickSearch('hospital')" class="quick-search-btn">
+              <i class="fas fa-hospital" style="color:var(--primary)"></i> Hospitals Near Me
+            </button>
+            <button onclick="quickSearch('general+physician')" class="quick-search-btn">
+              <i class="fas fa-user-doctor" style="color:#2563eb"></i> General Physicians
+            </button>
+            <button onclick="quickSearch('emergency+hospital')" class="quick-search-btn quick-search-btn-red">
+              <i class="fas fa-truck-medical" style="color:#F43F5E"></i> Emergency Hospitals
+            </button>
+            <button onclick="quickSearch('pharmacy')" class="quick-search-btn">
+              <i class="fas fa-pills" style="color:#d97706"></i> Nearby Pharmacies
+            </button>
+            <button onclick="quickSearch('diagnostic+lab')" class="quick-search-btn">
+              <i class="fas fa-flask" style="color:#7c3aed"></i> Diagnostic Labs
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended Hospitals -->
+      <div class="card animate-fade-in">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-star"></i> Recommended</div>
+        </div>
+        <div class="card-body">
+
+          <div class="rec-hospital-item" onclick="focusHospital('Jain+Global+Campus+Bengaluru')">
+            <div class="rec-hospital-icon" style="background:#e6f7f5">
+              <i class="fas fa-hospital-user" style="color:var(--primary)"></i>
+            </div>
+            <div class="rec-hospital-info">
+              <div class="rec-hospital-name">Jain Global Campus</div>
+              <div class="rec-hospital-timing"><i class="fas fa-clock"></i> 10 AM – 5 PM · Mon–Sat</div>
+            </div>
+            <i class="fas fa-chevron-right rec-arrow"></i>
+          </div>
+
+          <div class="nearby-rec-divider"></div>
+
+          <div class="rec-hospital-item" onclick="focusHospital('Dayananda+Sagar+Hospital+Bengaluru')">
+            <div class="rec-hospital-icon" style="background:#eff6ff">
+              <i class="fas fa-hospital" style="color:#2563eb"></i>
+            </div>
+            <div class="rec-hospital-info">
+              <div class="rec-hospital-name">Dayananda Sagar Hospital</div>
+              <div class="rec-hospital-timing"><i class="fas fa-clock"></i> 8 AM – 8 PM · All Days</div>
+            </div>
+            <i class="fas fa-chevron-right rec-arrow"></i>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Before You Visit Tips -->
+      <div class="card animate-fade-in">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-lightbulb"></i> Before You Visit</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;gap:0.6rem;font-size:0.85rem;color:var(--text-secondary);">
+              <i class="fas fa-check-circle" style="color:var(--success);flex-shrink:0;margin-top:2px;"></i>
+              Carry your MediCare AI health report for reference
+            </div>
+            <div style="display:flex;gap:0.6rem;font-size:0.85rem;color:var(--text-secondary);">
+              <i class="fas fa-check-circle" style="color:var(--success);flex-shrink:0;margin-top:2px;"></i>
+              Note down your symptoms and their duration
+            </div>
+            <div style="display:flex;gap:0.6rem;font-size:0.85rem;color:var(--text-secondary);">
+              <i class="fas fa-check-circle" style="color:var(--success);flex-shrink:0;margin-top:2px;"></i>
+              Carry any previous prescriptions or test reports
+            </div>
+            <div style="display:flex;gap:0.6rem;font-size:0.85rem;color:var(--text-secondary);">
+              <i class="fas fa-check-circle" style="color:var(--success);flex-shrink:0;margin-top:2px;"></i>
+              Check OPD timings online before you go
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end nearby-info-panel -->
+
+  </div><!-- end nearby-main-grid -->
+
+</div><!-- end nearby-page -->
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  var userLat = null;
+  var userLng = null;
+  var currentQuery = 'doctor';
+
+  /* ── Get user location ──────────────────────────────────────────────────── */
+  function getUserLocation() {
+    if (!navigator.geolocation) { showDefaultMap(); return; }
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        document.getElementById('location-input').value = userLat.toFixed(4) + ', ' + userLng.toFixed(4);
+        var badge = document.getElementById('map-status-badge');
+        badge.textContent = 'Location Found ✓';
+        badge.className = 'badge badge-success';
+        loadMap(userLat, userLng, currentQuery);
+      },
+      function() { showDefaultMap(); },
+      { timeout: 8000 }
+    );
+  }
+
+  /* ── Load Google Maps embed ─────────────────────────────────────────────── */
+  function loadMap(lat, lng, query) {
+    var iframe  = document.getElementById('google-map-iframe');
+    var loading = document.getElementById('map-loading');
+    iframe.src = 'https://maps.google.com/maps?q=' + query + '+near+' + lat + ',' + lng + '&output=embed&z=14';
+    iframe.style.display = 'block';
+    loading.style.display = 'none';
+  }
+
+  /* ── Default map (Bengaluru) ────────────────────────────────────────────── */
+  function showDefaultMap() {
+    var iframe  = document.getElementById('google-map-iframe');
+    var loading = document.getElementById('map-loading');
+    var badge   = document.getElementById('map-status-badge');
+    document.getElementById('location-input').value = 'Bengaluru, Karnataka';
+    badge.textContent = 'Default: Bengaluru';
+    badge.className = 'badge badge-warning';
+    iframe.src = 'https://maps.google.com/maps?q=doctor+near+Bengaluru+Karnataka&output=embed&z=13';
+    iframe.style.display = 'block';
+    loading.style.display = 'none';
+  }
+
+  /* ── Search nearby doctors ──────────────────────────────────────────────── */
+  window.searchNearbyDoctors = function() {
+    var speciality     = document.getElementById('speciality-filter').value;
+    var locationInput  = document.getElementById('location-input').value;
+    var btn = document.getElementById('search-doctors-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+    btn.disabled  = true;
+    currentQuery  = speciality;
+
+    setTimeout(function() {
+      if (userLat && userLng) {
+        loadMap(userLat, userLng, speciality);
+      } else if (locationInput) {
+        var iframe  = document.getElementById('google-map-iframe');
+        var loading = document.getElementById('map-loading');
+        iframe.src  = 'https://maps.google.com/maps?q=' + speciality + '+near+' + encodeURIComponent(locationInput) + '&output=embed&z=14';
+        iframe.style.display = 'block';
+        loading.style.display = 'none';
+      } else {
+        showDefaultMap();
+      }
+      btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Search Doctors';
+      btn.disabled  = false;
+      if (typeof showToast === 'function') showToast('Map updated!', 'success');
+    }, 700);
+  };
+
+  /* ── Quick search ───────────────────────────────────────────────────────── */
+  window.quickSearch = function(type) {
+    document.getElementById('speciality-filter').value = type;
+    window.searchNearbyDoctors();
+  };
+
+  /* ── Focus on specific hospital ─────────────────────────────────────────── */
+  window.focusHospital = function(query) {
+    var iframe  = document.getElementById('google-map-iframe');
+    var loading = document.getElementById('map-loading');
+    iframe.src  = 'https://maps.google.com/maps?q=' + query + '&output=embed&z=16';
+    iframe.style.display = 'block';
+    loading.style.display = 'none';
+    document.getElementById('map-container').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  /* ── Init ───────────────────────────────────────────────────────────────── */
+  getUserLocation();
+
+})();
+</script>
+{% endblock %}

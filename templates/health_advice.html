@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}AI Health Advisor — Karuna AI{% endblock %}
+{% block breadcrumb %}AI Assistant{% endblock %}
+
+{% block additional_styles %}
+<style>
+  .advisor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  /* Input card */
+  .advisor-input {
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+  }
+
+  .advisor-input h3 {
+    font-family: var(--font-display);
+    font-size: var(--text-headline-sm);
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .advisor-input > p {
+    opacity: 0.9;
+    font-size: var(--text-body-md);
+    margin-bottom: var(--space-5);
+    line-height: 1.5;
+  }
+
+  .health-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+  }
+
+  .health-tag {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    background-color: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.35);
+    color: var(--on-primary);
+    font-size: var(--text-label-lg);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .health-tag:hover {
+    background-color: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+  }
+
+  .health-tag.selected {
+    background-color: var(--on-primary);
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .advisor-input textarea {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border: none;
+    background-color: rgba(255,255,255,0.92);
+    color: var(--on-surface);
+    font-size: var(--text-body-md);
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+  }
+
+  .advisor-input textarea:focus {
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+  }
+
+  .advisor-input .disclaimer-box {
+    background-color: rgba(255,255,255,0.15);
+    border-left: 3px solid rgba(255,255,255,0.5);
+    padding: var(--space-3);
+    margin: var(--space-4) 0;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-body-sm);
+    line-height: 1.4;
+  }
+
+  .advisor-submit {
+    width: 100%;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    background-color: var(--on-primary);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: var(--text-body-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    transition: all var(--transition-fast);
+  }
+
+  .advisor-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  }
+
+  /* Results card */
+  .results-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #adviceResult {
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background-color: var(--surface-container-low);
+    min-height: 120px;
+    font-size: var(--text-body-lg);
+    line-height: 1.6;
+    transition: all var(--transition-normal);
+  }
+
+  #adviceResult.filled {
+    border-left: 4px solid var(--primary);
+    background-color: var(--surface-container-lowest);
+  }
+
+  #adviceResult h4 {
+    font-family: var(--font-display);
+    color: var(--primary);
+    font-size: var(--text-title-lg);
+    margin-bottom: var(--space-3);
+  }
+
+  #additionalResources ul {
+    padding-left: var(--space-5);
+    list-style: disc;
+  }
+
+  #additionalResources li {
+    margin-bottom: var(--space-2);
+  }
+
+  #additionalResources a {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  /* Loading */
+  .loader {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--surface-container-high);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: var(--space-8) auto;
+  }
+
+  /* Categories grid */
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    background-color: var(--surface-container-lowest);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: center;
+  }
+
+  .category-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .category-item i {
+    font-size: 2rem;
+    color: var(--primary);
+  }
+
+  .category-item h4 {
+    font-family: var(--font-display);
+    font-size: var(--text-body-md);
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0;
+  }
+
+  @media (max-width: 1024px) {
+    .advisor-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">AI Health Advisor</h1>
+  <p class="page-subtitle">Describe your condition or select symptoms for personalized health guidance.</p>
+</div>
+
+<div class="advisor-grid">
+  <!-- ── Input ────────────────────────────────────────── -->
+  <div class="advisor-input animate-slide-up">
+    <h3><i class="fas fa-robot"></i> Get Health Advice</h3>
+    <p>Describe your health condition or select from common symptoms below.</p>
+
+    <div class="health-tags">
+      <span class="health-tag" data-condition="headache">Headache</span>
+      <span class="health-tag" data-condition="fatigue">Fatigue</span>
+      <span class="health-tag" data-condition="stress">Stress</span>
+      <span class="health-tag" data-condition="insomnia">Insomnia</span>
+      <span class="health-tag" data-condition="back pain">Back Pain</span>
+      <span class="health-tag" data-condition="common cold">Common Cold</span>
+      <span class="health-tag" data-condition="allergies">Allergies</span>
+      <span class="health-tag" data-condition="dehydration">Dehydration</span>
+    </div>
+
+    <form id="adviceForm">
+      <label for="health-condition" style="display:block;font-weight:600;margin-bottom:var(--space-2);font-size:var(--text-label-lg);">
+        Describe your concerns:
+      </label>
+      <textarea id="health-condition" placeholder="e.g., I've been experiencing frequent headaches and fatigue..."></textarea>
+
+      <div class="disclaimer-box">
+        <i class="fas fa-info-circle"></i> This is not a substitute for professional medical advice. For serious concerns, consult a healthcare professional.
+      </div>
+
+      <button type="submit" class="advisor-submit">
+        <i class="fas fa-search"></i> Get Personalized Advice
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Results ──────────────────────────────────────── -->
+  <div class="card results-card">
+    <div class="card-header">
+      <span class="card-header-title"><i class="fas fa-notes-medical"></i> Health Recommendations</span>
+    </div>
+    <div class="card-body">
+      <div id="loading" class="hidden">
+        <div class="loader"></div>
+        <p class="text-center text-muted">Analyzing your condition...</p>
+      </div>
+
+      <div id="adviceResult">
+        <p class="text-center text-muted">Your health advice will appear here.</p>
+      </div>
+
+      <div id="additionalResources" class="hidden mt-6">
+        <h4 style="font-family:var(--font-display);font-weight:600;margin-bottom:var(--space-3);">Additional Resources</h4>
+        <ul id="resourcesList"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Browse Topics ──────────────────────────────────── -->
+<h3 class="page-title" style="font-size:var(--text-headline-sm);margin-bottom:var(--space-6);">
+  Browse Health Topics
+</h3>
+
+<div class="categories-grid stagger-children">
+  <div class="category-item" data-category="nutrition">
+    <i class="fas fa-apple-alt"></i>
+    <h4>Nutrition</h4>
+  </div>
+  <div class="category-item" data-category="fitness">
+    <i class="fas fa-running"></i>
+    <h4>Fitness</h4>
+  </div>
+  <div class="category-item" data-category="mental-health">
+    <i class="fas fa-brain"></i>
+    <h4>Mental Health</h4>
+  </div>
+  <div class="category-item" data-category="sleep">
+    <i class="fas fa-moon"></i>
+    <h4>Sleep</h4>
+  </div>
+  <div class="category-item" data-category="heart-health">
+    <i class="fas fa-heartbeat"></i>
+    <h4>Heart Health</h4>
+  </div>
+  <div class="category-item" data-category="chronic-conditions">
+    <i class="fas fa-stethoscope"></i>
+    <h4>Chronic Conditions</h4>
+  </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const adviceForm = document.getElementById('adviceForm');
+    const input = document.getElementById('health-condition');
+    const adviceResult = document.getElementById('adviceResult');
+    const loadingEl = document.getElementById('loading');
+    const addRes = document.getElementById('additionalResources');
+    const resList = document.getElementById('resourcesList');
+    const tags = document.querySelectorAll('.health-tag');
+    const cats = document.querySelectorAll('.category-item');
+
+    const db = {
+      "headache": { advice: "<strong>For headaches:</strong> Stay hydrated, rest, reduce screen time, and practice deep breathing. Use OTC pain relievers if needed. Consult a doctor for persistent headaches.", resources: [{title:"Understanding Headache Types",link:"#"},{title:"Natural Headache Remedies",link:"#"}] },
+      "fatigue": { advice: "<strong>For fatigue:</strong> Get 7-9 hours of sleep, stay hydrated, eat balanced meals rich in iron and B vitamins. Regular moderate exercise boosts energy.", resources: [{title:"Combating Chronic Fatigue",link:"#"},{title:"Energy-Boosting Foods",link:"#"}] },
+      "stress": { advice: "<strong>For stress:</strong> Practice mindfulness 10 min daily. Exercise regularly, sleep well, limit caffeine. Try time management strategies.", resources: [{title:"Stress Management Techniques",link:"#"},{title:"How Stress Affects Your Body",link:"#"}] },
+      "insomnia": { advice: "<strong>For insomnia:</strong> Maintain consistent sleep schedule, create a relaxing routine, keep bedroom cool and dark. Limit screens before bed.", resources: [{title:"CBT for Insomnia",link:"#"},{title:"Optimal Sleep Environment",link:"#"}] },
+      "back pain": { advice: "<strong>For back pain:</strong> Maintain good posture, strengthen your core, apply ice or heat. Consider ergonomic adjustments.", resources: [{title:"Back Exercises",link:"#"},{title:"Ergonomic Tips",link:"#"}] },
+      "common cold": { advice: "<strong>For common cold:</strong> Rest, stay hydrated, use a humidifier, try warm saltwater gargles. Wash hands frequently.", resources: [{title:"Cold vs Flu",link:"#"},{title:"Natural Cold Remedies",link:"#"}] },
+      "allergies": { advice: "<strong>For allergies:</strong> Identify and avoid triggers. Use air purifiers, consider antihistamines. See an allergist for severe cases.", resources: [{title:"Seasonal Allergy Management",link:"#"},{title:"Allergy-Proofing Your Home",link:"#"}] },
+      "dehydration": { advice: "<strong>For dehydration:</strong> Drink water regularly — at least 8 glasses daily. Consume electrolyte-rich beverages for moderate dehydration.", resources: [{title:"Signs of Dehydration",link:"#"},{title:"Hydration Best Practices",link:"#"}] }
+    };
+
+    const catDb = {
+      "nutrition":   { title: "Nutrition Resources", advice: "Focus on whole foods, fruits, vegetables, lean proteins, and healthy fats. Limit processed foods.", resources: [{title:"Meal Planning Guide",link:"#"},{title:"Macro & Micronutrients",link:"#"}] },
+      "fitness":     { title: "Fitness Resources", advice: "Aim for 150 min moderate or 75 min vigorous exercise weekly, plus strength training 2-3x/week.", resources: [{title:"Creating a Workout Routine",link:"#"},{title:"No-Equipment Training",link:"#"}] },
+      "mental-health": { title: "Mental Health Resources", advice: "Practice self-care, mindfulness, and stress management. Don't hesitate to seek professional help.", resources: [{title:"Daily Mindfulness",link:"#"},{title:"Finding Support",link:"#"}] },
+      "sleep":       { title: "Sleep Health", advice: "Adults need 7-9 hours. Establish a regular schedule and restful environment.", resources: [{title:"Bedtime Routine Guide",link:"#"},{title:"Sleep Disorder Help",link:"#"}] },
+      "heart-health": { title: "Heart Health", advice: "Regular exercise, balanced diet, no smoking, manage stress. Monitor blood pressure and cholesterol.", resources: [{title:"Heart-Healthy Diet",link:"#"},{title:"Cardiovascular Risk Factors",link:"#"}] },
+      "chronic-conditions": { title: "Chronic Conditions", advice: "Partner with healthcare providers, adhere to medication, monitor regularly, and adapt lifestyle.", resources: [{title:"Self-Management Strategies",link:"#"},{title:"Patient Advocacy",link:"#"}] }
+    };
+
+    tags.forEach(t => t.addEventListener('click', () => {
+      input.value = t.dataset.condition;
+      tags.forEach(x => x.classList.remove('selected'));
+      t.classList.add('selected');
+    }));
+
+    function showResults(advice, resources) {
+      loadingEl.classList.add('hidden');
+      adviceResult.classList.remove('hidden');
+      adviceResult.innerHTML = '<p>' + advice + '</p>';
+      adviceResult.classList.add('filled');
+      if (resources && resources.length) {
+        resList.innerHTML = '';
+        resources.forEach(r => { resList.innerHTML += '<li><a href="' + r.link + '">' + r.title + '</a></li>'; });
+        addRes.classList.remove('hidden');
+      }
+    }
+
+    adviceForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const cond = input.value.trim().toLowerCase();
+      if (!cond) { alert('Please describe your condition or select a tag.'); return; }
+      adviceResult.classList.add('hidden');
+      loadingEl.classList.remove('hidden');
+      addRes.classList.add('hidden');
+      setTimeout(() => {
+        let found = db[cond];
+        if (!found) { for (const k in db) { if (cond.includes(k) || k.includes(cond)) { found = db[k]; break; } } }
+        if (!found) { found = { advice: "<strong>General advice:</strong> Maintain balanced nutrition, exercise, sleep 7-9 hours, manage stress, and stay hydrated. Consult a professional for specific concerns.", resources: [{title:"General Health",link:"#"},{title:"When to See a Doctor",link:"#"}] }; }
+        showResults(found.advice, found.resources);
+      }, 1200);
+    });
+
+    cats.forEach(c => c.addEventListener('click', function() {
+      const info = catDb[this.dataset.category];
+      if (info) {
+        adviceResult.classList.add('hidden');
+        loadingEl.classList.remove('hidden');
+        addRes.classList.add('hidden');
+        setTimeout(() => {
+          showResults('<h4>' + info.title + '</h4>' + info.advice, info.resources);
+        }, 800);
+      }
+    }));
+  });
+</script>
+{% endblock %}

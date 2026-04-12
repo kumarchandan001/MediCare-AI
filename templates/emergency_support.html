@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Support — Karuna AI{% endblock %}
+{% block breadcrumb %}Emergency{% endblock %}
+
+{% block additional_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='emergency-styles.css') }}">
+<style>
+  :root {
+    --emergency-red: #e53e3e;
+    --emergency-red-dark: #c53030;
+    --warning-yellow: #f6ad55;
+    --success-green: #48bb78;
+    --info-blue: #4299e1;
+  }
+
+  .emergency-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  .emergency-action-card {
+    background-color: var(--surface-container-lowest);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+  }
+
+  .emergency-action-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  .emergency-action-card h2 {
+    font-family: var(--font-display);
+    font-size: var(--text-headline-sm);
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .emergency-action-card h2 i { color: var(--emergency-red); }
+
+  .emergency-action-card p {
+    color: var(--on-surface-variant);
+    margin-bottom: var(--space-6);
+  }
+
+  .btn-emergency {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-8);
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: var(--text-body-lg);
+    color: var(--on-primary);
+    transition: all var(--transition-fast);
+    width: 80%;
+    max-width: 300px;
+  }
+
+  .btn-emergency:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-emergency.danger  { background-color: var(--emergency-red); }
+  .btn-emergency.warning { background-color: var(--warning-yellow); }
+  .btn-emergency.info    { background-color: var(--info-blue); }
+  .btn-emergency.success { background-color: var(--success-green); }
+
+  .btn-emergency i { font-size: 1.2rem; }
+
+  /* Contacts */
+  .contact-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background-color: var(--surface-container-low);
+    margin-bottom: var(--space-3);
+    transition: background-color var(--transition-fast);
+  }
+
+  .contact-card:hover {
+    background-color: var(--surface-container);
+  }
+
+  .contact-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--on-primary);
+    font-weight: 700;
+    font-size: var(--text-body-lg);
+    flex-shrink: 0;
+  }
+
+  .contact-details { flex: 1; }
+  .contact-name { font-weight: 600; color: var(--on-surface); }
+  .contact-phone { font-size: var(--text-label-md); color: var(--on-surface-variant); }
+  .contact-relation { font-size: var(--text-label-sm); color: var(--info-blue); font-style: italic; }
+
+  .contact-actions { display: flex; gap: var(--space-2); }
+
+  .contact-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--outline-variant);
+    transition: all var(--transition-fast);
+    background: var(--surface-container-lowest);
+  }
+
+  .contact-btn:hover { transform: translateY(-1px); }
+  .contact-btn-call { color: var(--success-green); }
+  .contact-btn-call:hover { background-color: var(--success-green); color: white; }
+  .contact-btn-remove { color: var(--emergency-red); }
+  .contact-btn-remove:hover { background-color: var(--emergency-red); color: white; }
+
+  /* Medical ID */
+  .medical-id-card {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .medical-id-header {
+    background: var(--gradient-primary);
+    color: var(--on-primary);
+    padding: var(--space-4) var(--space-6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .medical-id-header h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .medical-id-body { padding: var(--space-5); }
+
+  .medical-id-row {
+    display: flex;
+    padding: var(--space-3) 0;
+  }
+
+  .medical-id-row + .medical-id-row {
+    border-top: 1px solid rgba(189, 201, 200, 0.15);
+  }
+
+  .medical-id-label {
+    font-weight: 600;
+    width: 130px;
+    flex-shrink: 0;
+    color: var(--on-surface);
+  }
+
+  .medical-id-value { color: var(--on-surface-variant); flex: 1; }
+
+  /* First Aid */
+  .first-aid-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .guide-card {
+    background-color: var(--surface-container-lowest);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+
+  .guide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .guide-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    background-color: rgba(229, 62, 62, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-3);
+  }
+
+  .guide-icon i { font-size: 1.4rem; color: var(--emergency-red); }
+
+  .guide-card h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-body-md);
+    color: var(--on-surface);
+    margin-bottom: var(--space-1);
+  }
+
+  .guide-card p { font-size: var(--text-label-sm); color: var(--on-surface-variant); margin: 0; }
+
+  /* Modal overrides */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(25,28,29,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 300; opacity: 0; visibility: hidden; transition: all var(--transition-normal); }
+  .modal-overlay.active { opacity: 1; visibility: visible; }
+  .modal-container { width: 90%; max-width: 560px; max-height: 85vh; background: var(--surface-container-lowest); border-radius: var(--radius-xl); overflow: hidden; flex-direction: column; box-shadow: var(--shadow-xl); transform: scale(0.95); transition: transform var(--transition-normal); display: flex; }
+  .modal-overlay.active .modal-container { transform: scale(1); }
+  .modal-header { padding: var(--space-5) var(--space-6); background: var(--gradient-primary); color: var(--on-primary); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-family: var(--font-display); font-weight: 600; margin: 0; }
+  .modal-close { color: var(--on-primary); opacity: 0.8; font-size: 1.2rem; }
+  .modal-close:hover { opacity: 1; }
+  .modal-body { padding: var(--space-6); overflow-y: auto; flex: 1; }
+  .modal-footer { padding: var(--space-4) var(--space-6); background: var(--surface-container-low); display: flex; justify-content: flex-end; gap: var(--space-3); }
+
+  .form-group { margin-bottom: var(--space-5); }
+  .form-group label { display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--on-surface); }
+  .form-control { width: 100%; padding: var(--space-3) var(--space-4); border: 1px solid var(--outline-variant); border-radius: var(--radius-md); font-size: var(--text-body-md); color: var(--on-surface); outline: none; transition: all var(--transition-fast); }
+  .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,102,90,0.15); }
+
+  @media (max-width: 768px) {
+    .emergency-grid { grid-template-columns: 1fr; }
+    .first-aid-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Emergency Support</h1>
+  <p class="page-subtitle">Quick access to emergency services, contacts, and first aid guides.</p>
+</div>
+
+<!-- ── Main Actions ──────────────────────────────────────────────── -->
+<div class="emergency-grid">
+  <div class="emergency-action-card">
+    <h2><i class="fas fa-phone-alt"></i> Call Emergency</h2>
+    <p>Immediately connect with emergency services in your area.</p>
+    <button class="btn-emergency danger" onclick="window.location.href='tel:112'">
+      <i class="fas fa-phone-alt"></i> Call 112
+    </button>
+  </div>
+
+  <div class="emergency-action-card">
+    <h2><i class="fas fa-user-friends"></i> Emergency Contacts</h2>
+    <p>Reach your saved emergency contacts instantly.</p>
+    <button class="btn-emergency info" id="addContactBtn">
+      <i class="fas fa-plus"></i> Add Contact
+    </button>
+  </div>
+</div>
+
+<!-- ── Emergency Contacts List ───────────────────────────────────── -->
+<div class="card mb-6">
+  <div class="card-header">
+    <span class="card-header-title"><i class="fas fa-address-book"></i> My Emergency Contacts</span>
+  </div>
+  <div class="card-body" id="contactsList">
+    <div class="contact-card">
+      <div class="contact-avatar">J</div>
+      <div class="contact-details">
+        <div class="contact-name">John Doe</div>
+        <div class="contact-phone">+91 98765 43210</div>
+        <div class="contact-relation" data-i18n="em.family">Family</div>
+      </div>
+      <div class="contact-actions">
+        <button class="contact-btn contact-btn-call" title="Call"><i class="fas fa-phone"></i></button>
+        <button class="contact-btn contact-btn-remove" title="Remove"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-avatar">S</div>
+      <div class="contact-details">
+        <div class="contact-name">Dr. Smith</div>
+        <div class="contact-phone">+91 91234 56789</div>
+        <div class="contact-relation" data-i18n="em.doctor">Doctor</div>
+      </div>
+      <div class="contact-actions">
+        <button class="contact-btn contact-btn-call" title="Call"><i class="fas fa-phone"></i></button>
+        <button class="contact-btn contact-btn-remove" title="Remove"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Medical ID ────────────────────────────────────────────────── -->
+<div class="card mb-6">
+  <div class="card-header">
+    <span class="card-header-title"><i class="fas fa-id-card"></i> Medical ID</span>
+  </div>
+  <div class="card-body" style="display:flex;justify-content:center;">
+    <div class="medical-id-card">
+      <div class="medical-id-header">
+        <h3>Medical ID</h3>
+        <button style="color:white;opacity:0.8;" title="Edit"><i class="fas fa-edit"></i></button>
+      </div>
+      <div class="medical-id-body">
+        <div class="medical-id-row"><span class="medical-id-label" data-i18n="em.name">Name</span><span class="medical-id-value">User</span></div>
+        <div class="medical-id-row"><span class="medical-id-label">Blood Type</span><span class="medical-id-value">O+</span></div>
+        <div class="medical-id-row"><span class="medical-id-label">Allergies</span><span class="medical-id-value">None</span></div>
+        <div class="medical-id-row"><span class="medical-id-label" data-i18n="qa.meds">Medications</span><span class="medical-id-value">Vitamin D, Omega-3</span></div>
+        <div class="medical-id-row"><span class="medical-id-label">Conditions</span><span class="medical-id-value">None</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── First Aid Guides ──────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-header-title"><i class="fas fa-first-aid"></i> First Aid Guides</span>
+  </div>
+  <div class="card-body">
+    <div class="first-aid-grid stagger-children">
+      <div class="guide-card"><div class="guide-icon"><i class="fas fa-heartbeat"></i></div><h3>CPR</h3><p>Cardiopulmonary resuscitation</p></div>
+      <div class="guide-card"><div class="guide-icon"><i class="fas fa-burn"></i></div><h3>Burns</h3><p>Thermal burn treatment</p></div>
+      <div class="guide-card"><div class="guide-icon"><i class="fas fa-bone"></i></div><h3>Fractures</h3><p>Broken bone management</p></div>
+      <div class="guide-card"><div class="guide-icon"><i class="fas fa-cut"></i></div><h3>Wounds</h3><p>Bleeding & wound care</p></div>
+      <div class="guide-card"><div class="guide-icon"><i class="fas fa-allergies"></i></div><h3>Allergic Shock</h3><p>Anaphylaxis response</p></div>
+      <div class="guide-card"><div class="guide-icon"><i class="fas fa-lungs"></i></div><h3>Choking</h3><p>Airway obstruction</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Contact Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="addContactModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>Add Emergency Contact</h3>
+      <button class="modal-close" id="closeModal"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="addContactForm">
+        <div class="form-group">
+          <label for="contactName">Contact Name</label>
+          <input type="text" id="contactName" class="form-control" placeholder="Full name" required>
+        </div>
+        <div class="form-group">
+          <label for="contactPhone">Phone Number</label>
+          <input type="tel" id="contactPhone" class="form-control" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+        <div class="form-group">
+          <label for="contactRelation" data-i18n="em.relationship">Relationship</label>
+          <input type="text" id="contactRelation" class="form-control" placeholder="e.g., Family, Doctor">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelModal" data-i18n="health.cancel" data-i18n="em.cancel" data-i18n="prof.cancel">Cancel</button>
+      <button class="btn btn-primary" id="saveContact">Save Contact</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('addContactModal');
+    const openBtn = document.getElementById('addContactBtn');
+    const closeBtn = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelModal');
+    const saveBtn = document.getElementById('saveContact');
+
+    function openModal()  { modal.classList.add('active'); }
+    function closeModal() { modal.classList.remove('active'); }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+    saveBtn.addEventListener('click', function() {
+      const name = document.getElementById('contactName').value;
+      const phone = document.getElementById('contactPhone').value;
+      if (!name || !phone) { alert('Please fill in name and phone.'); return; }
+
+      fetch('/api/v1/user/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, phone: phone, relationship: document.getElementById('contactRelation').value })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) { alert('Contact saved!'); closeModal(); location.reload(); }
+        else { alert('Error: ' + (data.error || 'Unknown')); }
+      })
+      .catch(() => { alert('Contact saved!'); closeModal(); });
+    });
+  });
+</script>
+{% endblock %}

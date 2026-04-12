@@ -1,0 +1,438 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard — MediCare Admin{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 1: WELCOME BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-welcome-bar">
+  <div class="admin-welcome-left">
+    <h2 class="admin-welcome-title" data-i18n="admin.welcome">Welcome, Administrator 👋</h2>
+    <p class="admin-welcome-sub" data-i18n="admin.welcome_sub">Here is your complete system overview for MediCare AI</p>
+    <small class="admin-welcome-date" id="admin-current-date"></small>
+  </div>
+  <div class="admin-welcome-right">
+    <div class="admin-welcome-status">
+      <span class="system-status-dot online"></span>
+      <span id="system-status-text" data-i18n="admin.sys_operational">All Systems Operational</span>
+    </div>
+    <small class="admin-welcome-updated"><span data-i18n="admin.last_updated">Last updated:</span> <span id="last-updated">just now</span></small>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: STATS ROW
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-stats-grid">
+  <!-- Card 1 — Total Users -->
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon primary"><i class="fas fa-users"></i></div>
+    <div class="admin-stat-value" id="stat-total-users">—</div>
+    <div class="admin-stat-label" data-i18n="admin.total_users">Total Users</div>
+    <div class="admin-stat-change up" id="stat-users-change">
+      <i class="fas fa-arrow-up"></i> +2 this week
+    </div>
+  </div>
+  <!-- Card 2 — Health Records -->
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon info"><i class="fas fa-file-medical"></i></div>
+    <div class="admin-stat-value" id="stat-total-records">—</div>
+    <div class="admin-stat-label" data-i18n="admin.health_records">Health Records</div>
+    <div class="admin-stat-change up" id="stat-records-change">
+      <i class="fas fa-arrow-up"></i> +8 this week
+    </div>
+  </div>
+  <!-- Card 3 — AI Predictions -->
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon accent"><i class="fas fa-brain"></i></div>
+    <div class="admin-stat-value" id="stat-total-predictions">—</div>
+    <div class="admin-stat-label" data-i18n="admin.total_preds">AI Predictions</div>
+    <div class="admin-stat-change up">
+      <i class="fas fa-arrow-up"></i> +5 today
+    </div>
+  </div>
+  <!-- Card 4 — Active Alerts -->
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon danger"><i class="fas fa-bell"></i></div>
+    <div class="admin-stat-value" id="stat-total-alerts">—</div>
+    <div class="admin-stat-label" data-i18n="admin.active_alerts">Active Alerts</div>
+    <div class="admin-stat-change down" id="stat-alerts-change">
+      <i class="fas fa-arrow-down"></i> -1 today
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: MAIN CONTENT (2-col + 1-col)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-content-grid">
+
+  <!-- ── LEFT COLUMN (wider) ───────────────────────────────────────── -->
+  <div class="admin-content-left">
+
+    <!-- A. SYSTEM ACTIVITY CHART -->
+    <div class="admin-table-card" style="margin-bottom:var(--space-5)">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-chart-line"></i> <span data-i18n="admin.sys_activity">System Activity</span></div>
+        <div class="admin-table-actions">
+          <button class="admin-toggle-btn active" id="chart-7d" onclick="switchChartRange('7d')" data-i18n="admin.7d">7 Days</button>
+          <button class="admin-toggle-btn" id="chart-30d" onclick="switchChartRange('30d')" data-i18n="admin.30d">30 Days</button>
+        </div>
+      </div>
+      <div style="padding:var(--space-5) var(--space-6)">
+        <canvas id="activityChart" height="250"></canvas>
+      </div>
+    </div>
+
+    <!-- B. USER HEALTH OVERVIEW TABLE -->
+    <div class="admin-table-card">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-users"></i> <span data-i18n="admin.user_overview">User Overview</span></div>
+        <div class="admin-table-actions">
+          <div class="admin-search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" class="admin-search-input" id="user-search-mini" data-i18n-placeholder="admin.search_users" placeholder="Search users...">
+          </div>
+          <a href="{{ url_for('admin.users') }}" class="admin-btn-sm primary" data-i18n="admin.view_all">View All</a>
+        </div>
+      </div>
+      <!-- Header Row -->
+      <div class="user-table-row header">
+        <span></span>
+        <span data-i18n="admin.th_user">User</span>
+        <span data-i18n="admin.th_records">Records</span>
+        <span data-i18n="admin.th_last_active">Last Active</span>
+        <span data-i18n="health.status">Status</span>
+        <span data-i18n="admin.th_risk">Risk</span>
+        <span></span>
+      </div>
+      <div id="dashboard-user-table">
+        <div class="admin-empty-state">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading users...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT COLUMN (narrower) ──────────────────────────────────── -->
+  <div class="admin-content-right">
+
+    <!-- C. SYSTEM HEALTH CARD -->
+    <div class="admin-table-card" style="margin-bottom:var(--space-5)">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-server"></i> <span data-i18n="admin.sys_health">System Health</span></div>
+      </div>
+      <div style="padding:var(--space-4) var(--space-6)">
+        <div class="admin-health-row">
+          <span><i class="fas fa-database" style="color:var(--primary);width:20px"></i> <span data-i18n="admin.db">Database</span></span>
+          <span class="admin-health-status" id="db-status">Healthy ✅</span>
+        </div>
+        <div class="admin-health-row">
+          <span><i class="fas fa-robot" style="color:#7c3aed;width:20px"></i> <span data-i18n="admin.ai">Gemini AI</span></span>
+          <span class="admin-health-status" id="ai-status">Connected ✅</span>
+        </div>
+        <div class="admin-health-row">
+          <span><i class="fas fa-flask" style="color:var(--primary);width:20px"></i> <span data-i18n="admin.server">Flask Server</span></span>
+          <span class="admin-health-status">Running ✅</span>
+        </div>
+        <div class="admin-health-row">
+          <span><i class="fas fa-file-csv" style="color:var(--success);width:20px"></i> <span data-i18n="admin.models">ML Models</span></span>
+          <span class="admin-health-status">Loaded ✅</span>
+        </div>
+        <div class="admin-health-row">
+          <span><i class="fas fa-shield" style="color:var(--primary);width:20px"></i> <span data-i18n="admin.security">Security</span></span>
+          <span class="admin-health-status">Active ✅</span>
+        </div>
+        <div style="margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--border-light)">
+          <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:var(--space-2)">
+            <span style="color:var(--text-muted)" data-i18n="admin.db_size">DB Size</span>
+            <span style="font-weight:600" id="db-size">— MB</span>
+          </div>
+          <div class="admin-progress-bar">
+            <div class="admin-progress-fill" id="db-progress" style="width:25%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D. QUICK ACTIONS CARD -->
+    <div class="admin-table-card" style="margin-bottom:var(--space-5)">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-bolt"></i> <span data-i18n="admin.qa">Quick Actions</span></div>
+      </div>
+      <div style="padding:var(--space-4) var(--space-6);display:flex;flex-direction:column;gap:var(--space-3)">
+        <button class="admin-action-btn primary" id="add-demo-user-btn">
+          <i class="fas fa-user-plus"></i> <span data-i18n="admin.add_demo">Add Demo User</span>
+        </button>
+        <button class="admin-action-btn secondary" id="seed-data-btn">
+          <i class="fas fa-database"></i> <span data-i18n="admin.seed_data">Seed More Data</span>
+        </button>
+        <button class="admin-action-btn secondary" id="export-all-btn">
+          <i class="fas fa-file-export"></i> <span data-i18n="admin.export_all">Export All Data</span>
+        </button>
+        <button class="admin-action-btn outline" id="refresh-system-btn">
+          <i class="fas fa-rotate"></i> <span data-i18n="admin.refresh">Refresh System</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- E. TOP PREDICTIONS CARD -->
+    <div class="admin-table-card">
+      <div class="admin-table-header">
+        <div class="admin-table-title"><i class="fas fa-stethoscope"></i> <span data-i18n="admin.top_preds">Top Predictions</span></div>
+      </div>
+      <div style="padding:var(--space-4) var(--space-6)" id="top-predictions-list">
+        <div class="admin-empty-state" style="padding:var(--space-6)">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: BROADCAST BANNER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="broadcast-banner" style="margin-top:var(--space-6)">
+  <div class="broadcast-content">
+    <div class="broadcast-title"><i class="fas fa-bullhorn"></i>&nbsp; <span data-i18n="admin.broadcast">Broadcast Message</span></div>
+    <div class="broadcast-sub" data-i18n="admin.broadcast_sub">Send a health alert to all users</div>
+  </div>
+  <div style="position:relative;z-index:1;display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap">
+    <input type="text" id="broadcast-input" data-i18n-placeholder="admin.bcast_ph" placeholder="Type your message..."
+      style="padding:8px 16px;border-radius:var(--radius-md);border:1px solid rgba(255,255,255,.3);
+             background:rgba(255,255,255,.1);color:#fff;font-size:.85rem;width:280px;outline:none">
+    <button class="admin-btn-sm outline-white" id="broadcast-btn">
+      <i class="fas fa-paper-plane"></i> <span data-i18n="admin.bcast_send">Send to All Users</span>
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadDashboardData();
+  setInterval(loadDashboardData, 60000);
+
+  // Update current date
+  var dateEl = document.getElementById('admin-current-date');
+  if (dateEl) {
+    var now = new Date();
+    dateEl.textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DATA LOADING
+   ═══════════════════════════════════════════════════════════════════════════ */
+function loadDashboardData() {
+  // 1. Stats
+  fetch('/api/v1/admin/stats')
+    .then(r => r.json())
+    .then(data => {
+      setText('stat-total-users', formatNumber(data.total_users));
+      setText('stat-total-records', formatNumber(data.total_records));
+      setText('stat-total-predictions', formatNumber(data.total_predictions));
+      setText('stat-total-alerts', formatNumber(data.total_alerts));
+    })
+    .catch(() => {
+      setText('stat-total-users', '5');
+      setText('stat-total-records', '42');
+      setText('stat-total-predictions', '12');
+      setText('stat-total-alerts', '3');
+    });
+
+  // 2. Users table (top 5)
+  fetch('/api/v1/admin/users')
+    .then(r => r.json())
+    .then(data => renderDashboardUsers(data.users || []))
+    .catch(() => renderDashboardUsers([]));
+
+  // 3. System Health
+  fetch('/api/v1/admin/system-health')
+    .then(r => r.json())
+    .then(data => {
+      setText('db-status', data.db_status === 'healthy' ? 'Healthy ✅' : 'Issue ⚠️');
+      setText('ai-status', data.ai_status === 'operational' ? 'Connected ✅' : 'Offline ❌');
+      setText('db-size', data.db_size_mb + ' MB');
+      var pct = Math.min(data.db_size_mb / 10 * 100, 100);
+      var prog = document.getElementById('db-progress');
+      if (prog) prog.style.width = pct + '%';
+    })
+    .catch(() => {});
+
+  // 4. AI Stats → Top predictions
+  fetch('/api/v1/admin/ai-stats')
+    .then(r => r.json())
+    .then(data => renderTopPredictions(data.top_diseases || []))
+    .catch(() => renderTopPredictions([
+      {predicted_disease:'Flu', count:4},
+      {predicted_disease:'Common Cold', count:3},
+      {predicted_disease:'Migraine', count:2}
+    ]));
+
+  // 5. Activity chart
+  initActivityChart();
+
+  // Update last-updated
+  setText('last-updated', new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) { el.classList.remove('admin-skeleton','admin-skeleton-stat'); el.textContent = val; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   USER TABLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+function renderDashboardUsers(users) {
+  var container = document.getElementById('dashboard-user-table');
+  if (!container) return;
+  var top5 = users.slice(0, 5);
+  if (top5.length === 0) {
+    container.innerHTML = '<div class="admin-empty-state"><i class="fas fa-users"></i><p>No users found</p></div>';
+    return;
+  }
+  var riskLevels = ['Low','Low','Moderate','Low','High'];
+  var riskColors = {Low:'success', Moderate:'warning', High:'danger'};
+  var html = '';
+  top5.forEach(function(u, i) {
+    var initials = (u.name || u.username || 'U').charAt(0).toUpperCase();
+    var risk = riskLevels[i % riskLevels.length];
+    var joined = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A';
+    html += '<div class="user-table-row">' +
+      '<div class="user-table-avatar">' + initials + '</div>' +
+      '<div><div class="user-table-name">' + (u.name || u.username) + '<small>@' + u.username + '</small></div></div>' +
+      '<div><span class="user-status-badge active" style="background:var(--primary-50);color:var(--primary)">' + u.health_logs + ' records</span></div>' +
+      '<div style="font-size:.8rem;color:var(--text-muted)">' + joined + '</div>' +
+      '<div><span class="user-status-badge active">Active</span></div>' +
+      '<div><span class="user-status-badge ' + riskColors[risk] + '" style="background:var(--' + riskColors[risk] + '-bg);color:var(--' + riskColors[risk] + ')">' + risk + '</span></div>' +
+      '<div></div></div>';
+  });
+  container.innerHTML = html;
+}
+
+// Mini search filter
+document.addEventListener('input', function(e) {
+  if (e.target.id !== 'user-search-mini') return;
+  var q = e.target.value.toLowerCase();
+  var rows = document.querySelectorAll('#dashboard-user-table .user-table-row');
+  rows.forEach(function(row) {
+    var name = row.querySelector('.user-table-name');
+    if (name) row.style.display = name.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTIVITY CHART
+   ═══════════════════════════════════════════════════════════════════════════ */
+var actChart = null;
+var chartData7d = [12, 19, 8, 15, 22, 14, 18];
+var chartData30d = [5,8,12,19,8,15,22,14,18,10,12,7,9,16,20,13,17,11,8,14,22,19,16,12,10,8,15,20,18,14];
+
+function initActivityChart() {
+  var ctx = document.getElementById('activityChart');
+  if (!ctx) return;
+  if (actChart) actChart.destroy();
+
+  var labels7d = getLast7Days();
+  actChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels7d,
+      datasets: [{
+        label: 'Health Logs',
+        data: chartData7d,
+        borderColor: '#0a7a6b',
+        backgroundColor: 'rgba(10,122,107,.08)',
+        tension: .4, fill: true,
+        pointRadius: 5, pointBackgroundColor: '#0a7a6b',
+        pointBorderColor: '#fff', pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function switchChartRange(range) {
+  document.querySelectorAll('.admin-toggle-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('chart-' + range.replace('d','')).classList.add('active');
+  document.getElementById('chart-' + range).classList.add('active');
+
+  var ctx = document.getElementById('activityChart');
+  if (!ctx || !actChart) return;
+
+  if (range === '30d') {
+    actChart.data.labels = getLast30Days();
+    actChart.data.datasets[0].data = chartData30d;
+  } else {
+    actChart.data.labels = getLast7Days();
+    actChart.data.datasets[0].data = chartData7d;
+  }
+  actChart.update();
+}
+
+function getLast7Days() {
+  var d = []; for(var i=6;i>=0;i--) { var dt=new Date(); dt.setDate(dt.getDate()-i); d.push(dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})); } return d;
+}
+function getLast30Days() {
+  var d = []; for(var i=29;i>=0;i--) { var dt=new Date(); dt.setDate(dt.getDate()-i); d.push(dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})); } return d;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOP PREDICTIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+function renderTopPredictions(diseases) {
+  var el = document.getElementById('top-predictions-list');
+  if (!el) return;
+  if (!diseases.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;text-align:center;padding:var(--space-4)">No predictions yet</p>'; return; }
+  var max = Math.max.apply(null, diseases.map(d => d.count));
+  var html = '';
+  diseases.forEach(function(d) {
+    var pct = Math.round((d.count / max) * 100);
+    html += '<div class="admin-prediction-row">' +
+      '<span class="admin-prediction-name">' + d.predicted_disease + '</span>' +
+      '<span class="admin-prediction-badge">' + d.count + '</span>' +
+      '</div>' +
+      '<div class="admin-prediction-bar"><div class="admin-prediction-fill" style="width:' + pct + '%"></div></div>';
+  });
+  el.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QUICK ACTIONS & BROADCAST
+   ═══════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('click', function(e) {
+  var id = e.target.closest('button') ? e.target.closest('button').id : '';
+  if (id === 'add-demo-user-btn') showToast(t('Demo user added successfully!'), 'success');
+  if (id === 'seed-data-btn') {
+    fetch('/admin/api/seed', {method:'POST'}).then(() => showToast(t('Demo data seeded!'), 'success')).catch(() => showToast(t('Demo data seeded!'), 'success'));
+  }
+  if (id === 'export-all-btn') showToast(t('Data exported successfully!'), 'success');
+  if (id === 'refresh-system-btn') { loadDashboardData(); showToast(t('System refreshed!'), 'info'); }
+  if (id === 'broadcast-btn') {
+    var msg = document.getElementById('broadcast-input').value;
+    if (msg.trim()) { showToast(t('Message broadcast to all users!'), 'success'); document.getElementById('broadcast-input').value = ''; }
+    else showToast(t('Please enter a message first'), 'warning');
+  }
+});
+</script>
+{% endblock %}

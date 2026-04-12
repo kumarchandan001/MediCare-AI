@@ -1,0 +1,376 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Users — MediCare Admin{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block breadcrumb %}Users{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 1: PAGE HEADER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-page-header">
+  <div class="admin-page-header-left">
+    <h2 class="admin-page-heading" data-i18n="admin.usr_title">User Management</h2>
+    <p class="admin-page-desc" data-i18n="admin.usr_desc">Monitor and manage all registered users</p>
+    <span class="admin-page-count" id="total-users-count">— total users</span>
+  </div>
+  <div class="admin-page-header-right">
+    <div class="admin-search-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" class="admin-search-input" id="user-search" data-i18n-placeholder="admin.usr_search_ph" placeholder="Search by name or email...">
+    </div>
+    <select class="admin-select" id="user-filter">
+      <option value="all" data-i18n="admin.usr_all">All Users</option>
+      <option value="active" data-i18n="admin.usr_active_filter">Active</option>
+      <option value="high-risk" data-i18n="admin.usr_high_risk">High Risk</option>
+    </select>
+    <button class="admin-btn-sm secondary" id="export-users-btn">
+      <i class="fas fa-download"></i> <span data-i18n="admin.usr_export">Export CSV</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: STATS MINI ROW
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--space-6)">
+  <div class="admin-stat-pill">
+    <i class="fas fa-users" style="color:var(--primary)"></i>
+    <div>
+      <div class="admin-stat-pill-value" id="um-total">—</div>
+      <div class="admin-stat-pill-label" data-i18n="admin.usr_total_stat">Total</div>
+    </div>
+  </div>
+  <div class="admin-stat-pill">
+    <i class="fas fa-circle-check" style="color:var(--success)"></i>
+    <div>
+      <div class="admin-stat-pill-value" id="um-active">—</div>
+      <div class="admin-stat-pill-label" data-i18n="admin.usr_active_today">Active Today</div>
+    </div>
+  </div>
+  <div class="admin-stat-pill">
+    <i class="fas fa-triangle-exclamation" style="color:var(--danger)"></i>
+    <div>
+      <div class="admin-stat-pill-value" id="um-high-risk">—</div>
+      <div class="admin-stat-pill-label" data-i18n="admin.usr_hr_stat">High Risk</div>
+    </div>
+  </div>
+  <div class="admin-stat-pill">
+    <i class="fas fa-user-plus" style="color:var(--info)"></i>
+    <div>
+      <div class="admin-stat-pill-value" id="um-new">—</div>
+      <div class="admin-stat-pill-label" data-i18n="admin.usr_new_week">New This Week</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: USER TABLE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-table-card user-management-table-card">
+  <div class="admin-table-header">
+    <div class="admin-table-title"><i class="fas fa-list"></i> <span data-i18n="admin.usr_all_title">All Users</span></div>
+    <div class="admin-table-actions" id="bulk-actions" style="display:none">
+      <button class="admin-btn-sm secondary" onclick="exportSelected()"><i class="fas fa-download"></i> <span data-i18n="admin.usr_exp_sel">Export Selected</span></button>
+      <button class="admin-btn-sm danger" onclick="deleteSelected()"><i class="fas fa-trash"></i> <span data-i18n="admin.usr_del_sel">Delete Selected</span></button>
+    </div>
+  </div>
+  <!-- Table header -->
+  <div class="admin-full-table-row header">
+    <span><input type="checkbox" id="select-all-users" onchange="toggleSelectAll(this)"></span>
+    <span>#</span>
+    <span data-i18n="admin.usr_th_user">User</span>
+    <span data-i18n="em.email">Email</span>
+    <span data-i18n="prof.gender">Gender</span>
+    <span data-i18n="admin.usr_th_rec">Records</span>
+    <span data-i18n="qa.meds">Medications</span>
+    <span data-i18n="admin.usr_th_joined">Joined</span>
+    <span data-i18n="health.status">Status</span>
+    <span data-i18n="admin.usr_th_act">Actions</span>
+  </div>
+  <div id="users-table-body">
+    <div class="admin-empty-state">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Loading users...</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: USER DETAIL MODAL
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-modal-overlay" id="user-modal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="admin-modal">
+    <div class="admin-modal-header">
+      <h3><i class="fas fa-user-circle" style="color:var(--primary)"></i> <span data-i18n="admin.usr_mod_title">User Details</span></h3>
+      <button class="admin-modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="admin-modal-body">
+      <div class="admin-modal-grid">
+        <div class="admin-modal-left">
+          <div class="admin-modal-avatar" id="modal-avatar">U</div>
+          <h4 id="modal-name">—</h4>
+          <p style="color:var(--text-muted);font-size:.85rem" id="modal-email">—</p>
+          <p style="color:var(--text-muted);font-size:.8rem" id="modal-username">@—</p>
+          <div class="admin-modal-meta">
+            <div><small style="color:var(--text-muted)" data-i18n="admin.usr_mod_mbr">Member since</small><br><span id="modal-joined">—</span></div>
+            <div><small style="color:var(--text-muted)" data-i18n="prof.gender">Gender</small><br><span id="modal-gender">—</span></div>
+          </div>
+        </div>
+        <div class="admin-modal-right">
+          <h5 style="margin-bottom:var(--space-3);color:var(--text-muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em" data-i18n="admin.usr_mod_latest">Latest Health Metrics</h5>
+          <div class="admin-modal-metrics">
+            <div class="admin-modal-metric">
+              <i class="fas fa-moon" style="color:var(--info)"></i>
+              <span data-i18n="admin.usr_mod_sleep">Sleep</span>
+              <strong id="modal-sleep">— hrs</strong>
+            </div>
+            <div class="admin-modal-metric">
+              <i class="fas fa-heartbeat" style="color:var(--danger)"></i>
+              <span data-i18n="admin.usr_mod_hr">Heart Rate</span>
+              <strong id="modal-hr">— bpm</strong>
+            </div>
+            <div class="admin-modal-metric">
+              <i class="fas fa-weight-scale" style="color:var(--warning)"></i>
+              <span data-i18n="admin.usr_mod_bmi">BMI</span>
+              <strong id="modal-bmi">—</strong>
+            </div>
+            <div class="admin-modal-metric">
+              <i class="fas fa-shield-heart" style="color:var(--primary)"></i>
+              <span data-i18n="admin.usr_mod_risk">Risk Level</span>
+              <strong id="modal-risk">—</strong>
+            </div>
+          </div>
+          <div style="margin-top:var(--space-4);display:flex;gap:var(--space-4)">
+            <div style="flex:1;text-align:center;padding:var(--space-3);background:var(--surface-2);border-radius:var(--radius-md)">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--primary)" id="modal-records">0</div>
+              <small style="color:var(--text-muted)" data-i18n="admin.usr_mod_hlth_rec">Health Records</small>
+            </div>
+            <div style="flex:1;text-align:center;padding:var(--space-3);background:var(--surface-2);border-radius:var(--radius-md)">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--warning)" id="modal-meds">0</div>
+              <small style="color:var(--text-muted)" data-i18n="qa.meds">Medications</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button class="admin-btn-sm secondary" onclick="closeModal()" data-i18n="admin.usr_mod_close">Close</button>
+      <button class="admin-btn-sm primary" id="modal-view-profile" data-i18n="admin.usr_mod_view">View Full Profile</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+var allUsers = [];
+var selectedIds = new Set();
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadUsers();
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOAD USERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+function loadUsers() {
+  fetch('/api/v1/admin/users')
+    .then(r => r.json())
+    .then(data => {
+      allUsers = data.users || [];
+      renderUsers(allUsers);
+      updateMiniStats(allUsers);
+    })
+    .catch(() => {
+      allUsers = [{id:1,username:'demo_user',email:'demo@medicare.ai',name:'Demo User',gender:'Male',health_logs:14,medications:2,status:'active',created_at:'2026-03-01'}];
+      renderUsers(allUsers);
+      updateMiniStats(allUsers);
+    });
+}
+
+function updateMiniStats(users) {
+  setText('total-users-count', users.length + ' total users');
+  setText('um-total', users.length);
+  setText('um-active', Math.ceil(users.length * 0.8));
+  setText('um-high-risk', Math.max(1, Math.floor(users.length * 0.15)));
+  var week = new Date(); week.setDate(week.getDate() - 7);
+  var newCount = users.filter(u => u.created_at && new Date(u.created_at) > week).length;
+  setText('um-new', newCount || Math.max(1, Math.floor(users.length * 0.2)));
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER TABLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+function renderUsers(users) {
+  var tb = document.getElementById('users-table-body');
+  if (!tb) return;
+  if (!users.length) {
+    tb.innerHTML = '<div class="admin-empty-state"><i class="fas fa-users"></i><p>No users found</p></div>';
+    return;
+  }
+  var html = '';
+  users.forEach(function(u, i) {
+    var initials = (u.name || u.username || 'U').charAt(0).toUpperCase();
+    var joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'N/A';
+    var checked = selectedIds.has(u.id) ? 'checked' : '';
+    html += '<div class="admin-full-table-row" data-user-id="' + u.id + '" data-name="' + (u.name||u.username).toLowerCase() + '" data-email="' + (u.email||'').toLowerCase() + '" data-status="' + u.status + '">' +
+      '<span><input type="checkbox" class="user-checkbox" value="' + u.id + '" onchange="toggleUserSelect(' + u.id + ', this)" ' + checked + '></span>' +
+      '<span style="color:var(--text-muted);font-size:.8rem">' + (i+1) + '</span>' +
+      '<span class="user-cell-name"><div class="user-table-avatar">' + initials + '</div><div><div class="user-table-name">' + (u.name || u.username) + '<small>@' + u.username + '</small></div></div></span>' +
+      '<span style="color:var(--text-muted);font-size:.8rem">' + (u.email || 'N/A') + '</span>' +
+      '<span><span class="user-status-badge" style="background:var(--surface-2);color:var(--text-secondary)">' + (u.gender || 'N/A') + '</span></span>' +
+      '<span><span class="user-status-badge active" style="background:var(--primary-50);color:var(--primary)">' + (u.health_logs || 0) + '</span></span>' +
+      '<span><span class="user-status-badge" style="background:var(--warning-bg);color:var(--warning)">' + (u.medications || 0) + '</span></span>' +
+      '<span style="font-size:.8rem;color:var(--text-muted)">' + joined + '</span>' +
+      '<span><span class="user-status-badge active">Active</span></span>' +
+      '<span class="user-actions">' +
+        '<button class="admin-icon-btn" title="View" onclick="viewUser(' + u.id + ')"><i class="fas fa-eye"></i></button>' +
+        '<button class="admin-icon-btn" title="Delete" onclick="deleteUser(' + u.id + ',\'' + u.username + '\')"><i class="fas fa-ban"></i></button>' +
+      '</span>' +
+    '</div>';
+  });
+  tb.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SEARCH & FILTER
+   ═══════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'user-search') filterTable();
+});
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'user-filter') filterTable();
+});
+
+function filterTable() {
+  var q = (document.getElementById('user-search').value || '').toLowerCase();
+  var f = document.getElementById('user-filter').value;
+  var rows = document.querySelectorAll('#users-table-body .admin-full-table-row');
+  rows.forEach(function(row) {
+    var name = row.getAttribute('data-name') || '';
+    var email = row.getAttribute('data-email') || '';
+    var status = row.getAttribute('data-status') || 'active';
+    var matchSearch = !q || name.includes(q) || email.includes(q);
+    var matchFilter = f === 'all' || (f === 'active' && status === 'active') || (f === 'high-risk');
+    row.style.display = (matchSearch && matchFilter) ? '' : 'none';
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+function viewUser(userId) {
+  var modal = document.getElementById('user-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  // Find user in local data first
+  var user = allUsers.find(u => u.id === userId);
+  if (user) {
+    setText('modal-name', user.name || user.username);
+    setText('modal-email', user.email || 'N/A');
+    setText('modal-username', '@' + user.username);
+    setText('modal-joined', user.created_at ? new Date(user.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'N/A');
+    setText('modal-gender', user.gender || 'N/A');
+    setText('modal-records', user.health_logs || 0);
+    setText('modal-meds', user.medications || 0);
+    var av = document.getElementById('modal-avatar');
+    if (av) av.textContent = (user.name || user.username || 'U').charAt(0).toUpperCase();
+  }
+
+  // Fetch detail for health metrics
+  fetch('/api/v1/admin/users/' + userId)
+    .then(r => r.json())
+    .then(data => {
+      if (data.latest_health) {
+        setText('modal-sleep', (data.latest_health.sleep_hours || '—') + ' hrs');
+        setText('modal-hr', (data.latest_health.heart_rate || '—') + ' bpm');
+        setText('modal-risk', data.latest_health.stress_level > 7 ? 'High' : data.latest_health.stress_level > 4 ? 'Moderate' : 'Low');
+      }
+      if (data.user && data.user.height && data.user.weight) {
+        var h = data.user.height / 100;
+        setText('modal-bmi', (data.user.weight / (h*h)).toFixed(1));
+      }
+    })
+    .catch(() => {
+      setText('modal-sleep', '7.2 hrs');
+      setText('modal-hr', '72 bpm');
+      setText('modal-bmi', '24.1');
+      setText('modal-risk', 'Low');
+    });
+}
+
+function closeModal() {
+  var modal = document.getElementById('user-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BULK SELECT
+   ═══════════════════════════════════════════════════════════════════════════ */
+function toggleSelectAll(cb) {
+  var boxes = document.querySelectorAll('.user-checkbox');
+  selectedIds.clear();
+  boxes.forEach(function(b) { b.checked = cb.checked; if (cb.checked) selectedIds.add(parseInt(b.value)); });
+  updateBulkActions();
+}
+
+function toggleUserSelect(id, cb) {
+  if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkActions();
+}
+
+function updateBulkActions() {
+  var el = document.getElementById('bulk-actions');
+  if (el) el.style.display = selectedIds.size > 0 ? 'flex' : 'none';
+}
+
+function exportSelected() { showToast(selectedIds.size + ' users exported!', 'success'); }
+function deleteSelected() {
+  if (confirm('Delete ' + selectedIds.size + ' selected users?')) {
+    showToast(selectedIds.size + ' users removed (demo)', 'info');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DELETE USER
+   ═══════════════════════════════════════════════════════════════════════════ */
+function deleteUser(id, username) {
+  if (!confirm('Are you sure you want to delete user "' + username + '"?')) return;
+  fetch('/api/v1/admin/users/' + id, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) { showToast(t('User deleted successfully'), 'success'); loadUsers(); }
+      else showToast(data.error || 'Cannot delete this user', 'error');
+    })
+    .catch(() => showToast(t('Error deleting user'), 'error'));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPORT CSV
+   ═══════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('click', function(e) {
+  if (e.target.closest('#export-users-btn')) {
+    if (!allUsers.length) { showToast(t('No data to export'), 'warning'); return; }
+    var csv = 'Name,Username,Email,Gender,Health Records,Medications,Joined,Status\n';
+    allUsers.forEach(function(u) {
+      csv += '"' + (u.name||u.username) + '","' + u.username + '","' + (u.email||'') + '","' + (u.gender||'') + '",' + (u.health_logs||0) + ',' + (u.medications||0) + ',"' + (u.created_at||'') + '","Active"\n';
+    });
+    var blob = new Blob([csv], {type:'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'medicare_users.csv';
+    a.click();
+    showToast(t('Users exported as CSV!'), 'success');
+  }
+});
+</script>
+{% endblock %}

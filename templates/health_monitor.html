@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+
+{% block title %}Health Monitoring — Karuna AI{% endblock %}
+{% block breadcrumb %}Health Monitor{% endblock %}
+
+{% block additional_styles %}
+<style>
+  .monitor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: var(--space-6);
+  }
+
+  /* Input Card */
+  .input-card {
+    background: var(--gradient-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    color: var(--on-primary);
+  }
+
+  .input-card h3 {
+    font-family: var(--font-display);
+    font-size: var(--text-headline-sm);
+    font-weight: 700;
+    margin-bottom: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .input-field {
+    margin-bottom: var(--space-5);
+  }
+
+  .input-field label {
+    display: block;
+    font-size: var(--text-label-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    opacity: 0.95;
+  }
+
+  .input-field input,
+  .input-field textarea {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border: none;
+    font-size: var(--text-body-md);
+    background-color: rgba(255,255,255,0.92);
+    color: var(--on-surface);
+    outline: none;
+    transition: box-shadow var(--transition-fast);
+  }
+
+  .input-field input:focus,
+  .input-field textarea:focus {
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+  }
+
+  .input-field textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .save-btn {
+    width: 100%;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    background-color: var(--on-primary);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: var(--text-body-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    transition: all var(--transition-fast);
+  }
+
+  .save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .stat-tile {
+    background-color: var(--surface-container-lowest);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stat-tile-icon {
+    font-size: 1.4rem;
+    color: var(--primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .stat-tile-value {
+    font-family: var(--font-display);
+    font-size: var(--text-headline-sm);
+    font-weight: 700;
+    color: var(--on-surface);
+  }
+
+  .stat-tile-label {
+    font-size: var(--text-label-md);
+    color: var(--on-surface-variant);
+    margin-top: var(--space-1);
+  }
+
+  /* Period selector */
+  .period-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .period-row label {
+    font-weight: 500;
+    color: var(--on-surface-variant);
+    font-size: var(--text-body-md);
+  }
+
+  .period-select {
+    padding: var(--space-2) var(--space-4);
+    padding-right: 36px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--outline-variant);
+    background-color: var(--surface-container-lowest);
+    font-size: var(--text-body-md);
+    color: var(--on-surface);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236e7979' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    outline: none;
+  }
+
+  @media (max-width: 1024px) {
+    .monitor-grid { grid-template-columns: 1fr; }
+    .stats-grid   { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Health Monitoring</h1>
+  <p class="page-subtitle">Track and visualize your vital signs over time.</p>
+</div>
+
+<div class="monitor-grid">
+  <!-- ── Input Section ────────────────────────────────────── -->
+  <div class="input-card animate-slide-up">
+    <h3><i class="fas fa-heartbeat"></i> Enter Health Data</h3>
+
+    <form id="healthDataForm">
+      <div class="input-field">
+        <label for="blood-pressure">Blood Pressure (mmHg)</label>
+        <input type="text" id="blood-pressure" placeholder="e.g., 120/80" />
+        <div class="validation-msg" id="msg-bp" style="font-size: var(--text-label-sm); margin-top: var(--space-1); display: none;"></div>
+      </div>
+
+      <div class="input-field">
+        <label for="heart-rate">Heart Rate (bpm)</label>
+        <input type="number" id="heart-rate" placeholder="e.g., 72" />
+        <div class="validation-msg" id="msg-hr" style="font-size: var(--text-label-sm); margin-top: var(--space-1); display: none;"></div>
+      </div>
+
+      <div class="input-field">
+        <label for="glucose-level">Blood Glucose (mg/dL)</label>
+        <input type="number" id="glucose-level" placeholder="e.g., 95" />
+        <div class="validation-msg" id="msg-gl" style="font-size: var(--text-label-sm); margin-top: var(--space-1); display: none;"></div>
+      </div>
+
+      <div class="input-field">
+        <label for="oxygen-level">Oxygen Saturation (%)</label>
+        <input type="number" id="oxygen-level" placeholder="e.g., 98" />
+        <div class="validation-msg" id="msg-o2" style="font-size: var(--text-label-sm); margin-top: var(--space-1); display: none;"></div>
+      </div>
+
+      <div class="input-field">
+        <label for="body-temperature">Body Temperature (°F)</label>
+        <input type="number" step="0.1" id="body-temperature" placeholder="e.g., 98.6" />
+        <div class="validation-msg" id="msg-temp" style="font-size: var(--text-label-sm); margin-top: var(--space-1); display: none;"></div>
+      </div>
+
+      <div class="input-field">
+        <label for="health-notes">Notes</label>
+        <textarea id="health-notes" placeholder="Add any relevant details..."></textarea>
+      </div>
+
+      <div id="validation-container"></div>
+
+      <button type="submit" class="save-btn" id="save-btn">
+        <i class="fas fa-save"></i> Save Health Data
+      </button>
+    </form>
+  </div>
+
+  <!-- ── History & Stats ──────────────────────────────────── -->
+  <div class="flex flex-col gap-6">
+    <div class="card animate-slide-up">
+      <div class="card-header">
+        <span class="card-header-title"><i class="fas fa-chart-line"></i> Health History</span>
+      </div>
+      <div class="card-body">
+        <div class="period-row">
+          <label for="history-period">View data for:</label>
+          <select id="history-period" class="period-select">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 3 months</option>
+            <option value="180">Last 6 months</option>
+          </select>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="stat-tile-value">72</div>
+            <div class="stat-tile-label">Avg. Heart Rate</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="fas fa-tachometer-alt"></i></div>
+            <div class="stat-tile-value">120/80</div>
+            <div class="stat-tile-label">Avg. BP</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-icon"><i class="fas fa-tint"></i></div>
+            <div class="stat-tile-value">95</div>
+            <div class="stat-tile-label">Avg. Glucose</div>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th data-i18n="health.date">Date</th>
+              <th>BP</th>
+              <th>HR</th>
+              <th>Glucose</th>
+              <th>O₂</th>
+              <th>Temp</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Today</td>
+              <td>120/80</td>
+              <td>72</td>
+              <td>95</td>
+              <td>98%</td>
+              <td>98.6°F</td>
+            </tr>
+            <tr>
+              <td>Yesterday</td>
+              <td>118/78</td>
+              <td>70</td>
+              <td>92</td>
+              <td>99%</td>
+              <td>98.4°F</td>
+            </tr>
+            <tr>
+              <td>2 days ago</td>
+              <td>122/82</td>
+              <td>74</td>
+              <td>98</td>
+              <td>97%</td>
+              <td>98.8°F</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="hidden" id="empty-state" style="text-align:center; padding:var(--space-8); color:var(--on-surface-variant);">
+          <i class="fas fa-heartbeat" style="font-size:3rem; color:var(--surface-container-high); margin-bottom:var(--space-4);"></i>
+          <p>No health data recorded yet. Start tracking to see history.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const healthDataForm = document.getElementById('healthDataForm');
+    const historyPeriodSelect = document.getElementById('history-period');
+
+    healthDataForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const bloodPressure  = document.getElementById('blood-pressure').value;
+      const heartRate      = document.getElementById('heart-rate').value;
+      const glucoseLevel   = document.getElementById('glucose-level').value;
+      const oxygenLevel    = document.getElementById('oxygen-level').value;
+      const bodyTemperature= document.getElementById('body-temperature').value;
+      const healthNotes    = document.getElementById('health-notes').value;
+
+      if (!bloodPressure || !heartRate) {
+        alert('Please enter at least blood pressure and heart rate.');
+        return;
+      }
+
+      const payload = {
+        blood_pressure: bloodPressure,
+        heart_rate: parseInt(heartRate),
+        oxygen_level: parseInt(oxygenLevel) || 98,
+        glucose_level: parseInt(glucoseLevel) || null,
+        body_temperature: parseFloat(bodyTemperature) || null,
+        notes: healthNotes,
+        force_confirm: !!healthDataForm.dataset.forceConfirm // Capture force context
+      };
+
+      // Send data to backend API
+      fetch('/api/v1/health/vitals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(async r => {
+        if (r.status === 406) {
+          const errData = await r.json();
+          renderValidationWarning(errData.details.warnings, errData.details.suggestions);
+          return null;
+        }
+        return r.json();
+      })
+      .then(data => {
+        if (!data) return; // Handled by 406
+        
+        if (data.success) {
+          alert('Health data saved successfully!');
+          healthDataForm.reset();
+          document.getElementById('validation-container').innerHTML = '';
+          healthDataForm.dataset.forceConfirm = '';
+        } else {
+          alert('Error: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+      });
+    });
+
+    function renderValidationWarning(warnings, suggestions) {
+        const container = document.getElementById('validation-container');
+        let html = `
+          <div class="validation-warning-box relative">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="validation-warning-content">
+              <h4>Unusual Value Detected</h4>
+              <p>${warnings.join('<br>')}</p>
+              <div class="validation-warning-actions">
+                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('healthDataForm').dataset.forceConfirm = 'true'; document.getElementById('save-btn').click();">
+                  <i class="fas fa-check"></i> Confirm Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        container.innerHTML = html;
+        
+        // Highlight inputs
+        const hr = document.getElementById('heart-rate');
+        if (warnings.some(w => w.toLowerCase().includes('heart'))) {
+            hr.classList.add('input-warning');
+        }
+    }
+
+    // Real-time validation logic
+    function setFeedback(id, show, text, type) {
+      const el = document.getElementById(id);
+      if (!show) { el.style.display = 'none'; return; }
+      el.style.display = 'block';
+      el.textContent = text;
+      el.style.color = type === 'warning' ? '#f6ad55' : (type === 'error' ? '#e53e3e' : '#48bb78');
+    }
+
+    document.getElementById('heart-rate').addEventListener('input', function() {
+      const v = parseInt(this.value);
+      if (isNaN(v)) return setFeedback('msg-hr', false);
+      if (v < 60) setFeedback('msg-hr', true, 'Bradycardia risk. Normal is 60-100.', 'warning');
+      else if (v > 100) setFeedback('msg-hr', true, 'Tachycardia risk. Normal is 60-100.', 'warning');
+      else setFeedback('msg-hr', true, 'Heart rate looks normal.', 'success');
+    });
+
+    document.getElementById('blood-pressure').addEventListener('input', function() {
+      const v = this.value.trim();
+      const parts = v.split('/');
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        const sys = parseInt(parts[0]), dia = parseInt(parts[1]);
+        if (sys >= 140 || dia >= 90) setFeedback('msg-bp', true, 'High blood pressure (Hypertension).', 'error');
+        else if (sys >= 120 || dia >= 80) setFeedback('msg-bp', true, 'Elevated blood pressure.', 'warning');
+        else if (sys < 90 || dia < 60) setFeedback('msg-bp', true, 'Low blood pressure (Hypotension).', 'warning');
+        else setFeedback('msg-bp', true, 'Blood pressure is normal.', 'success');
+      } else {
+        setFeedback('msg-bp', false);
+      }
+    });
+
+    document.getElementById('oxygen-level').addEventListener('input', function() {
+      const v = parseInt(this.value);
+      if (isNaN(v)) return setFeedback('msg-o2', false);
+      if (v < 90) setFeedback('msg-o2', true, 'Critical: Seek immediate attention.', 'error');
+      else if (v < 95) setFeedback('msg-o2', true, 'Low oxygen levels.', 'warning');
+      else setFeedback('msg-o2', true, 'Oxygen levels look optimal.', 'success');
+    });
+
+    historyPeriodSelect.addEventListener('change', function() {
+      console.log('Period changed to:', this.value, 'days');
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MediCare AI — Complete your health profile to unlock personalized insights">
+  <title>Welcome — MediCare AI Health Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/medicare.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+
+<body>
+
+  <!-- Floating particles background -->
+  <div class="onb-particles">
+    <div class="particle p1"></div>
+    <div class="particle p2"></div>
+    <div class="particle p3"></div>
+    <div class="particle p4"></div>
+    <div class="particle p5"></div>
+    <div class="particle p6"></div>
+  </div>
+
+  <div class="onb-container">
+
+    <!-- ── Header ──────────────────────────────────────────────────────── -->
+    <div class="onb-header">
+      <div class="onb-logo">
+        <div class="onb-logo-pulse"></div>
+        <i class="fas fa-leaf"></i>
+      </div>
+      <h1>Welcome to <span class="brand-gradient">MediCare</span><span class="brand-ai">AI</span></h1>
+      <p class="onb-subtitle">Let's set up your health profile for personalized health insights</p>
+    </div>
+
+    <!-- ── Progress ────────────────────────────────────────────────────── -->
+    <div class="onb-progress-wrapper">
+      <div class="onb-step-label" id="step-label">Step <span id="step-num">1</span> of 5</div>
+      <div class="onb-progress-track">
+        <div class="onb-progress-fill" id="progress-fill" style="width:20%"></div>
+      </div>
+      <div class="onb-step-dots">
+        <div class="step-dot active" data-step="1"><i class="fas fa-user"></i><span>Basic</span></div>
+        <div class="step-dot" data-step="2"><i class="fas fa-ruler-vertical"></i><span>Body</span></div>
+        <div class="step-dot" data-step="3"><i class="fas fa-file-medical"></i><span>Medical</span></div>
+        <div class="step-dot" data-step="4"><i class="fas fa-heart-pulse"></i><span>Lifestyle</span></div>
+        <div class="step-dot" data-step="5"><i class="fas fa-shield-heart"></i><span data-i18n="nav.emergency" data-i18n="qa.emergency">Emergency</span></div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="onb-toast" id="onb-toast"></div>
+
+    <form id="onboarding-form" method="post" action="/onboarding">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+         STEP 1: BASIC INFORMATION
+         ═══════════════════════════════════════════════════════════════ -->
+      <div class="onb-step active" id="step-1">
+        <div class="onb-card">
+          <div class="onb-card-icon-row">
+            <div class="onb-card-icon"><i class="fas fa-user-circle"></i></div>
+            <div>
+              <h2 class="onb-card-title">Basic Information</h2>
+              <p class="onb-card-desc">Tell us a bit about yourself</p>
+            </div>
+          </div>
+
+          <div class="onb-grid">
+            <div class="onb-field full-width">
+              <label for="full_name"><i class="fas fa-id-card"></i> Full Name</label>
+              <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" maxlength="120"
+                required>
+              <span class="field-error" id="full_name-error"></span>
+            </div>
+            <div class="onb-field">
+              <label for="age"><i class="fas fa-calendar-alt"></i> Age</label>
+              <input type="number" id="age" name="age" min="1" max="150" placeholder="e.g. 28" required>
+              <span class="field-error" id="age-error"></span>
+            </div>
+            <div class="onb-field">
+              <label for="gender"><i class="fas fa-venus-mars"></i> Gender</label>
+              <select id="gender" name="gender" required>
+                <option value="">Select gender...</option>
+                <option value="Male" data-i18n="prof.male">Male</option>
+                <option value="Female" data-i18n="prof.female">Female</option>
+                <option value="Other" data-i18n="health.other" data-i18n="em.other" data-i18n="prof.other">Other</option>
+              </select>
+              <span class="field-error" id="gender-error"></span>
+            </div>
+          </div>
+        </div>
+        <div class="onb-actions">
+          <div></div>
+          <button type="button" class="onb-btn onb-btn-primary" onclick="goToStep(2)">
+            Next <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+         STEP 2: BODY METRICS
+         ═══════════════════════════════════════════════════════════════ -->
+      <div class="onb-step" id="step-2">
+        <div class="onb-card">
+          <div class="onb-card-icon-row">
+            <div class="onb-card-icon blue"><i class="fas fa-ruler-vertical"></i></div>
+            <div>
+              <h2 class="onb-card-title">Body Metrics</h2>
+              <p class="onb-card-desc">Your physical measurements help us personalize recommendations</p>
+            </div>
+          </div>
+
+          <div class="onb-grid">
+            <div class="onb-field">
+              <label for="height"><i class="fas fa-arrows-alt-v"></i> Height (cm)</label>
+              <input type="number" id="height" name="height" min="30" max="300" step="0.1" placeholder="e.g. 170">
+              <span class="field-hint">in centimetres</span>
+              <span class="field-error" id="height-error"></span>
+            </div>
+            <div class="onb-field">
+              <label for="weight"><i class="fas fa-weight-scale"></i> Weight (kg)</label>
+              <input type="number" id="weight" name="weight" min="5" max="500" step="0.1" placeholder="e.g. 65">
+              <span class="field-hint">in kilograms</span>
+              <span class="field-error" id="weight-error"></span>
+            </div>
+          </div>
+
+          <!-- BMI Preview -->
+          <div class="bmi-preview" id="bmi-preview">
+            <div class="bmi-preview-icon"><i class="fas fa-calculator"></i></div>
+            <div class="bmi-preview-content">
+              <span class="bmi-label">BMI Preview</span>
+              <span class="bmi-value" id="bmi-value">—</span>
+            </div>
+            <span class="bmi-category" id="bmi-category"></span>
+          </div>
+        </div>
+        <div class="onb-actions">
+          <button type="button" class="onb-btn onb-btn-secondary" onclick="goToStep(1)">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button type="button" class="onb-btn onb-btn-primary" onclick="goToStep(3)">
+            Next <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+         STEP 3: MEDICAL HISTORY
+         ═══════════════════════════════════════════════════════════════ -->
+      <div class="onb-step" id="step-3">
+        <div class="onb-card">
+          <div class="onb-card-icon-row">
+            <div class="onb-card-icon amber"><i class="fas fa-file-medical"></i></div>
+            <div>
+              <h2 class="onb-card-title">Medical History</h2>
+              <p class="onb-card-desc">Helps MediCare AI give safer, more relevant advice</p>
+            </div>
+          </div>
+
+          <!-- Tag-based conditions selector -->
+          <div class="onb-field full-width" style="margin-bottom:1.25rem">
+            <label><i class="fas fa-stethoscope"></i> Existing Conditions</label>
+            <div class="tag-selector" id="condition-tags">
+              <button type="button" class="tag-chip" data-value="Diabetes">Diabetes</button>
+              <button type="button" class="tag-chip" data-value="Hypertension">Hypertension</button>
+              <button type="button" class="tag-chip" data-value="Asthma">Asthma</button>
+              <button type="button" class="tag-chip" data-value="Heart Disease">Heart Disease</button>
+              <button type="button" class="tag-chip" data-value="Thyroid">Thyroid</button>
+              <button type="button" class="tag-chip" data-value="Arthritis">Arthritis</button>
+              <button type="button" class="tag-chip" data-value="PCOS">PCOS</button>
+              <button type="button" class="tag-chip" data-value="None">None</button>
+            </div>
+            <input type="hidden" id="conditions" name="conditions">
+          </div>
+
+          <div class="onb-grid">
+            <div class="onb-field full-width">
+              <label for="allergies"><i class="fas fa-allergies"></i> Allergies</label>
+              <input type="text" id="allergies" name="allergies" placeholder="e.g. Penicillin, Peanuts, Dust..."
+                maxlength="500">
+              <span class="field-hint">Separate with commas, or type "None"</span>
+            </div>
+            <div class="onb-field full-width">
+              <label for="medications"><i class="fas fa-pills"></i> Current Medications</label>
+              <input type="text" id="medications" name="medications" placeholder="e.g. Metformin, Aspirin..."
+                maxlength="500">
+              <span class="field-hint">Separate with commas, or type "None"</span>
+            </div>
+          </div>
+        </div>
+        <div class="onb-actions">
+          <button type="button" class="onb-btn onb-btn-secondary" onclick="goToStep(2)">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button type="button" class="onb-btn onb-btn-primary" onclick="goToStep(4)">
+            Next <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+         STEP 4: LIFESTYLE
+         ═══════════════════════════════════════════════════════════════ -->
+      <div class="onb-step" id="step-4">
+        <div class="onb-card">
+          <div class="onb-card-icon-row">
+            <div class="onb-card-icon purple"><i class="fas fa-heart-pulse"></i></div>
+            <div>
+              <h2 class="onb-card-title">Your Lifestyle</h2>
+              <p class="onb-card-desc">Help us understand your daily habits</p>
+            </div>
+          </div>
+
+          <!-- Sleep slider -->
+          <div class="slider-group">
+            <label><i class="fas fa-moon"></i> Average Sleep Hours</label>
+            <div class="slider-row">
+              <input type="range" id="sleep_hours" name="sleep_hours" min="1" max="14" step="0.5" value="7"
+                class="onb-slider">
+              <span class="slider-val" id="sleep-val">7 hrs</span>
+            </div>
+          </div>
+
+          <!-- Activity level -->
+          <div class="activity-selector">
+            <label><i class="fas fa-running"></i> Activity Level</label>
+            <div class="activity-cards">
+              <button type="button" class="activity-card" data-value="sedentary" onclick="selectActivity(this)">
+                <i class="fas fa-couch"></i><span data-i18n="alert.low">LOW</span><small>Desk job, minimal movement</small>
+              </button>
+              <button type="button" class="activity-card active" data-value="moderate" onclick="selectActivity(this)">
+                <i class="fas fa-walking"></i><span data-i18n="alert.medium">MEDIUM</span><small>Light exercise, walks</small>
+              </button>
+              <button type="button" class="activity-card" data-value="active" onclick="selectActivity(this)">
+                <i class="fas fa-dumbbell"></i><span data-i18n="alert.high">HIGH</span><small>Regular workouts</small>
+              </button>
+            </div>
+            <input type="hidden" id="lifestyle" name="lifestyle" value="moderate">
+          </div>
+
+          <!-- Water intake slider -->
+          <div class="slider-group">
+            <label><i class="fas fa-glass-water"></i> Daily Water Intake</label>
+            <div class="slider-row">
+              <input type="range" id="water_intake" name="water_intake" min="1" max="10" step="0.5" value="3"
+                class="onb-slider water">
+              <span class="slider-val" id="water-val">3 L</span>
+            </div>
+          </div>
+        </div>
+        <div class="onb-actions">
+          <button type="button" class="onb-btn onb-btn-secondary" onclick="goToStep(3)">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button type="button" class="onb-btn onb-btn-primary" onclick="goToStep(5)">
+            Next <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════
+         STEP 5: EMERGENCY DETAILS
+         ═══════════════════════════════════════════════════════════════ -->
+      <div class="onb-step" id="step-5">
+        <div class="onb-card">
+          <div class="onb-card-icon-row">
+            <div class="onb-card-icon red"><i class="fas fa-shield-heart"></i></div>
+            <div>
+              <h2 class="onb-card-title">Emergency Details</h2>
+              <p class="onb-card-desc">Important information for your safety</p>
+            </div>
+          </div>
+
+          <div class="onb-grid">
+            <div class="onb-field full-width">
+              <label for="blood_group"><i class="fas fa-droplet"></i> Blood Group</label>
+              <select id="blood_group" name="blood_group">
+                <option value="">Select blood group...</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="ec-divider"><span>Emergency Contact</span></div>
+
+          <div id="ec-list">
+            <div class="ec-card" data-idx="1">
+              <div class="onb-grid">
+                <div class="onb-field">
+                  <label>Contact Name</label>
+                  <input type="text" name="ec_name_1" placeholder="Full name" maxlength="120">
+                </div>
+                <div class="onb-field">
+                  <label>Phone Number</label>
+                  <input type="tel" name="ec_phone_1" placeholder="+91 9876543210">
+                </div>
+                <div class="onb-field full-width">
+                  <label data-i18n="em.relationship">Relationship</label>
+                  <select name="ec_relation_1">
+                    <option value="">Select...</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Parent">Parent</option>
+                    <option value="Sibling">Sibling</option>
+                    <option value="Friend" data-i18n="em.friend">Friend</option>
+                    <option value="Doctor" data-i18n="em.doctor">Doctor</option>
+                    <option value="Other" data-i18n="health.other" data-i18n="em.other" data-i18n="prof.other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="add-contact-btn" id="add-ec-btn" onclick="addContact()">
+            <i class="fas fa-plus"></i> Add Another Contact
+          </button>
+        </div>
+
+        <div class="onb-actions">
+          <button type="button" class="onb-btn onb-btn-secondary" onclick="goToStep(4)">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button type="submit" class="onb-btn onb-btn-submit" id="submit-btn">
+            <span class="onb-loading" id="submit-spinner">
+              <div class="spinner"></div>
+            </span>
+            <span id="submit-text">Submit & Continue</span>
+            <i class="fas fa-check-circle" id="submit-icon"></i>
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
+</body>
+
+</html>

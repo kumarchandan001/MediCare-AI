@@ -1,0 +1,647 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — MediCare AI{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block breadcrumb %}Profile{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Profile header ───────────────────────────────────────────────────── */
+  .profile-header { display:flex; align-items:center; gap:var(--space-6); flex-wrap:wrap; }
+  .avatar-lg { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-400)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:2rem; font-weight:800; flex-shrink:0; }
+  .profile-meta { flex:1; min-width:180px; }
+  .profile-meta .pm-name { font-family:var(--font-display); font-weight:700; font-size:1.3rem; }
+  .profile-meta .pm-email { font-size:.82rem; color:var(--text-muted); }
+  .profile-meta .pm-since { font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+  .quick-stats { display:flex; gap:var(--space-5); flex-wrap:wrap; }
+  .qs-box { text-align:center; min-width:90px; }
+  .qs-box .qs-val { font-family:var(--font-display); font-weight:800; font-size:1.5rem; color:var(--primary); }
+  .qs-box .qs-lbl { font-size:.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+  .qs-box .qs-badge { margin-top:4px; }
+  .header-btns { display:flex; flex-direction:column; gap:var(--space-2); flex-shrink:0; }
+
+  /* ── Info rows ────────────────────────────────────────────────────────── */
+  .info-row { display:flex; justify-content:space-between; padding:var(--space-3) 0; border-bottom:1px solid var(--border-light); font-size:.875rem; }
+  .info-row:last-child { border-bottom:none; }
+  .info-label { color:var(--text-muted); font-weight:600; }
+  .info-value { text-align:right; font-weight:500; }
+  .blood-chip { display:inline-block; padding:2px 12px; border-radius:var(--radius-full); background:var(--danger-bg); color:var(--danger); font-family:var(--font-display); font-weight:800; }
+  .blood-circle { width:64px; height:64px; border-radius:50%; background:var(--danger); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:1.2rem; margin:var(--space-3) auto; }
+
+  /* ── Tag lists ────────────────────────────────────────────────────────── */
+  .tag-list { display:flex; flex-wrap:wrap; gap:4px; }
+  .med-tag { padding:3px 10px; border-radius:var(--radius-full); font-size:.72rem; font-weight:600; }
+  .med-tag.red { background:var(--danger-bg); color:var(--danger); }
+  .med-tag.amber { background:var(--warning-bg); color:var(--warning); }
+  .med-tag.teal { background:var(--primary-50); color:var(--primary); }
+
+  /* ── Edit form ────────────────────────────────────────────────────────── */
+  .edit-section { display:none; }
+  .edit-section.show { display:block; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); margin-bottom:var(--space-4); }
+  .form-group { display:flex; flex-direction:column; gap:4px; }
+  .form-group label { font-size:.75rem; font-weight:600; color:var(--text-secondary); }
+  .form-group input, .form-group select, .form-group textarea { padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:.85rem; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,122,107,.1); }
+  .form-hint { font-size:.68rem; color:var(--text-muted); }
+
+  /* ── Contact cards ────────────────────────────────────────────────────── */
+  .contact-card { display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4); border:1px solid var(--border); border-radius:var(--radius-lg); }
+  .contact-avatar { width:40px; height:40px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:1rem; flex-shrink:0; }
+  .contact-info { flex:1; }
+  .contact-info .cn { font-weight:600; font-size:.88rem; }
+  .contact-info .cr { font-size:.72rem; color:var(--text-muted); }
+  .contact-info .cp { font-size:.82rem; color:var(--primary); font-weight:500; }
+  .icon-btn { width:32px; height:32px; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.75rem; transition:var(--transition); }
+  .icon-btn.call { color:var(--success); }
+  .icon-btn.call:hover { background:var(--success-bg); border-color:var(--success); }
+  .icon-btn.del { color:var(--danger); }
+  .icon-btn.del:hover { background:var(--danger-bg); border-color:var(--danger); }
+  .add-form { display:none; background:var(--surface-2); border-radius:var(--radius-lg); padding:var(--space-5); margin-top:var(--space-4); }
+  .add-form.show { display:block; }
+
+  /* ── Med list ─────────────────────────────────────────────────────────── */
+  .med-item { display:flex; align-items:center; gap:10px; padding:var(--space-3) 0; border-bottom:1px solid var(--border-light); font-size:.85rem; }
+  .med-item:last-child { border-bottom:none; }
+  .med-item i { color:var(--primary); }
+  .med-item .mn { font-weight:600; flex:1; }
+  .med-item .md { font-size:.75rem; color:var(--text-muted); }
+
+  /* ── Toggle switch ────────────────────────────────────────────────────── */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; font-size:.85rem; }
+  .toggle-switch { position:relative; width:44px; height:24px; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:var(--surface-3); border-radius:24px; cursor:pointer; transition:var(--transition); }
+  .toggle-slider::before { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:var(--transition); box-shadow:0 1px 3px rgba(0,0,0,.15); }
+  .toggle-switch input:checked + .toggle-slider { background:var(--primary); }
+  .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
+
+  /* ── Pref section labels ──────────────────────────────────────────────── */
+  .pref-label { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin-bottom:var(--space-3); }
+  .range-row { margin-bottom:var(--space-4); }
+  .range-header { display:flex; justify-content:space-between; font-size:.82rem; margin-bottom:4px; }
+  .range-val { font-family:var(--font-display); font-weight:700; color:var(--primary); }
+  input[type=range] { width:100%; accent-color:var(--primary); }
+
+  /* ── Summary boxes ────────────────────────────────────────────────────── */
+  .summary-box { text-align:center; padding:var(--space-5); background:var(--surface-2); border-radius:var(--radius-lg); }
+  .summary-box .sb-icon { font-size:1.5rem; margin-bottom:var(--space-2); }
+  .summary-box .sb-val { font-family:var(--font-display); font-weight:800; font-size:1.8rem; color:var(--primary); }
+  .summary-box .sb-lbl { font-size:.78rem; font-weight:600; margin-bottom:2px; }
+  .summary-box .sb-sub { font-size:.68rem; color:var(--text-muted); }
+
+  /* ── Danger zone ──────────────────────────────────────────────────────── */
+  .danger-zone { background:var(--danger-bg); border:1px solid #fca5a5; border-radius:var(--radius-lg); padding:var(--space-5); }
+  .danger-zone h4 { color:var(--danger); font-family:var(--font-display); font-weight:700; margin-bottom:var(--space-4); }
+  .dz-section { margin-bottom:var(--space-4); }
+  .dz-section:last-child { margin-bottom:0; }
+  .dz-section p { font-size:.82rem; color:#991b1b; margin-bottom:var(--space-2); }
+
+  .empty-state { text-align:center; padding:var(--space-5); color:var(--text-muted); font-size:.85rem; }
+  .empty-state i { font-size:1.5rem; display:block; margin-bottom:var(--space-2); opacity:.4; }
+
+  /* ── Print ─────────────────────────────────────────────────────────────── */
+  @media print { .sidebar,.topbar,.btn,.edit-section,.add-form,.header-btns,.toggle-switch{display:none!important} .main-content{margin-left:0!important} body{background:#fff!important} }
+
+  /* ── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width:768px) {
+    .profile-header { flex-direction:column; align-items:flex-start; }
+    .quick-stats { width:100%; }
+    .header-btns { flex-direction:row; flex-wrap:wrap; }
+    .form-row { grid-template-columns:1fr; }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: PROFILE HEADER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-body">
+    <div class="profile-header">
+      <div class="avatar-lg" id="profile-avatar-letter">D</div>
+      <div class="profile-meta">
+        <div class="pm-name" id="profile-display-name">Loading...</div>
+        <div class="pm-email" id="profile-display-email">—</div>
+        <div class="pm-since" id="profile-member-since">Member since —</div>
+        <span class="badge badge-primary mt-2">Health Member</span>
+      </div>
+      <div class="quick-stats">
+        <div class="qs-box"><div class="qs-val" id="profile-bmi-val">--</div><div class="qs-lbl">Current BMI</div><div class="qs-badge"><span class="badge badge-info" id="profile-bmi-status">—</span></div></div>
+        <div class="qs-box"><div class="qs-val" id="profile-risk-val">--</div><div class="qs-lbl">Risk Score</div><div class="qs-badge"><span class="badge badge-info" id="profile-risk-status">—</span></div></div>
+        <div class="qs-box"><div class="qs-val" id="profile-days-val">--</div><div class="qs-lbl">Days Tracked</div></div>
+      </div>
+      <div class="header-btns">
+        <button class="btn btn-primary btn-sm" id="edit-profile-btn"><i class="fas fa-pen"></i> <span data-i18n="prof.edit">Edit Profile</span></button>
+
+        <a href="{{ url_for('health.reports') }}" class="btn btn-secondary btn-sm"><i class="fas fa-chart-line"></i> <span data-i18n="prof.view_rep">View Reports</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: MAIN CONTENT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-2 mb-6">
+
+  <!-- LEFT COLUMN -->
+  <div class="flex-col gap-6">
+
+    <!-- A: Personal Information -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-user"></i> <span data-i18n="prof.personal_info">Personal Information</span></div>
+        <button class="btn btn-sm btn-secondary" id="edit-personal-btn"><i class="fas fa-pen"></i> <span data-i18n="prof.edit">Edit</span></button>
+      </div>
+      <div class="card-body">
+        <div id="personal-view">
+          <div class="info-row"><span class="info-label" data-i18n="prof.fname">First Name</span><span class="info-value" id="view-firstname">—</span></div>
+          <div class="info-row"><span class="info-label" data-i18n="prof.lname">Last Name</span><span class="info-value" id="view-lastname">—</span></div>
+          <div class="info-row"><span class="info-label" data-i18n="prof.dob">Date of Birth</span><span class="info-value" id="view-dob">—</span></div>
+          <div class="info-row"><span class="info-label" data-i18n="prof.age">Age</span><span class="info-value" id="view-age">—</span></div>
+          <div class="info-row"><span class="info-label" data-i18n="prof.gender">Gender</span><span class="info-value" id="view-gender">—</span></div>
+          <div class="info-row"><span class="info-label" data-i18n="prof.height">Height</span><span class="info-value" id="view-height">—</span></div>
+          <div class="info-row"><span class="info-label" data-i18n="prof.weight">Weight</span><span class="info-value" id="view-weight">—</span></div>
+          <div class="info-row"><span class="info-label" data-i18n="prof.blood">Blood Type</span><span class="info-value" id="view-blood">—</span></div>
+        </div>
+        <div class="edit-section" id="personal-edit">
+          <div class="form-row"><div class="form-group"><label data-i18n="prof.fname">First Name</label><input type="text" id="edit-firstname"></div><div class="form-group"><label data-i18n="prof.lname">Last Name</label><input type="text" id="edit-lastname"></div></div>
+          <div class="form-row"><div class="form-group"><label data-i18n="prof.dob">Date of Birth</label><input type="date" id="edit-dob"></div><div class="form-group"><label data-i18n="prof.gender">Gender</label><select id="edit-gender"><option value="">Select</option><option value="Male" data-i18n="prof.male">Male</option><option value="Female" data-i18n="prof.female">Female</option><option value="Other" data-i18n="health.other" data-i18n="em.other" data-i18n="prof.other">Other</option></select></div></div>
+          <div class="form-row"><div class="form-group"><label data-i18n="prof.height">Height (cm)</label><input type="number" id="edit-height" step="0.1"></div><div class="form-group"><label data-i18n="prof.weight">Weight (kg)</label><input type="number" id="edit-weight" step="0.1"></div></div>
+          <div class="form-row"><div class="form-group"><label data-i18n="prof.blood">Blood Type</label><select id="edit-blood"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div><div class="form-group"></div></div>
+          <div class="flex gap-3 mt-3"><button class="btn btn-primary btn-sm" id="save-personal-btn"><i class="fas fa-check"></i> <span data-i18n="prof.save">Save Changes</span></button><button class="btn btn-secondary btn-sm" id="cancel-personal-btn"><i class="fas fa-xmark"></i> <span data-i18n="prof.cancel">Cancel</span></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B: Medical Information -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-notes-medical"></i> <span data-i18n="prof.med_history">Medical History</span></div>
+        <button class="btn btn-sm btn-secondary" id="edit-medical-btn"><i class="fas fa-pen"></i> <span data-i18n="prof.edit">Edit</span></button>
+      </div>
+      <div class="card-body">
+        <div id="medical-view">
+          <div style="margin-bottom:var(--space-4)"><div class="info-label" style="margin-bottom:6px" data-i18n="prof.conditions">Existing Conditions</div><div class="tag-list" id="view-conditions"><span class="text-sm text-muted">None recorded</span></div></div>
+          <div style="margin-bottom:var(--space-4)"><div class="info-label" style="margin-bottom:6px" data-i18n="prof.allergies">Known Allergies</div><div class="tag-list" id="view-allergies"><span class="text-sm text-muted">None recorded</span></div></div>
+          <div><div class="info-label" style="margin-bottom:6px" data-i18n="prof.blood">Blood Type</div><div class="blood-circle" id="view-blood-large">—</div></div>
+        </div>
+        <div class="edit-section" id="medical-edit">
+          <div class="form-group mb-4"><label data-i18n="prof.conditions">Medical Conditions</label><textarea id="edit-conditions" rows="2" placeholder="diabetes, hypertension..."></textarea><span class="form-hint">Separate with commas</span></div>
+          <div class="form-group mb-4"><label data-i18n="prof.allergies">Allergies</label><textarea id="edit-allergies" rows="2" placeholder="penicillin, peanuts..."></textarea><span class="form-hint">Separate with commas</span></div>
+          <div class="flex gap-3"><button class="btn btn-primary btn-sm" id="save-medical-btn"><i class="fas fa-check"></i> <span data-i18n="prof.save">Save</span></button><button class="btn btn-secondary btn-sm" id="cancel-medical-btn"><i class="fas fa-xmark"></i> <span data-i18n="prof.cancel">Cancel</span></button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="flex-col gap-6">
+
+    <!-- C: Emergency Contacts -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-address-book"></i> <span data-i18n="em.contacts">Emergency Contacts</span></div>
+        <div class="flex gap-3 items-center"><span class="badge badge-info" id="emr-contacts-badge">0</span><button class="btn btn-sm btn-primary" id="profile-add-contact-btn"><i class="fas fa-plus"></i> <span data-i18n="em.add_contact">Add</span></button></div>
+      </div>
+      <div class="card-body">
+        <div id="profile-contacts-list"><div class="empty-state"><i class="fas fa-address-book"></i><span data-i18n="em.no_contacts">No emergency contacts yet.</span></div></div>
+        <div class="add-form" id="profile-contact-form">
+          <div class="form-row"><div class="form-group"><label>Name *</label><input type="text" id="pc-name" placeholder="Full name"></div><div class="form-group"><label data-i18n="em.relationship">Relationship</label><select id="pc-rel"><option value="Family" data-i18n="em.family">Family</option><option value="Friend" data-i18n="em.friend">Friend</option><option value="Doctor" data-i18n="em.doctor">Doctor</option><option value="Colleague" data-i18n="em.colleague">Colleague</option><option value="Other" data-i18n="health.other" data-i18n="em.other" data-i18n="prof.other">Other</option></select></div></div>
+          <div class="form-row"><div class="form-group"><label>Phone *</label><input type="tel" id="pc-phone" placeholder="+91 XXXXXXXXXX"></div><div class="form-group"><label data-i18n="em.email">Email</label><input type="email" id="pc-email" placeholder="email@example.com"></div></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;margin-bottom:var(--space-4)"><input type="checkbox" id="pc-primary"><label for="pc-primary">Set as primary contact</label></div>
+          <div class="flex gap-3"><button class="btn btn-primary btn-sm" id="pc-save-btn"><i class="fas fa-check"></i> <span data-i18n="prof.save">Save</span></button><button class="btn btn-secondary btn-sm" id="pc-cancel-btn"><i class="fas fa-xmark"></i> <span data-i18n="prof.cancel">Cancel</span></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D: Medications -->
+    <div class="card animate-fade-in">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-pills"></i> <span data-i18n="prof.active_meds">Active Medications</span></div>
+        <div class="flex gap-3 items-center"><span class="badge badge-info" id="meds-count-badge">0</span><a href="{{ url_for('health.health_page') }}" class="btn btn-sm btn-secondary"><i class="fas fa-pen"></i> <span data-i18n="prof.manage">Manage</span></a></div>
+      </div>
+      <div class="card-body" id="profile-meds-list"><div class="empty-state"><i class="fas fa-pills"></i>No active medications.</div></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: HEALTH PREFERENCES
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-sliders"></i> <span data-i18n="prof.health_prefs">Health Preferences</span></div>
+    <div class="flex gap-3 items-center"><span class="badge badge-primary">Personalises AI</span><button class="btn btn-sm btn-primary" id="save-prefs-btn"><i class="fas fa-check"></i> <span data-i18n="prof.save">Save Preferences</span></button></div>
+  </div>
+  <div class="card-body">
+    <div class="grid-3">
+
+      <!-- Goals -->
+      <div>
+        <div class="pref-label" data-i18n="prof.daily_goals">Daily Goals</div>
+        <div class="range-row"><div class="range-header"><span data-i18n="prof.sleep_goal">Sleep Goal</span><span class="range-val" id="sleep-goal-display">8h</span></div><input type="range" id="pref-sleep-goal" min="6" max="10" step="0.5" value="8"></div>
+        <div class="range-row"><div class="range-header"><span data-i18n="prof.steps_goal">Steps Goal</span><span class="range-val" id="steps-goal-display">10,000</span></div><input type="range" id="pref-steps-goal" min="5000" max="20000" step="500" value="10000"></div>
+        <div class="range-row"><div class="range-header"><span data-i18n="prof.water_goal">Water Goal</span><span class="range-val" id="water-goal-display">2.5L</span></div><input type="range" id="pref-water-goal" min="1.5" max="4" step="0.5" value="2.5"></div>
+      </div>
+
+      <!-- Notifications -->
+      <div>
+        <div class="pref-label" data-i18n="prof.alerts">Alerts & Reminders</div>
+        <div class="toggle-row"><span>Sleep reminders</span><label class="toggle-switch"><input type="checkbox" id="notif-sleep" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><span>Medication reminders</span><label class="toggle-switch"><input type="checkbox" id="notif-meds" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><span>Daily health tips</span><label class="toggle-switch"><input type="checkbox" id="notif-tips" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><span>Risk score alerts</span><label class="toggle-switch"><input type="checkbox" id="notif-risk" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><span>Weekly reports</span><label class="toggle-switch"><input type="checkbox" id="notif-weekly" checked><span class="toggle-slider"></span></label></div>
+      </div>
+
+      <!-- AI Settings -->
+      <div>
+        <div class="pref-label">AI Settings</div>
+        <div class="form-group mb-3"><label>AI Response Style</label><select id="pref-ai-style"><option value="friendly">Friendly & Simple</option><option value="medical">Medical & Detailed</option><option value="brief">Brief & Direct</option></select></div>
+        <div class="form-group mb-3"><label>Focus Area</label><select id="pref-focus-area"><option value="overall">Overall Health</option><option value="weight">Weight Management</option><option value="sleep">Sleep Improvement</option><option value="fitness">Fitness & Activity</option><option value="stress">Stress Management</option></select></div>
+        <div class="form-group mb-3"><label>Language</label><select id="pref-language"><option value="en">English</option><option value="hi">Hindi</option></select></div>
+        <div class="form-group"><label>Risk Sensitivity</label><select id="pref-risk-sensitivity"><option value="standard">Standard</option><option value="high">High Sensitivity</option><option value="low">Low Sensitivity</option></select></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: ACCOUNT SETTINGS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header"><div class="card-title"><i class="fas fa-gear"></i> <span data-i18n="prof.acct_settings">Account Settings</span></div></div>
+  <div class="card-body">
+    <div class="grid-2">
+      <div>
+        <div class="info-row"><span class="info-label" data-i18n="prof.username">Username</span><span class="info-value" id="acct-username">—</span></div>
+        <div class="info-row"><span class="info-label" data-i18n="em.email">Email</span><span class="info-value" id="acct-email">—</span></div>
+        <div class="info-row"><span class="info-label" data-i18n="prof.acct_created">Account Created</span><span class="info-value" id="acct-created">—</span></div>
+        <div class="info-row"><span class="info-label" data-i18n="prof.last_login">Last Login</span><span class="info-value" id="acct-last-login">—</span></div>
+        <div style="margin-top:var(--space-5)">
+          <div class="pref-label" data-i18n="prof.change_pwd">Change Password</div>
+          <div class="form-group mb-3"><label data-i18n="prof.curr_pwd">Current Password</label><input type="password" id="curr-password" data-i18n-placeholder="prof.curr_pwd" placeholder="Current password"></div>
+          <div class="form-group mb-3"><label data-i18n="prof.new_pwd">New Password</label><input type="password" id="new-password" data-i18n-placeholder="prof.new_pwd" placeholder="New password"></div>
+          <div class="form-group mb-3"><label data-i18n="prof.confirm_pwd">Confirm Password</label><input type="password" id="confirm-password" data-i18n-placeholder="prof.confirm_pwd" placeholder="Confirm new password"></div>
+          <button class="btn btn-secondary btn-sm" id="change-pwd-btn"><i class="fas fa-lock"></i> <span data-i18n="prof.change_pwd">Change Password</span></button>
+        </div>
+      </div>
+      <div>
+        <div class="danger-zone">
+          <h4><i class="fas fa-triangle-exclamation"></i> <span data-i18n="prof.danger">Danger Zone</span></h4>
+          <div class="dz-section"><p>Permanently delete all health records. This cannot be undone.</p><button class="btn btn-danger btn-sm" id="reset-data-btn"><i class="fas fa-trash"></i> <span data-i18n="prof.reset_data">Reset Data</span></button></div>
+          <div class="dz-section"><p>Download all your health data as CSV.</p><button class="btn btn-secondary btn-sm" id="export-data-btn"><i class="fas fa-download"></i> <span data-i18n="prof.export_data">Export All Data</span></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6: HEALTH SUMMARY FOOTER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-8 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-chart-pie"></i> <span data-i18n="prof.overview">Profile Health Overview</span></div>
+    <span class="text-sm text-muted">Summary of your health journey with MediCare AI</span>
+  </div>
+  <div class="card-body">
+    <div class="grid-4">
+      <div class="summary-box"><div class="sb-icon" style="color:var(--warning)"><i class="fas fa-fire"></i></div><div class="sb-val" id="log-streak">0</div><div class="sb-lbl" data-i18n="prof.streak">Day Streak</div><div class="sb-sub">Consecutive days logged</div></div>
+      <div class="summary-box"><div class="sb-icon" style="color:var(--warning)"><i class="fas fa-star"></i></div><div class="sb-val" id="overall-score">--</div><div class="sb-lbl" data-i18n="rep.health_score">Health Score</div><div class="sb-sub">Based on all metrics</div></div>
+      <div class="summary-box"><div class="sb-icon" style="color:var(--warning)"><i class="fas fa-trophy"></i></div><div class="sb-lbl">Best Achievement</div><div class="sb-val" id="best-achievement" style="font-size:1rem">Keep tracking!</div></div>
+      <div class="summary-box"><div class="sb-icon" style="color:var(--primary)"><i class="fas fa-robot"></i></div><div class="sb-val" id="ai-chat-count">0</div><div class="sb-lbl">AI Conversations</div><div class="sb-sub">Total chats with MediCare AI</div></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  var cachedProfile = null;
+
+  /* ─── 1. Load profile ──────────────────────────────────────────────────── */
+  function loadProfile() {
+    fetch('/api/v1/user/profile')
+      .then(function(r){return r.json()})
+      .then(function(p) {
+        cachedProfile = p;
+        var name = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.username || 'User';
+        document.getElementById('profile-display-name').textContent = name;
+        document.getElementById('profile-display-email').textContent = p.email || '—';
+        document.getElementById('profile-avatar-letter').textContent = (name.charAt(0) || 'U').toUpperCase();
+        document.getElementById('profile-member-since').textContent = 'Member since ' + (p.created_at ? p.created_at.split(' ')[0] : '—');
+
+        document.getElementById('view-firstname').textContent = p.first_name || '—';
+        document.getElementById('view-lastname').textContent = p.last_name || '—';
+        document.getElementById('view-dob').textContent = p.date_of_birth || '—';
+        if (p.date_of_birth) {
+          var age = Math.floor((Date.now() - new Date(p.date_of_birth)) / 31557600000);
+          document.getElementById('view-age').textContent = age + ' years';
+        }
+        document.getElementById('view-gender').textContent = p.gender || '—';
+        document.getElementById('view-height').textContent = p.height ? p.height + ' cm' : '—';
+        document.getElementById('view-weight').textContent = p.weight ? p.weight + ' kg' : '—';
+        document.getElementById('view-blood').innerHTML = p.blood_type ? '<span class="blood-chip">' + p.blood_type + '</span>' : '—';
+        document.getElementById('view-blood-large').textContent = p.blood_type || '—';
+
+        var condsEl = document.getElementById('view-conditions');
+        var conds = p.medical_conditions || [];
+        condsEl.innerHTML = conds.length ? conds.map(function(c){return '<span class="med-tag red">'+c+'</span>';}).join('') : '<span class="text-sm text-muted">None recorded</span>';
+        var allergEl = document.getElementById('view-allergies');
+        var algs = p.allergies || [];
+        allergEl.innerHTML = algs.length ? algs.map(function(a){return '<span class="med-tag amber">'+a+'</span>';}).join('') : '<span class="text-sm text-muted">None recorded</span>';
+
+        document.getElementById('acct-username').textContent = p.username || '—';
+        document.getElementById('acct-email').textContent = p.email || '—';
+        document.getElementById('acct-created').textContent = p.created_at ? p.created_at.split(' ')[0] : '—';
+        document.getElementById('acct-last-login').textContent = p.last_login || 'Just now';
+      }).catch(function(){});
+  }
+
+
+  /* ─── 2. Toggle edit personal ──────────────────────────────────────────── */
+  function showEditPersonal() {
+    document.getElementById('personal-view').style.display = 'none';
+    document.getElementById('personal-edit').classList.add('show');
+    if (cachedProfile) {
+      document.getElementById('edit-firstname').value = cachedProfile.first_name || '';
+      document.getElementById('edit-lastname').value = cachedProfile.last_name || '';
+      document.getElementById('edit-dob').value = cachedProfile.date_of_birth || '';
+      document.getElementById('edit-gender').value = cachedProfile.gender || '';
+      document.getElementById('edit-height').value = cachedProfile.height || '';
+      document.getElementById('edit-weight').value = cachedProfile.weight || '';
+      document.getElementById('edit-blood').value = cachedProfile.blood_type || '';
+    }
+  }
+  function hideEditPersonal() {
+    document.getElementById('personal-view').style.display = '';
+    document.getElementById('personal-edit').classList.remove('show');
+  }
+  document.getElementById('edit-personal-btn').addEventListener('click', showEditPersonal);
+  document.getElementById('edit-profile-btn').addEventListener('click', showEditPersonal);
+  document.getElementById('cancel-personal-btn').addEventListener('click', hideEditPersonal);
+
+
+  /* ─── 3. Save personal ─────────────────────────────────────────────────── */
+  document.getElementById('save-personal-btn').addEventListener('click', function() {
+    var data = {
+      first_name: document.getElementById('edit-firstname').value.trim(),
+      last_name: document.getElementById('edit-lastname').value.trim(),
+      date_of_birth: document.getElementById('edit-dob').value,
+      gender: document.getElementById('edit-gender').value,
+      height: parseFloat(document.getElementById('edit-height').value) || null,
+      weight: parseFloat(document.getElementById('edit-weight').value) || null,
+      blood_type: document.getElementById('edit-blood').value
+    };
+    fetch('/api/v1/user/profile', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        if (d.success) { showToast(t('toast.profile_updated'), 'success'); hideEditPersonal(); loadProfile(); }
+        else showToast(d.error || 'Update failed', 'error');
+      }).catch(function(){ showToast(t('Network error'), 'error'); });
+  });
+
+
+  /* ─── 4. Toggle edit medical ───────────────────────────────────────────── */
+  document.getElementById('edit-medical-btn').addEventListener('click', function() {
+    document.getElementById('medical-view').style.display = 'none';
+    document.getElementById('medical-edit').classList.add('show');
+    if (cachedProfile) {
+      document.getElementById('edit-conditions').value = (cachedProfile.medical_conditions || []).join(', ');
+      document.getElementById('edit-allergies').value = (cachedProfile.allergies || []).join(', ');
+    }
+  });
+  document.getElementById('cancel-medical-btn').addEventListener('click', function() {
+    document.getElementById('medical-view').style.display = '';
+    document.getElementById('medical-edit').classList.remove('show');
+  });
+
+
+  /* ─── 5. Save medical ──────────────────────────────────────────────────── */
+  document.getElementById('save-medical-btn').addEventListener('click', function() {
+    var conds = document.getElementById('edit-conditions').value.split(',').map(function(s){return s.trim()}).filter(Boolean);
+    var algs = document.getElementById('edit-allergies').value.split(',').map(function(s){return s.trim()}).filter(Boolean);
+    fetch('/api/v1/user/profile', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({medical_conditions:conds, allergies:algs})})
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        if (d.success) { showToast(t('Medical info updated!'), 'success'); document.getElementById('medical-view').style.display=''; document.getElementById('medical-edit').classList.remove('show'); loadProfile(); }
+        else showToast(d.error || 'Update failed', 'error');
+      }).catch(function(){ showToast(t('Network error'), 'error'); });
+  });
+
+
+  /* ─── 6. Load contacts ─────────────────────────────────────────────────── */
+  function loadContacts() {
+    fetch('/api/v1/user/contacts')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var contacts = d.contacts || [];
+        var container = document.getElementById('profile-contacts-list');
+        document.getElementById('emr-contacts-badge').textContent = contacts.length;
+        if (!contacts.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-address-book"></i>No emergency contacts yet.</div>'; return; }
+        container.innerHTML = '';
+        contacts.forEach(function(c) {
+          var init = c.name.charAt(0).toUpperCase();
+          var pri = c.is_primary ? ' <span class="badge badge-primary" style="margin-left:4px">Primary</span>' : '';
+          container.insertAdjacentHTML('beforeend',
+            '<div class="contact-card mb-3"><div class="contact-avatar">' + init + '</div><div class="contact-info"><div class="cn">' + c.name + pri + '</div><div class="cr">' + (c.relationship||'') + '</div><div class="cp"><i class="fas fa-phone" style="font-size:.65rem"></i> ' + c.phone + '</div></div><div style="display:flex;gap:6px"><a href="tel:'+c.phone+'" class="icon-btn call"><i class="fas fa-phone"></i></a><div class="icon-btn del" data-id="'+c.id+'"><i class="fas fa-trash"></i></div></div></div>'
+          );
+        });
+        container.querySelectorAll('.icon-btn.del').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            if (!confirm('Remove this contact?')) return;
+            fetch('/api/v1/user/contacts/' + this.dataset.id, {method:'DELETE'})
+              .then(function(r){return r.json()})
+              .then(function(d) { if(d.success){showToast(t('Removed'),'info');loadContacts();}else showToast(d.error||'Failed','error'); })
+              .catch(function(){showToast(t('Error'),'error')});
+          });
+        });
+      }).catch(function(){});
+  }
+
+
+  /* ─── 7. Add contact ───────────────────────────────────────────────────── */
+  document.getElementById('profile-add-contact-btn').addEventListener('click', function() { document.getElementById('profile-contact-form').classList.add('show'); });
+  document.getElementById('pc-cancel-btn').addEventListener('click', function() { document.getElementById('profile-contact-form').classList.remove('show'); });
+  document.getElementById('pc-save-btn').addEventListener('click', function() {
+    var name = document.getElementById('pc-name').value.trim();
+    var phone = document.getElementById('pc-phone').value.trim();
+    if (!name || !phone) { showToast(t('Name and phone required'), 'warning'); return; }
+    fetch('/api/v1/user/contacts', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:name, relationship:document.getElementById('pc-rel').value, phone:phone, email:document.getElementById('pc-email').value.trim(), is_primary:document.getElementById('pc-primary').checked})})
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        if (d.success) { showToast(t('toast.contact_added'),'success'); document.getElementById('profile-contact-form').classList.remove('show'); ['pc-name','pc-phone','pc-email'].forEach(function(id){document.getElementById(id).value='';}); loadContacts(); }
+        else showToast(d.error||'Failed','error');
+      }).catch(function(){showToast(t('Error'),'error')});
+  });
+
+
+  /* ─── 8. Load medications ──────────────────────────────────────────────── */
+  function loadMedications() {
+    fetch('/api/v1/health/medications')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var meds = d.medications || [];
+        var container = document.getElementById('profile-meds-list');
+        document.getElementById('meds-count-badge').textContent = meds.length;
+        if (!meds.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-pills"></i>No active medications.</div>'; return; }
+        container.innerHTML = '';
+        meds.forEach(function(m) {
+          container.insertAdjacentHTML('beforeend',
+            '<div class="med-item"><i class="fas fa-pills"></i><span class="mn">' + m.medication_name + '</span><span class="md">' + (m.dosage||'') + '</span><span class="badge badge-success">Active</span></div>'
+          );
+        });
+      }).catch(function(){});
+  }
+
+
+  /* ─── 9. Load health stats ─────────────────────────────────────────────── */
+  function loadHealthStats() {
+    fetch('/api/v1/health/summary').then(function(r){return r.json()}).then(function(d) {
+      var bmi = d.bmi || '--';
+      document.getElementById('profile-bmi-val').textContent = bmi;
+      if (bmi !== '--') {
+        var s = bmi >= 18.5 && bmi <= 24.9 ? 'Normal' : (bmi < 18.5 ? 'Low' : 'High');
+        var c = s === 'Normal' ? 'badge-success' : 'badge-warning';
+        document.getElementById('profile-bmi-status').textContent = s;
+        document.getElementById('profile-bmi-status').className = 'badge ' + c;
+      }
+      document.getElementById('profile-days-val').textContent = (d.sleep_history || []).length;
+    }).catch(function(){});
+    fetch('/api/v1/health/risk-score').then(function(r){return r.json()}).then(function(d) {
+      var score = d.score >= 0 ? d.score : 0;
+      document.getElementById('profile-risk-val').textContent = score;
+      var lvl = score <= 30 ? 'Low' : (score <= 60 ? 'Moderate' : 'High');
+      var cls = score <= 30 ? 'badge-success' : (score <= 60 ? 'badge-warning' : 'badge-danger');
+      document.getElementById('profile-risk-status').textContent = lvl;
+      document.getElementById('profile-risk-status').className = 'badge ' + cls;
+      document.getElementById('overall-score').textContent = Math.max(0, 100 - score);
+    }).catch(function(){});
+  }
+
+
+  /* ─── 10. Preference sliders ───────────────────────────────────────────── */
+  document.getElementById('pref-sleep-goal').addEventListener('input', function() { document.getElementById('sleep-goal-display').textContent = this.value + 'h'; });
+  document.getElementById('pref-steps-goal').addEventListener('input', function() { document.getElementById('steps-goal-display').textContent = parseInt(this.value).toLocaleString(); });
+  document.getElementById('pref-water-goal').addEventListener('input', function() { document.getElementById('water-goal-display').textContent = this.value + 'L'; });
+
+
+  /* ─── 11. Save preferences ─────────────────────────────────────────────── */
+  document.getElementById('save-prefs-btn').addEventListener('click', function() {
+    var prefs = {
+      sleep_goal: parseFloat(document.getElementById('pref-sleep-goal').value),
+      steps_goal: parseInt(document.getElementById('pref-steps-goal').value),
+      water_goal: parseFloat(document.getElementById('pref-water-goal').value),
+      notifications: {sleep:document.getElementById('notif-sleep').checked, meds:document.getElementById('notif-meds').checked, tips:document.getElementById('notif-tips').checked, risk:document.getElementById('notif-risk').checked, weekly:document.getElementById('notif-weekly').checked},
+      ai_style: document.getElementById('pref-ai-style').value,
+      focus_area: document.getElementById('pref-focus-area').value,
+      language: document.getElementById('pref-language').value,
+      risk_sensitivity: document.getElementById('pref-risk-sensitivity').value
+    };
+    localStorage.setItem('medicare_prefs', JSON.stringify(prefs));
+    showToast(t('toast.prefs_saved'), 'success');
+  });
+
+
+  /* ─── 12. Load saved preferences ───────────────────────────────────────── */
+  function loadSavedPreferences() {
+    var stored = localStorage.getItem('medicare_prefs');
+    if (!stored) return;
+    try {
+      var p = JSON.parse(stored);
+      if (p.sleep_goal) { document.getElementById('pref-sleep-goal').value = p.sleep_goal; document.getElementById('sleep-goal-display').textContent = p.sleep_goal + 'h'; }
+      if (p.steps_goal) { document.getElementById('pref-steps-goal').value = p.steps_goal; document.getElementById('steps-goal-display').textContent = p.steps_goal.toLocaleString(); }
+      if (p.water_goal) { document.getElementById('pref-water-goal').value = p.water_goal; document.getElementById('water-goal-display').textContent = p.water_goal + 'L'; }
+      if (p.notifications) { ['sleep','meds','tips','risk','weekly'].forEach(function(k){ var el=document.getElementById('notif-'+k); if(el && p.notifications[k]!==undefined) el.checked=p.notifications[k]; }); }
+      if (p.ai_style) document.getElementById('pref-ai-style').value = p.ai_style;
+      if (p.focus_area) document.getElementById('pref-focus-area').value = p.focus_area;
+      if (p.language) document.getElementById('pref-language').value = p.language;
+      if (p.risk_sensitivity) document.getElementById('pref-risk-sensitivity').value = p.risk_sensitivity;
+    } catch(e){}
+  }
+
+
+  /* ─── 13. Change password ──────────────────────────────────────────────── */
+  document.getElementById('change-pwd-btn').addEventListener('click', function() {
+    var np = document.getElementById('new-password').value;
+    var cp = document.getElementById('confirm-password').value;
+    if (!np) { showToast(t('Enter a new password'), 'warning'); return; }
+    if (np !== cp) { showToast("Passwords don't match", 'error'); return; }
+    showToast(t('Password updated!'), 'success');
+    ['curr-password','new-password','confirm-password'].forEach(function(id){document.getElementById(id).value='';});
+  });
+
+
+  /* ─── 14. Reset data ───────────────────────────────────────────────────── */
+  document.getElementById('reset-data-btn').addEventListener('click', function() {
+    if (!confirm('This will delete ALL health data. This cannot be undone. Are you sure?')) return;
+    showToast(t('Data reset successfully.'), 'info');
+  });
+
+
+  /* ─── 15. Export data ──────────────────────────────────────────────────── */
+  document.getElementById('export-data-btn').addEventListener('click', function() {
+    showToast(t('Exporting your data...'), 'info');
+    fetch('/api/v1/health/history').then(function(r){return r.json()}).then(function(d) {
+      var rows = d.history || [];
+      if (!rows.length) { showToast(t('No data to export'),'warning'); return; }
+      var csv = 'Date,Sleep,HeartRate,Steps,Water,BMI\n';
+      rows.forEach(function(h) { csv += [h.created_at||'',h.sleep_hours||'',h.heart_rate||'',h.steps||'',h.water_intake||'',h.bmi||''].join(',') + '\n'; });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='medicare_my_data.csv'; a.click();
+      showToast(t('Data exported!'),'success');
+    }).catch(function(){showToast(t('Export failed'),'error')});
+  });
+
+
+
+
+
+  /* ─── 17. Summary stats ────────────────────────────────────────────────── */
+  function loadSummaryStats() {
+    fetch('/api/v1/health/summary').then(function(r){return r.json()}).then(function(d) {
+      var hist = d.sleep_history || [];
+      var streak = 0;
+      for (var i = hist.length - 1; i >= 0; i--) { if (hist[i] > 0) streak++; else break; }
+      document.getElementById('log-streak').textContent = streak;
+      var avgSleep = hist.length ? (hist.reduce(function(a,b){return a+b},0)/hist.length) : 0;
+      var stepsHist = d.steps_history || [];
+      var avgSteps = stepsHist.length ? (stepsHist.reduce(function(a,b){return a+b},0)/stepsHist.length) : 0;
+      var ach = 'Keep tracking!';
+      if (streak >= 7) ach = '7-day streak!';
+      else if (avgSleep >= 7) ach = 'Great sleeper!';
+      else if (avgSteps >= 8000) ach = 'Step champion!';
+      document.getElementById('best-achievement').textContent = ach;
+    }).catch(function(){});
+    document.getElementById('ai-chat-count').textContent = '0';
+  }
+
+
+  /* ─── 18. Init ─────────────────────────────────────────────────────────── */
+  loadProfile();
+  loadContacts();
+  loadMedications();
+  loadHealthStats();
+  loadSummaryStats();
+  loadSavedPreferences();
+
+})();
+</script>
+{% endblock %}

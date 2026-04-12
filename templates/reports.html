@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — MediCare AI{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+{% block breadcrumb %}Reports{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Header bar ───────────────────────────────────────────────────────── */
+  .report-header { display:flex; align-items:center; justify-content:space-between; gap:var(--space-5); margin-bottom:var(--space-6); }
+  .report-header h2 { font-family:var(--font-display); font-weight:700; font-size:1.3rem; margin-bottom:2px; }
+  .report-header p { font-size:.85rem; color:var(--text-secondary); }
+  .report-header .rdr { font-size:.72rem; color:var(--text-muted); margin-top:4px; }
+  .header-actions { display:flex; align-items:center; gap:var(--space-3); flex-shrink:0; }
+  .header-actions .divider { width:1px; height:28px; background:var(--border); }
+
+  /* ── Stat rows (AI summary right panel) ───────────────────────────────── */
+  .stat-rows { display:flex; flex-direction:column; gap:0; }
+  .stat-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border-light); font-size:.82rem; }
+  .stat-row:last-child { border-bottom:none; }
+  .stat-row i { width:18px; text-align:center; color:var(--primary); font-size:.78rem; }
+  .stat-row .s-lbl { flex:1; color:var(--text-secondary); }
+  .stat-row .s-val { font-family:var(--font-display); font-weight:700; }
+
+  /* ── AI Summary text ──────────────────────────────────────────────────── */
+  .ai-sum-text { font-size:1rem; line-height:1.8; color:var(--text-secondary); }
+  .highlight-list { list-style:none; padding:0; margin-top:var(--space-5); }
+  .highlight-list li { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:.85rem; color:var(--text-secondary); }
+  .h-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .h-dot.green { background:var(--success); }
+  .h-dot.red { background:var(--danger); }
+  .h-dot.amber { background:var(--warning); }
+  .h-dot.blue { background:var(--info); }
+
+  /* ── Chart sub-stats ──────────────────────────────────────────────────── */
+  .chart-stats { display:flex; justify-content:space-around; padding-top:var(--space-4); border-top:1px solid var(--border-light); margin-top:var(--space-4); }
+  .chart-stat { text-align:center; }
+  .chart-stat .cs-val { font-family:var(--font-display); font-weight:700; font-size:1rem; }
+  .chart-stat .cs-lbl { font-size:.68rem; color:var(--text-muted); }
+
+  /* ── Data table ───────────────────────────────────────────────────────── */
+  .data-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  .data-table th { padding:var(--space-3) var(--space-4); text-align:left; font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); border-bottom:2px solid var(--border); }
+  .data-table td { padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--border-light); }
+  .data-table tr:hover td { background:var(--surface-2); }
+  .status-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:var(--radius-full); font-size:.7rem; font-weight:600; }
+  .status-badge.good { background:var(--success-bg); color:var(--success); }
+  .status-badge.fair { background:var(--warning-bg); color:var(--warning); }
+  .status-badge.poor { background:var(--danger-bg); color:var(--danger); }
+  .conf-bar { width:60px; height:6px; background:var(--surface-3); border-radius:3px; display:inline-block; vertical-align:middle; margin-right:6px; }
+  .conf-bar-fill { height:100%; border-radius:3px; background:var(--primary); }
+  .sym-tag { display:inline-block; padding:1px 8px; border-radius:var(--radius-full); background:var(--surface-2); font-size:.68rem; margin:1px 2px; }
+  .empty-state { text-align:center; padding:var(--space-8); color:var(--text-muted); font-size:.88rem; }
+  .empty-state i { font-size:2rem; margin-bottom:var(--space-3); display:block; opacity:.4; }
+
+  /* ── Download section ─────────────────────────────────────────────────── */
+  .download-bar { display:flex; align-items:center; justify-content:space-between; gap:var(--space-6); }
+  .download-bar h3 { font-family:var(--font-display); font-weight:700; font-size:1.1rem; margin-bottom:4px; }
+  .download-bar p { font-size:.85rem; color:var(--text-secondary); }
+  .download-bar .dl-note { font-size:.72rem; color:var(--text-muted); margin-top:4px; }
+  .download-btns { display:flex; gap:var(--space-3); flex-shrink:0; }
+
+  /* ── Print styles ─────────────────────────────────────────────────────── */
+  @media print {
+    .sidebar, .topbar, .btn, .header-actions, .download-bar { display:none!important; }
+    .main-content { margin-left:0!important; padding:0!important; }
+    .page-content { padding:0!important; }
+    canvas { max-width:100%!important; height:auto!important; }
+    .card { break-inside:avoid; box-shadow:none!important; border:1px solid #ddd; }
+    body { background:#fff!important; font-size:12px; }
+  }
+
+  /* ── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width:768px) {
+    .report-header { flex-direction:column; align-items:flex-start; }
+    .header-actions { flex-wrap:wrap; }
+    .download-bar { flex-direction:column; align-items:flex-start; }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: PAGE HEADER BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="report-header animate-fade-in">
+  <div>
+    <h2><i class="fas fa-chart-line" style="color:var(--primary);margin-right:6px"></i> <span data-i18n="rep.title">Health Analytics Report</span></h2>
+    <p data-i18n="rep.subtitle">Comprehensive analysis of your health data with AI-powered insights</p>
+    <div class="rdr" id="report-date-range">Last 7 days</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary btn-sm" id="btn-7days" onclick="setPeriod(7)" data-i18n="rep.7days">7 Days</button>
+    <button class="btn btn-secondary btn-sm" id="btn-30days" onclick="setPeriod(30)" data-i18n="rep.30days">30 Days</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: KEY METRICS SUMMARY
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-4 mb-6">
+  <div class="metric-card animate-fade-in anim-delay-1">
+    <div class="metric-card-header">
+      <div class="metric-icon primary"><i class="fas fa-moon"></i></div>
+      <span class="metric-trend flat" id="sleep-trend-badge"><i class="fas fa-minus"></i> --</span>
+    </div>
+    <div class="metric-value"><span id="avg-sleep">--</span><span class="metric-unit">hrs/night</span></div>
+    <div class="metric-value"><span id="avg-sleep">--</span><span class="metric-unit" data-i18n="metric.hrs">hrs/night</span></div>
+    <div class="metric-label" data-i18n="rep.avg_sleep">Average Sleep</div>
+    <div class="metric-progress"><div class="metric-progress-fill" id="sleep-avg-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="metric-card success animate-fade-in anim-delay-2">
+    <div class="metric-card-header">
+      <div class="metric-icon success"><i class="fas fa-shoe-prints"></i></div>
+      <span class="metric-trend flat" id="steps-trend-badge"><i class="fas fa-minus"></i> --</span>
+    </div>
+    <div class="metric-value"><span id="avg-steps">--</span><span class="metric-unit">steps/day</span></div>
+    <div class="metric-label" data-i18n="rep.avg_steps">Average Activity</div>
+    <div class="metric-progress"><div class="metric-progress-fill" id="steps-avg-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="metric-card info animate-fade-in anim-delay-3">
+    <div class="metric-card-header">
+      <div class="metric-icon info"><i class="fas fa-heart-pulse"></i></div>
+      <span class="metric-trend flat" id="health-trend-badge"><i class="fas fa-minus"></i> --</span>
+    </div>
+    <div class="metric-value"><span id="health-score">--</span><span class="metric-unit">/100</span></div>
+    <div class="metric-label" data-i18n="rep.health_score">Overall Health Score</div>
+    <div class="metric-progress"><div class="metric-progress-fill" id="health-score-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="metric-card accent animate-fade-in anim-delay-4">
+    <div class="metric-card-header">
+      <div class="metric-icon primary"><i class="fas fa-shield-heart"></i></div>
+    </div>
+    <div class="metric-value"><span id="risk-level-val">--</span></div>
+    <div class="metric-label" data-i18n="rep.risk_level">Current Risk Level</div>
+    <div class="text-sm text-muted mt-1" id="risk-score-sub">Score: --</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: AI SUMMARY CARD
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-brain"></i> <span data-i18n="rep.ai_summary">AI Health Summary</span></div>
+    <div class="flex gap-3 items-center">
+      <span class="badge badge-primary" data-i18n="rep.ai_badge">Generated by AI</span>
+      <span class="text-xs text-muted">Updated just now</span>
+      <button class="btn btn-sm btn-secondary" id="refresh-summary-btn"><i class="fas fa-arrows-rotate"></i></button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="grid-2-1">
+      <div>
+        <p class="ai-sum-text" id="ai-summary-text">Loading your personalised health summary...</p>
+        <ul class="highlight-list" id="ai-highlights-list"></ul>
+      </div>
+      <div>
+        <div class="stat-rows">
+          <div class="stat-row"><i class="fas fa-calendar"></i><span class="s-lbl">Days Tracked</span><span class="s-val" id="days-tracked">—</span></div>
+          <div class="stat-row"><i class="fas fa-chart-line"></i><span class="s-lbl">Data Points</span><span class="s-val" id="data-points">—</span></div>
+          <div class="stat-row"><i class="fas fa-pills"></i><span class="s-lbl">Medications Active</span><span class="s-val" id="meds-count">—</span></div>
+          <div class="stat-row"><i class="fas fa-stethoscope"></i><span class="s-lbl">Predictions Made</span><span class="s-val" id="pred-count">—</span></div>
+          <div class="stat-row"><i class="fas fa-trophy"></i><span class="s-lbl">Best Sleep Night</span><span class="s-val" id="best-sleep">—</span></div>
+          <div class="stat-row"><i class="fas fa-fire"></i><span class="s-lbl">Most Active Day</span><span class="s-val" id="most-active">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: TREND CHARTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-2 mb-6">
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-moon"></i> <span data-i18n="rep.sleep_chart">Sleep Analysis</span></div>
+      <div class="flex gap-2 items-center">
+        <span class="text-xs text-muted" id="sleep-chart-subtitle">Last 7 days</span>
+        <span class="badge badge-info" id="sleep-status-badge">—</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <canvas id="sleepTrendChart" height="250"></canvas>
+      <div class="chart-stats">
+        <div class="chart-stat"><div class="cs-val" id="sleep-chart-avg">—</div><div class="cs-lbl">Average</div></div>
+        <div class="chart-stat"><div class="cs-val" id="sleep-chart-best">—</div><div class="cs-lbl">Best</div></div>
+        <div class="chart-stat"><div class="cs-val" id="sleep-chart-worst">—</div><div class="cs-lbl">Worst</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-person-running"></i> <span data-i18n="rep.activity_chart">Activity Analysis</span></div>
+      <div class="flex gap-2 items-center">
+        <span class="text-xs text-muted" id="activity-chart-subtitle">Last 7 days</span>
+        <span class="badge badge-info" id="activity-status-badge">—</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <canvas id="activityTrendChart" height="250"></canvas>
+      <div class="chart-stats">
+        <div class="chart-stat"><div class="cs-val" id="activity-chart-avg">—</div><div class="cs-lbl">Avg/Day</div></div>
+        <div class="chart-stat"><div class="cs-val" id="activity-chart-best">—</div><div class="cs-lbl">Best Day</div></div>
+        <div class="chart-stat"><div class="cs-val" id="activity-chart-total">—</div><div class="cs-lbl">Total</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6: DETAILED CHARTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-2 mb-6">
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-weight-scale"></i> <span data-i18n="rep.bmi_chart">BMI Trend</span></div>
+      <span class="text-xs text-muted">Weight history</span>
+    </div>
+    <div class="card-body"><canvas id="bmiTrendChart" height="220"></canvas></div>
+  </div>
+
+  <div class="card animate-fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-shield-heart"></i> <span data-i18n="rep.risk_chart">Risk Score Trend</span></div>
+      <span class="text-xs text-muted">Health risk history</span>
+    </div>
+    <div class="card-body"><canvas id="riskTrendChart" height="220"></canvas></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 7: HEALTH HISTORY TABLE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-clock-rotate-left"></i> <span data-i18n="rep.history">Health Log History</span></div>
+    <div class="flex gap-3 items-center">
+      <select class="form-input" id="history-filter" style="width:auto;padding:6px 12px;font-size:.78rem" onchange="loadHistoryTable()">
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+      <button class="btn btn-sm btn-secondary" id="export-csv-btn" onclick="exportCSV()"><i class="fas fa-file-csv"></i> <span data-i18n="rep.export_csv">Export CSV</span></button>
+    </div>
+  </div>
+  <div class="card-body" style="overflow-x:auto">
+    <table class="data-table">
+      <thead><tr><th data-i18n="health.date">Date</th><th>Sleep</th><th>Heart Rate</th><th data-i18n="metric.steps_unit" data-i18n="health.steps">Steps</th><th>Water</th><th>BMI</th><th>Risk</th><th data-i18n="health.status">Status</th></tr></thead>
+      <tbody id="history-table-body">
+        <tr><td colspan="8" class="empty-state"><i class="fas fa-clock"></i>Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 8: PREDICTION HISTORY
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-stethoscope"></i> <span data-i18n="disease.history">Prediction History</span></div>
+    <span class="badge badge-info" id="pred-history-badge">0</span>
+  </div>
+  <div class="card-body" style="overflow-x:auto">
+    <table class="data-table">
+      <thead><tr><th data-i18n="health.date">Date</th><th>Symptoms Used</th><th>Predicted Disease</th><th>Confidence</th></tr></thead>
+      <tbody id="pred-history-body">
+        <tr><td colspan="4" class="empty-state"><i class="fas fa-stethoscope"></i>No predictions recorded yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  /* ─── State ────────────────────────────────────────────────────────────── */
+  var currentPeriod = 7;
+  var sleepChart = null, activityChart = null, bmiChart = null, riskChart = null;
+  var cachedHealth = null, cachedRisk = null, cachedHistory = [];
+
+  function dayLabels(n) {
+    var labels = [], days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for (var i = n - 1; i >= 0; i--) { var d = new Date(); d.setDate(d.getDate() - i); labels.push(days[d.getDay()]); }
+    return labels;
+  }
+  function avg(arr) { if (!arr.length) return 0; return arr.reduce(function(a,b){return a+b},0)/arr.length; }
+  function setTrend(id, dir) {
+    var el = document.getElementById(id); if (!el) return;
+    var icons = {up:'fa-arrow-up',down:'fa-arrow-down',flat:'fa-minus'};
+    var lbls = {up:'Up',down:'Down',flat:'Stable'};
+    el.className = 'metric-trend ' + dir;
+    el.innerHTML = '<i class="fas ' + (icons[dir]||icons.flat) + '"></i> ' + (lbls[dir]||'Stable');
+  }
+  var chartFont = { family: "'Plus Jakarta Sans'" };
+  var chartGrid = { color: 'rgba(0,0,0,0.05)' };
+
+  /* ─── 1. Period toggle ─────────────────────────────────────────────────── */
+  window.setPeriod = function(p) {
+    currentPeriod = p;
+    document.getElementById('btn-7days').className  = 'btn btn-sm ' + (p===7  ? 'btn-primary' : 'btn-secondary');
+    document.getElementById('btn-30days').className = 'btn btn-sm ' + (p===30 ? 'btn-primary' : 'btn-secondary');
+    document.getElementById('report-date-range').textContent = 'Last ' + p + ' days';
+    document.getElementById('sleep-chart-subtitle').textContent = 'Last ' + p + ' days';
+    document.getElementById('activity-chart-subtitle').textContent = 'Last ' + p + ' days';
+    loadReportData();
+  };
+
+  /* ─── 2. Load report data ──────────────────────────────────────────────── */
+  function loadReportData() {
+    Promise.all([
+      fetch('/api/v1/health/summary').then(function(r){return r.json()}),
+      fetch('/api/v1/health/risk-score').then(function(r){return r.json()})
+    ]).then(function(results) {
+      cachedHealth = results[0];
+      cachedRisk   = results[1];
+      applyMetrics(cachedHealth, cachedRisk);
+      generateAISummary(cachedHealth, cachedRisk);
+      initCharts(cachedHealth);
+    }).catch(function(){});
+  }
+
+  function applyMetrics(h, r) {
+    var sleepHist = h.sleep_history || [];
+    var stepsHist = h.steps_history || [];
+    var avgSleep = avg(sleepHist).toFixed(1);
+    var avgSteps = Math.round(avg(stepsHist));
+    var riskScore = r.score >= 0 ? r.score : 0;
+    var healthScore = Math.max(0, 100 - riskScore);
+
+    document.getElementById('avg-sleep').textContent = avgSleep;
+    document.getElementById('avg-steps').textContent = avgSteps.toLocaleString();
+    document.getElementById('health-score').textContent = healthScore;
+    document.getElementById('sleep-avg-bar').style.width = Math.min(100, (avgSleep/8)*100) + '%';
+    document.getElementById('steps-avg-bar').style.width = Math.min(100, (avgSteps/10000)*100) + '%';
+    document.getElementById('health-score-bar').style.width = healthScore + '%';
+
+    setTrend('sleep-trend-badge', h.sleep_trend || 'flat');
+    setTrend('steps-trend-badge', h.steps_trend || 'flat');
+    setTrend('health-trend-badge', riskScore < 40 ? 'up' : (riskScore > 60 ? 'down' : 'flat'));
+
+    var level = (r.level || 'moderate').charAt(0).toUpperCase() + (r.level || 'moderate').slice(1);
+    document.getElementById('risk-level-val').textContent = level;
+    document.getElementById('risk-score-sub').textContent = 'Score: ' + riskScore + '/100';
+
+    /* Quick stats */
+    document.getElementById('days-tracked').textContent = sleepHist.length;
+    document.getElementById('data-points').textContent = sleepHist.length + stepsHist.length;
+    document.getElementById('best-sleep').textContent = sleepHist.length ? Math.max.apply(null, sleepHist).toFixed(1) + 'h' : '—';
+    document.getElementById('most-active').textContent = stepsHist.length ? Math.max.apply(null, stepsHist).toLocaleString() : '—';
+
+    /* Chart sub-stats */
+    document.getElementById('sleep-chart-avg').textContent = avgSleep + 'h';
+    document.getElementById('sleep-chart-best').textContent = sleepHist.length ? Math.max.apply(null, sleepHist).toFixed(1) + 'h' : '—';
+    document.getElementById('sleep-chart-worst').textContent = sleepHist.length ? Math.min.apply(null, sleepHist).toFixed(1) + 'h' : '—';
+    document.getElementById('sleep-status-badge').textContent = avgSleep >= 7 ? 'Good' : 'Low';
+    document.getElementById('sleep-status-badge').className = 'badge ' + (avgSleep >= 7 ? 'badge-success' : 'badge-warning');
+
+    document.getElementById('activity-chart-avg').textContent = avgSteps.toLocaleString();
+    document.getElementById('activity-chart-best').textContent = stepsHist.length ? Math.max.apply(null, stepsHist).toLocaleString() : '—';
+    var totalSteps = stepsHist.reduce(function(a,b){return a+b},0);
+    document.getElementById('activity-chart-total').textContent = totalSteps.toLocaleString();
+    document.getElementById('activity-status-badge').textContent = avgSteps >= 8000 ? 'Active' : 'Low';
+    document.getElementById('activity-status-badge').className = 'badge ' + (avgSteps >= 8000 ? 'badge-success' : 'badge-warning');
+  }
+
+  /* ─── 3. AI summary ────────────────────────────────────────────────────── */
+  function generateAISummary(h, r) {
+    var sleepHist = h.sleep_history || [];
+    var stepsHist = h.steps_history || [];
+    var avgSleep = avg(sleepHist).toFixed(1);
+    var avgSteps = Math.round(avg(stepsHist));
+    var riskScore = r.score >= 0 ? r.score : 0;
+    var level = (r.level || 'unknown');
+
+    var status = riskScore <= 30 ? 'good' : (riskScore <= 60 ? 'moderate' : 'needs attention');
+    var sleepStatus = avgSleep >= 7 && avgSleep <= 9 ? 'within' : (avgSleep < 7 ? 'below' : 'above');
+    var stepsStatus = avgSteps >= 8000 ? 'good, meeting daily targets' : 'below the recommended 8,000 daily target';
+
+    var text = 'Based on your health data from the past ' + currentPeriod + ' days, your overall health status is ' + status + '. ' +
+      'Your average sleep of ' + avgSleep + ' hours is ' + sleepStatus + ' the recommended 7-9 hours range. ' +
+      'Your daily activity of ' + avgSteps.toLocaleString() + ' steps is ' + stepsStatus + '. ' +
+      'Your current health risk score of ' + riskScore + '/100 indicates ' + level + ' risk.';
+
+    if (riskScore > 60) text += ' Consider scheduling a health check-up and reviewing your lifestyle habits.';
+    else if (avgSleep < 6) text += ' Focus on improving your sleep schedule to enhance overall well-being.';
+    else if (avgSteps < 5000) text += ' Increasing daily physical activity would significantly improve your health metrics.';
+    else text += ' Keep maintaining your current healthy habits for continued well-being.';
+
+    document.getElementById('ai-summary-text').textContent = text;
+
+    /* Highlights */
+    var list = document.getElementById('ai-highlights-list');
+    list.innerHTML = '';
+    var highlights = [];
+    if (avgSleep < 6)        highlights.push({color:'red',   txt:'Sleep is below the recommended level (' + avgSleep + 'h)'});
+    else if (avgSleep >= 7)  highlights.push({color:'green', txt:'Sleep is within a healthy range (' + avgSleep + 'h)'});
+    else                     highlights.push({color:'amber', txt:'Sleep could be improved (' + avgSleep + 'h)'});
+
+    if (avgSteps >= 8000)    highlights.push({color:'green', txt:'Activity levels are good (' + avgSteps.toLocaleString() + ' steps/day)'});
+    else if (avgSteps >= 5000) highlights.push({color:'amber', txt:'Activity is moderate — aim for 8,000+ steps'});
+    else                     highlights.push({color:'red',   txt:'Activity is low — increase daily movement'});
+
+    if (riskScore <= 30)     highlights.push({color:'green', txt:'Health risk is low (score: ' + riskScore + ')'});
+    else if (riskScore <= 60) highlights.push({color:'amber', txt:'Health risk is moderate (score: ' + riskScore + ')'});
+    else                     highlights.push({color:'red',   txt:'Health risk needs attention (score: ' + riskScore + ')'});
+
+    highlights.forEach(function(hl) {
+      list.insertAdjacentHTML('beforeend', '<li><span class="h-dot ' + hl.color + '"></span>' + hl.txt + '</li>');
+    });
+  }
+
+  /* ─── 4. Charts ────────────────────────────────────────────────────────── */
+  function initCharts(h) {
+    var n = currentPeriod;
+    var labels = dayLabels(n);
+    var sleepData = padArray(h.sleep_history || [], n);
+    var stepsData = padArray(h.steps_history || [], n);
+    /* Simulated BMI + risk data for chart (stable values with slight variation) */
+    var bmiData = generateSeries(h.bmi || 0, n, h.bmi ? 0.3 : 0);
+    var riskData = generateSeries(cachedRisk ? cachedRisk.score : 0, n, cachedRisk && cachedRisk.score > 0 ? 5 : 0);
+
+    if (sleepChart) sleepChart.destroy();
+    if (activityChart) activityChart.destroy();
+    if (bmiChart) bmiChart.destroy();
+    if (riskChart) riskChart.destroy();
+
+    sleepChart = new Chart(document.getElementById('sleepTrendChart'), {
+      type:'line', data:{ labels:labels, datasets:[{ data:sleepData, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.1)', tension:0.4, fill:true, pointBackgroundColor:'#2563eb', pointRadius:4, borderWidth:2 }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:0,max:12,grid:chartGrid,ticks:{font:chartFont}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+    });
+
+    activityChart = new Chart(document.getElementById('activityTrendChart'), {
+      type:'bar', data:{ labels:labels, datasets:[{ data:stepsData, backgroundColor:'rgba(16,185,129,0.55)', borderColor:'#10B981', borderWidth:1, borderRadius:6, borderSkipped:false }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,grid:chartGrid,ticks:{font:chartFont}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+    });
+
+    bmiChart = new Chart(document.getElementById('bmiTrendChart'), {
+      type:'line', data:{ labels:labels, datasets:[{ data:bmiData, borderColor:'#0a7a6b', backgroundColor:'rgba(10,122,107,0.08)', tension:0.3, fill:true, pointRadius:4, pointBackgroundColor:'#0a7a6b', borderWidth:2 }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:15,max:40,grid:chartGrid,ticks:{font:chartFont,callback:function(v){return v.toFixed(0)}}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+    });
+
+    riskChart = new Chart(document.getElementById('riskTrendChart'), {
+      type:'line', data:{ labels:labels, datasets:[{ data:riskData, borderColor:'#F43F5E', backgroundColor:'rgba(244,63,94,0.1)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#F43F5E', borderWidth:2 }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:0,max:100,grid:chartGrid,ticks:{font:chartFont}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+    });
+  }
+
+  function padArray(arr, n) {
+    while (arr.length < n) arr.unshift(0);
+    return arr.slice(-n);
+  }
+  function generateSeries(base, n, variance) {
+    var arr = [];
+    for (var i = 0; i < n; i++) arr.push(+(base + (Math.random()-0.5)*2*variance).toFixed(1));
+    return arr;
+  }
+
+  /* ─── 5. Health history table ──────────────────────────────────────────── */
+  window.loadHistoryTable = function() {
+    var range = document.getElementById('history-filter').value;
+    fetch('/api/v1/health/history?range=' + range)
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var tbody = document.getElementById('history-table-body');
+        cachedHistory = d.history || [];
+        if (!cachedHistory.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-clock"></i>No health records yet. Start tracking on the Health page.</td></tr>'; return; }
+        tbody.innerHTML = '';
+        cachedHistory.forEach(function(h) {
+          var date = h.created_at ? h.created_at.split(' ')[0] : '—';
+          var sleep = h.sleep_hours != null ? h.sleep_hours + 'h' : '—';
+          var hr = h.heart_rate || '—';
+          var steps = h.steps || '—';
+          var water = h.water_intake ? h.water_intake + 'L' : '—';
+          var bmi = h.bmi || '—';
+          var warns = 0;
+          if (h.sleep_hours && h.sleep_hours < 6) warns++;
+          if (h.heart_rate && h.heart_rate > 100) warns++;
+          var statusCls = warns === 0 ? 'good' : (warns === 1 ? 'fair' : 'poor');
+          var statusTxt = warns === 0 ? 'Good' : (warns === 1 ? 'Fair' : 'Poor');
+          var riskBadge = '<span class="status-badge good" data-i18n="alert.low">LOW</span>';
+          tbody.insertAdjacentHTML('beforeend',
+            '<tr><td>' + date + '</td><td>' + sleep + '</td><td>' + hr + '</td><td>' + steps + '</td><td>' + water + '</td><td>' + bmi + '</td><td>' + riskBadge + '</td><td><span class="status-badge ' + statusCls + '">' + statusTxt + '</span></td></tr>'
+          );
+        });
+      })
+      .catch(function() { document.getElementById('history-table-body').innerHTML = '<tr><td colspan="8" class="empty-state">Failed to load.</td></tr>'; });
+  };
+
+  /* ─── 6. Prediction history ────────────────────────────────────────────── */
+  function loadPredictionHistory() {
+    fetch('/api/v1/predict/history')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var tbody = document.getElementById('pred-history-body');
+        var preds = d.predictions || [];
+        document.getElementById('pred-history-badge').textContent = preds.length;
+        document.getElementById('pred-count').textContent = preds.length;
+        if (!preds.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><i class="fas fa-stethoscope"></i>No predictions recorded yet.</td></tr>'; return; }
+        tbody.innerHTML = '';
+        preds.slice(0,10).forEach(function(p) {
+          var date = p.predicted_at ? p.predicted_at.split(' ')[0] : '—';
+          var syms = Array.isArray(p.symptoms) ? p.symptoms : (typeof p.symptoms === 'string' ? p.symptoms.split(',') : []);
+          var symHtml = syms.slice(0,3).map(function(s){ return '<span class="sym-tag">' + s.trim().replace(/_/g,' ') + '</span>'; }).join('');
+          if (syms.length > 3) symHtml += '<span class="sym-tag">+' + (syms.length-3) + ' more</span>';
+          var conf = p.confidence_score != null ? Math.round(p.confidence_score * 100) : 0;
+          var confHtml = '<span class="conf-bar"><span class="conf-bar-fill" style="width:' + conf + '%"></span></span>' + conf + '%';
+          tbody.insertAdjacentHTML('beforeend',
+            '<tr><td>' + date + '</td><td>' + symHtml + '</td><td><strong>' + (p.predicted_disease||'—') + '</strong></td><td>' + confHtml + '</td></tr>'
+          );
+        });
+      })
+      .catch(function(){});
+  }
+
+  /* ─── 7. Export CSV ────────────────────────────────────────────────────── */
+  window.exportCSV = function() {
+    if (!cachedHistory.length) { showToast(t('No data to export.'),'warning'); return; }
+    var csv = 'Date,Sleep,HeartRate,Steps,Water,BMI,Status\n';
+    cachedHistory.forEach(function(h) {
+      var date = h.created_at ? h.created_at.split(' ')[0] : '';
+      csv += [date, h.sleep_hours||'', h.heart_rate||'', h.steps||'', h.water_intake||'', h.bmi||'', 'Good'].join(',') + '\n';
+    });
+    var blob = new Blob([csv], {type:'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'medicare_health_report.csv';
+    a.click();
+    showToast(t('CSV downloaded!'),'success');
+  };
+
+
+  /* ─── 9. Refresh summary ───────────────────────────────────────────────── */
+  document.getElementById('refresh-summary-btn').addEventListener('click', loadReportData);
+
+  /* ─── 10. Medications count ────────────────────────────────────────────── */
+  function loadMedicationsCount() {
+    fetch('/api/v1/health/medications')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var meds = d.medications || [];
+        document.getElementById('meds-count').textContent = meds.length;
+      })
+      .catch(function(){});
+  }
+
+  /* ─── 11. Init ─────────────────────────────────────────────────────────── */
+  loadReportData();
+  loadHistoryTable();
+  loadPredictionHistory();
+  loadMedicationsCount();
+
+})();
+</script>
+{% endblock %}

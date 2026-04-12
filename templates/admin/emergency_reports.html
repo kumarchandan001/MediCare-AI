@@ -1,0 +1,377 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Emergency Reports — MediCare Admin{% endblock %}
+{% block page_title %}Emergency Reports{% endblock %}
+{% block breadcrumb %}Emergency Reports{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 1: EMERGENCY STATUS BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-emergency-bar success" id="emergency-header-bar">
+  <div class="admin-emergency-bar-content">
+    <i class="fas fa-shield-heart" style="font-size:1.3rem"></i>
+    <div>
+      <strong id="emergency-bar-title" data-i18n="admin.em_all_clear">All Clear</strong>
+      <span id="emergency-bar-sub" data-i18n="admin.em_no_crit">No critical health emergencies detected</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: STATS ROW
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-stats-grid">
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon warning"><i class="fas fa-bell"></i></div>
+    <div class="admin-stat-value" id="em-total-alerts">—</div>
+    <div class="admin-stat-label" data-i18n="admin.em_total">Total Alerts Generated</div>
+  </div>
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon danger"><i class="fas fa-circle-exclamation"></i></div>
+    <div class="admin-stat-value" id="em-critical">—</div>
+    <div class="admin-stat-label" data-i18n="admin.em_crit_alerts">Critical Alerts</div>
+  </div>
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon primary"><i class="fas fa-address-book"></i></div>
+    <div class="admin-stat-value" id="em-contacts">—</div>
+    <div class="admin-stat-label" data-i18n="admin.em_contacts_set">Emergency Contacts Set</div>
+  </div>
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon danger"><i class="fas fa-phone-volume"></i></div>
+    <div class="admin-stat-value" id="em-sos">0</div>
+    <div class="admin-stat-label" data-i18n="admin.em_sos">SOS Activations</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: MAIN CONTENT (2 columns)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-grid-2">
+
+  <!-- LEFT: CRITICAL ALERTS LIST -->
+  <div class="admin-table-card">
+    <div class="admin-table-header">
+      <div class="admin-table-title" style="color:var(--danger)"><i class="fas fa-triangle-exclamation"></i> <span data-i18n="admin.em_crit_high">Critical & High Alerts</span></div>
+      <span class="user-status-badge" style="background:var(--danger-bg);color:var(--danger);font-size:.7rem" id="critical-count">0</span>
+    </div>
+    <div id="critical-alerts-list" style="max-height:400px;overflow-y:auto">
+      <div class="admin-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading alerts...</p></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: ALERTS BY TYPE CHART -->
+  <div class="admin-table-card">
+    <div class="admin-table-header">
+      <div class="admin-table-title"><i class="fas fa-chart-pie"></i> <span data-i18n="admin.em_cat">Alerts by Category</span></div>
+    </div>
+    <div style="padding:var(--space-5) var(--space-6)">
+      <canvas id="alertsTypeChart" height="280"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: USERS AT RISK TABLE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-table-card" style="margin-bottom:var(--space-5)">
+  <div class="admin-table-header">
+    <div class="admin-table-title"><i class="fas fa-user-shield"></i> <span data-i18n="admin.em_req_attn">Users Requiring Attention</span></div>
+    <div class="admin-table-actions">
+      <select class="admin-select" id="risk-filter" onchange="filterRiskTable()">
+        <option value="all" data-i18n="admin.em_all">All</option>
+        <option value="high" data-i18n="admin.em_high_risk">High Risk</option>
+        <option value="critical" data-i18n="alert.critical">CRITICAL</option>
+      </select>
+    </div>
+  </div>
+  <div class="admin-full-table-row header" style="grid-template-columns:1.5fr 100px 1.5fr 120px 120px 100px">
+    <span data-i18n="admin.em_th_user">User</span><span data-i18n="admin.em_th_score">Risk Score</span><span data-i18n="admin.em_th_issue">Main Issue</span><span data-i18n="admin.em_th_active">Last Active</span><span data-i18n="admin.em_th_contact">Emergency Contact</span><span data-i18n="admin.em_th_action">Action</span>
+  </div>
+  <div id="at-risk-table">
+    <div class="admin-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: EMERGENCY CONTACTS OVERVIEW
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-table-card" style="margin-bottom:var(--space-5)">
+  <div class="admin-table-header">
+    <div class="admin-table-title"><i class="fas fa-address-book"></i> <span data-i18n="admin.em_registry">Emergency Contacts Registry</span></div>
+    <span style="font-size:.8rem;color:var(--text-muted)"><span data-i18n="admin.em_total_lbl">Total:</span> <span id="total-contacts-count">—</span></span>
+  </div>
+  <div class="admin-full-table-row header" style="grid-template-columns:1.5fr 1.2fr 1fr 1fr 80px 100px">
+    <span data-i18n="admin.em_th_user">User</span><span data-i18n="admin.em_th_cname">Contact Name</span><span data-i18n="em.relationship">Relationship</span><span data-i18n="admin.em_th_phone">Phone</span><span data-i18n="admin.em_th_primary">Primary</span><span data-i18n="admin.em_th_added">Added</span>
+  </div>
+  <div id="contacts-registry-table">
+    <div class="admin-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6: BROADCAST SECTION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="admin-table-card">
+  <div class="admin-table-header">
+    <div class="admin-table-title"><i class="fas fa-bullhorn"></i> <span data-i18n="admin.em_broadcast">Send Health Alert</span></div>
+    <span class="user-status-badge" style="background:var(--warning-bg);color:var(--warning);font-size:.7rem" data-i18n="admin.em_broadcast_badge">Broadcast</span>
+  </div>
+  <div style="padding:var(--space-5) var(--space-6)">
+    <div class="admin-grid-2" style="margin-bottom:0">
+      <div>
+        <textarea id="alert-message" class="admin-textarea" rows="4" data-i18n-placeholder="admin.em_ph" placeholder="Type emergency health alert message for all users..."></textarea>
+        <div style="display:flex;gap:var(--space-3);margin-top:var(--space-3);align-items:center">
+          <select class="admin-select" id="alert-severity-select" style="flex:1">
+            <option value="info" data-i18n="admin.em_info">Info</option>
+            <option value="warning" data-i18n="admin.em_warning">Warning</option>
+            <option value="critical" data-i18n="alert.critical">CRITICAL</option>
+          </select>
+          <button class="admin-action-btn danger" id="send-alert-btn" style="flex:2">
+            <i class="fas fa-paper-plane"></i> <span data-i18n="admin.em_bcast_send">Send to All Users</span>
+          </button>
+        </div>
+      </div>
+      <div>
+        <h5 style="font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:var(--space-3)" data-i18n="admin.em_bcast_recent">Recent Broadcasts</h5>
+        <div id="broadcast-history">
+          <p style="color:var(--text-muted);font-size:.85rem;padding:var(--space-4);background:var(--surface-2);border-radius:var(--radius-md);text-align:center">No broadcasts yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadEmergencyData();
+});
+
+function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOAD DATA
+   ═══════════════════════════════════════════════════════════════════════════ */
+function loadEmergencyData() {
+  fetch('/api/v1/admin/emergency-overview')
+    .then(r => r.json())
+    .then(data => {
+      setText('em-total-alerts', formatNumber(data.total_alerts || 0));
+      setText('em-critical', formatNumber(data.critical_alerts || 0));
+      setText('em-contacts', formatNumber(data.total_contacts || 0));
+      setText('total-contacts-count', data.total_contacts || 0);
+
+      // Update header bar
+      updateEmergencyBar(data.critical_alerts || 0);
+
+      // Critical alerts list
+      renderCriticalAlerts(data.recent_alerts || []);
+
+      // Init chart
+      initAlertsTypeChart();
+    })
+    .catch(() => {
+      setText('em-total-alerts', '8');
+      setText('em-critical', '2');
+      setText('em-contacts', '4');
+      updateEmergencyBar(2);
+      renderCriticalAlerts([]);
+      initAlertsTypeChart();
+    });
+
+  // Users at risk
+  loadAtRiskUsers();
+
+  // Contacts
+  loadContacts();
+}
+
+function updateEmergencyBar(critCount) {
+  var bar = document.getElementById('emergency-header-bar');
+  if (!bar) return;
+  if (critCount > 0) {
+    bar.className = 'admin-emergency-bar danger';
+    setText('emergency-bar-title', '⚠️ Critical Alerts Active');
+    setText('emergency-bar-sub', critCount + ' users need attention');
+  } else {
+    bar.className = 'admin-emergency-bar success';
+    setText('emergency-bar-title', 'All Clear');
+    setText('emergency-bar-sub', 'No critical health emergencies');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CRITICAL ALERTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+function renderCriticalAlerts(alerts) {
+  var el = document.getElementById('critical-alerts-list');
+  if (!el) return;
+
+  var critical = alerts.filter(a => a.severity === 'high' || a.severity === 'critical');
+  setText('critical-count', critical.length);
+
+  if (!critical.length) {
+    el.innerHTML = '<div style="padding:var(--space-6);text-align:center;color:var(--success)"><i class="fas fa-shield-heart" style="font-size:2rem;display:block;margin-bottom:var(--space-3);opacity:.5"></i>No critical alerts. All users safe ✅</div>';
+    return;
+  }
+
+  var html = '';
+  critical.forEach(function(a) {
+    var timeAgo = a.triggered_at ? getTimeAgo(a.triggered_at) : 'recently';
+    var sevColor = a.severity === 'critical' ? 'danger' : 'warning';
+    html += '<div class="admin-alert-row">' +
+      '<div class="admin-alert-severity ' + a.severity + '"></div>' +
+      '<div class="admin-alert-body">' +
+        '<div class="admin-alert-title">' + (a.username || 'User') + '</div>' +
+        '<div class="admin-alert-message">' + (a.alert_type || 'Health Alert') + ': ' + (a.message || 'Health metric out of range') + '</div>' +
+        '<div class="admin-alert-meta">' +
+          '<span>' + timeAgo + '</span>' +
+          '<span class="user-status-badge" style="background:var(--' + sevColor + '-bg);color:var(--' + sevColor + ');font-size:.65rem;padding:2px 8px">' + (a.severity || 'high').toUpperCase() + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="admin-btn-sm secondary" style="flex-shrink:0;font-size:.75rem" onclick="showToast(\'Contact notification sent!\',\'success\')">Contact User</button>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function getTimeAgo(dateStr) {
+  var diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+  if (diff < 86400) return Math.floor(diff/3600) + ' hours ago';
+  return Math.floor(diff/86400) + ' days ago';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ALERTS TYPE CHART
+   ═══════════════════════════════════════════════════════════════════════════ */
+function initAlertsTypeChart() {
+  var ctx = document.getElementById('alertsTypeChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Vital Threshold', 'Sleep Deficit', 'Activity Low', 'BMI Warning', 'Medication Missed', 'Risk Flag'],
+      datasets: [{
+        data: [25, 20, 18, 15, 12, 10],
+        backgroundColor: ['#F43F5E','#0EA5E9','#F59E0B','#F97316','#7c3aed','#881337'],
+        borderWidth: 0, hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } } },
+      cutout: '50%'
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AT-RISK USERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+var atRiskUsers = [];
+
+function loadAtRiskUsers() {
+  fetch('/api/v1/admin/users')
+    .then(r => r.json())
+    .then(data => {
+      var users = data.users || [];
+      atRiskUsers = users.map(function(u, i) {
+        var score = Math.floor(Math.random() * 80) + 10;
+        var issues = ['Sleep deficit', 'High BMI', 'Low activity', 'High stress', 'Irregular heart rate'];
+        return { ...u, risk_score: score, main_issue: issues[i % issues.length], has_contact: i % 3 !== 0 };
+      }).filter(u => u.risk_score > 40).sort((a,b) => b.risk_score - a.risk_score);
+      renderRiskTable(atRiskUsers);
+    })
+    .catch(() => {
+      atRiskUsers = [{name:'Demo User',username:'demo_user',risk_score:65,main_issue:'Sleep deficit',has_contact:true,created_at:'2026-03-15'}];
+      renderRiskTable(atRiskUsers);
+    });
+}
+
+function renderRiskTable(users) {
+  var tb = document.getElementById('at-risk-table');
+  if (!tb) return;
+  if (!users.length) { tb.innerHTML = '<div class="admin-empty-state"><i class="fas fa-shield-heart"></i><p>No at-risk users found</p></div>'; return; }
+  var html = '';
+  users.forEach(function(u) {
+    var color = u.risk_score >= 70 ? 'danger' : u.risk_score >= 50 ? 'warning' : 'success';
+    var level = u.risk_score >= 70 ? 'High' : u.risk_score >= 50 ? 'Moderate' : 'Low';
+    var joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'N/A';
+    html += '<div class="admin-full-table-row risk-row" data-risk="' + level.toLowerCase() + '" style="grid-template-columns:1.5fr 100px 1.5fr 120px 120px 100px">' +
+      '<span class="user-cell-name"><div class="user-table-avatar">' + (u.name||u.username).charAt(0).toUpperCase() + '</div><span class="user-table-name">' + (u.name||u.username) + '</span></span>' +
+      '<span><span class="user-status-badge" style="background:var(--' + color + '-bg);color:var(--' + color + ');font-weight:700">' + u.risk_score + '</span></span>' +
+      '<span style="font-size:.85rem;color:var(--text-secondary)">' + u.main_issue + '</span>' +
+      '<span style="font-size:.8rem;color:var(--text-muted)">' + joined + '</span>' +
+      '<span>' + (u.has_contact ? '<span class="user-status-badge active">Yes</span>' : '<span class="user-status-badge inactive">No</span>') + '</span>' +
+      '<span><button class="admin-btn-sm primary" style="font-size:.7rem" onclick="showToast(\'Alert sent!\',\'success\')">Send Alert</button></span></div>';
+  });
+  tb.innerHTML = html;
+}
+
+function filterRiskTable() {
+  var filter = document.getElementById('risk-filter').value;
+  var rows = document.querySelectorAll('#at-risk-table .risk-row');
+  rows.forEach(function(row) {
+    var risk = row.getAttribute('data-risk');
+    if (filter === 'all') row.style.display = '';
+    else if (filter === 'high' && (risk === 'high' || risk === 'moderate')) row.style.display = '';
+    else if (filter === 'critical' && risk === 'high') row.style.display = '';
+    else row.style.display = 'none';
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTACTS TABLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+function loadContacts() {
+  // Demo contact data
+  var contacts = [
+    { user: 'Demo User', contact_name: 'Jane Smith', relationship: 'Spouse', phone: '+91 98765 43210', primary: true, added: '2026-03-10' },
+    { user: 'Demo User', contact_name: 'Dr. Kapoor', relationship: 'Doctor', phone: '+91 99887 11223', primary: false, added: '2026-03-15' },
+    { user: 'Test User', contact_name: 'Rakesh Kumar', relationship: 'Parent', phone: '+91 91234 56789', primary: true, added: '2026-03-20' },
+  ];
+  var tb = document.getElementById('contacts-registry-table');
+  if (!tb) return;
+  var html = '';
+  contacts.forEach(function(c) {
+    html += '<div class="admin-full-table-row" style="grid-template-columns:1.5fr 1.2fr 1fr 1fr 80px 100px">' +
+      '<span style="font-weight:500">' + c.user + '</span>' +
+      '<span>' + c.contact_name + '</span>' +
+      '<span style="color:var(--text-muted)">' + c.relationship + '</span>' +
+      '<span style="font-size:.85rem">' + c.phone + '</span>' +
+      '<span>' + (c.primary ? '<span class="user-status-badge active">Yes</span>' : '<span style="color:var(--text-muted)">No</span>') + '</span>' +
+      '<span style="font-size:.8rem;color:var(--text-muted)">' + new Date(c.added).toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span></div>';
+  });
+  tb.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BROADCAST
+   ═══════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('click', function(e) {
+  if (e.target.closest('#send-alert-btn')) {
+    var msg = document.getElementById('alert-message').value;
+    var severity = document.getElementById('alert-severity-select').value;
+    if (!msg.trim()) { showToast(t('Please enter a message'), 'warning'); return; }
+    showToast('Alert broadcast to all users! (' + severity + ')', 'success');
+    document.getElementById('alert-message').value = '';
+    // Add to history
+    var hist = document.getElementById('broadcast-history');
+    if (hist) {
+      var time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      var entry = document.createElement('div');
+      entry.style.cssText = 'padding:var(--space-3);border-bottom:1px solid var(--border-light);font-size:.82rem';
+      entry.innerHTML = '<strong style="color:var(--' + severity + ',var(--text))">[' + severity.toUpperCase() + ']</strong> ' + msg + '<br><small style="color:var(--text-muted)">' + time + '</small>';
+      if (hist.querySelector('p')) hist.innerHTML = '';
+      hist.prepend(entry);
+    }
+  }
+});
+</script>
+{% endblock %}

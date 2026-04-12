@@ -1,0 +1,628 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Support — MediCare AI{% endblock %}
+{% block page_title %}Emergency Support{% endblock %}
+{% block breadcrumb %}Emergency{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Status bar ───────────────────────────────────────────────────────── */
+  .status-bar { display:flex; align-items:center; justify-content:space-between; gap:var(--space-5); padding:var(--space-5) var(--space-6); border-radius:var(--radius-xl); margin-bottom:var(--space-6); }
+  .status-bar.safe { background:var(--success-bg); border:1px solid #86efac; }
+  .status-bar.warning { background:var(--warning-bg); border:1px solid #fde68a; }
+  .status-bar.danger { background:var(--danger-bg); border:1px solid #fca5a5; }
+  .status-left { display:flex; align-items:center; gap:var(--space-4); }
+  .status-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; animation:pulseDot 1.6s infinite; }
+  .status-dot.green { background:#4ade80; }
+  .status-dot.amber { background:var(--warning); }
+  .status-dot.red { background:var(--danger); }
+  @keyframes pulseDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+  .status-bar h3 { font-family:var(--font-display); font-weight:700; font-size:1.1rem; margin-bottom:2px; }
+  .status-bar p { font-size:.82rem; color:var(--text-secondary); }
+  .status-right { text-align:right; flex-shrink:0; }
+  .status-right .ts { font-size:.72rem; color:var(--text-muted); margin-bottom:4px; }
+
+  /* ── SOS section ──────────────────────────────────────────────────────── */
+  .sos-label { font-size:.72rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--danger); margin-bottom:var(--space-4); }
+  .sos-btn {
+    width:160px; height:160px; border-radius:50%; border:none;
+    background:linear-gradient(135deg, #FB7185, #F43F5E);
+    color:#fff; cursor:pointer; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-family:var(--font-display);
+    font-size:2rem; font-weight:800; margin:0 auto var(--space-4);
+    box-shadow:0 0 0 0 rgba(239,68,68,.5); transition:all 300ms;
+    animation:sosPulse 2s infinite;
+  }
+  .sos-btn:hover { transform:scale(1.05); }
+  .sos-btn:active { transform:scale(.95); }
+  .sos-btn i { font-size:1.8rem; margin-bottom:4px; }
+  .sos-btn .sos-sub { font-size:.65rem; font-weight:500; opacity:.8; margin-top:2px; }
+  @keyframes sosPulse { 0%{box-shadow:0 0 0 0 rgba(239,68,68,.5)} 70%{box-shadow:0 0 0 20px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
+  .sos-note { font-size:.78rem; color:var(--text-muted); }
+  .sos-activated { display:none; background:var(--danger-bg); border:1px solid var(--danger); border-radius:var(--radius-lg); padding:var(--space-5); margin-top:var(--space-4); text-align:left; }
+  .sos-activated.show { display:block; }
+  .sos-activated h4 { color:var(--danger); font-family:var(--font-display); font-weight:700; margin-bottom:var(--space-2); }
+  .sos-activated p { font-size:.82rem; color:#991b1b; margin-bottom:4px; }
+
+  .emergency-nums { margin-top:var(--space-5); text-align:center; }
+  .enum { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-md); background:var(--surface-2); margin:4px; font-size:.85rem; font-weight:600; }
+  .enum span { font-size:.68rem; color:var(--text-muted); font-weight:400; }
+
+  /* ── Quick action cards ───────────────────────────────────────────────── */
+  .qa-card { border-radius:var(--radius-lg); padding:var(--space-5); text-align:center; display:flex; flex-direction:column; align-items:center; gap:var(--space-2); }
+  .qa-card .qa-icon { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:var(--space-2); }
+  .qa-card h4 { font-family:var(--font-display); font-weight:600; font-size:.9rem; }
+  .qa-card .qa-sub { font-size:.75rem; color:var(--text-muted); flex:1; }
+  .qa-card .btn { margin-top:auto; }
+
+  /* ── Alert items ──────────────────────────────────────────────────────── */
+  .alert-item { display:flex; align-items:flex-start; gap:var(--space-4); padding:var(--space-4); border-bottom:1px solid var(--border-light); }
+  .alert-item:last-child { border-bottom:none; }
+  .alert-sev-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .alert-sev-dot.critical { background:var(--danger); }
+  .alert-sev-dot.warning { background:var(--warning); }
+  .alert-content { flex:1; }
+  .alert-content .at { font-weight:600; font-size:.88rem; margin-bottom:2px; }
+  .alert-content .am { font-size:.8rem; color:var(--text-secondary); }
+  .alert-content .ad { font-size:.68rem; color:var(--text-muted); margin-top:4px; }
+  .all-clear { text-align:center; padding:var(--space-6); }
+  .all-clear i { font-size:2rem; color:var(--success); margin-bottom:var(--space-3); display:block; }
+
+  /* ── Suggestion cards ─────────────────────────────────────────────────── */
+  .sug-card { background:var(--surface-2); border-radius:var(--radius-lg); padding:var(--space-5); }
+  .sug-icon { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; margin-bottom:var(--space-3); }
+  .sug-icon.red { background:var(--danger-bg); color:var(--danger); }
+  .sug-icon.amber { background:var(--warning-bg); color:var(--warning); }
+  .sug-icon.blue { background:#dbeafe; color:#2563eb; }
+  .sug-icon.green { background:var(--success-bg); color:var(--success); }
+  .sug-icon.teal { background:var(--primary-50); color:var(--primary); }
+  .sug-cat { font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); font-weight:600; }
+  .sug-title { font-family:var(--font-display); font-weight:600; font-size:.92rem; margin:var(--space-1) 0; }
+  .sug-detail { font-size:.8rem; color:var(--text-secondary); line-height:1.55; }
+
+  /* ── Contact cards ────────────────────────────────────────────────────── */
+  .contact-card { display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); }
+  .contact-avatar { width:44px; height:44px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:1.1rem; flex-shrink:0; }
+  .contact-info { flex:1; }
+  .contact-info .cn { font-weight:600; font-size:.9rem; }
+  .contact-info .cr { font-size:.72rem; color:var(--text-muted); }
+  .contact-info .cp { font-size:.82rem; color:var(--primary); font-weight:500; }
+  .contact-actions { display:flex; gap:6px; }
+  .icon-btn { width:34px; height:34px; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.8rem; transition:var(--transition); }
+  .icon-btn.call { color:var(--success); }
+  .icon-btn.call:hover { background:var(--success-bg); border-color:var(--success); }
+  .icon-btn.del { color:var(--danger); }
+  .icon-btn.del:hover { background:var(--danger-bg); border-color:var(--danger); }
+
+  /* ── Add contact form ─────────────────────────────────────────────────── */
+  .add-form { display:none; background:var(--surface-2); border-radius:var(--radius-lg); padding:var(--space-5); margin-top:var(--space-4); }
+  .add-form.show { display:block; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); margin-bottom:var(--space-4); }
+  .form-group { display:flex; flex-direction:column; gap:4px; }
+  .form-group label { font-size:.75rem; font-weight:600; color:var(--text-secondary); }
+  .form-group input, .form-group select { padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:.85rem; }
+  .form-group input:focus, .form-group select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,122,107,.1); }
+  .check-row { display:flex; align-items:center; gap:8px; font-size:.82rem; margin-bottom:var(--space-4); }
+
+  /* ── EMR info blocks ──────────────────────────────────────────────────── */
+  .emr-block h4 { font-family:var(--font-display); font-weight:600; font-size:.9rem; margin-bottom:var(--space-3); color:var(--primary); }
+  .emr-row { display:flex; justify-content:space-between; padding:6px 0; font-size:.82rem; border-bottom:1px solid var(--border-light); }
+  .emr-row:last-child { border-bottom:none; }
+  .emr-row .er-val { font-weight:600; }
+  .blood-badge { display:inline-block; padding:6px 16px; border-radius:var(--radius-full); background:var(--danger-bg); color:var(--danger); font-family:var(--font-display); font-weight:800; font-size:1.2rem; }
+  .tag-list { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+  .med-tag { padding:2px 10px; border-radius:var(--radius-full); font-size:.72rem; font-weight:500; }
+  .med-tag.red { background:var(--danger-bg); color:var(--danger); }
+  .med-tag.amber { background:var(--warning-bg); color:var(--warning); }
+  .med-tag.teal { background:var(--primary-50); color:var(--primary); }
+
+  .empty-state { text-align:center; padding:var(--space-6); color:var(--text-muted); font-size:.85rem; }
+  .empty-state i { font-size:2rem; display:block; margin-bottom:var(--space-3); opacity:.4; }
+
+  /* ── Print ─────────────────────────────────────────────────────────────── */
+  @media print { .sidebar,.topbar,.btn,.sos-btn,.add-form,.contact-actions{display:none!important} .main-content{margin-left:0!important} body{background:#fff!important} .card{break-inside:avoid;box-shadow:none!important} }
+
+  /* ── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width:768px) {
+    .status-bar { flex-direction:column; align-items:flex-start; }
+    .form-row { grid-template-columns:1fr; }
+    .sos-btn { width:130px; height:130px; font-size:1.6rem; }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2: EMERGENCY STATUS BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="status-bar safe animate-fade-in" id="emergency-status-bar">
+  <div class="status-left">
+    <div class="status-dot green" id="status-dot"></div>
+    <div>
+      <h3 id="status-title" data-i18n="em.safe">You Are Currently Safe</h3>
+      <p id="status-message" data-i18n="em.safe_sub">No critical health alerts detected. Your health data looks stable.</p>
+    </div>
+  </div>
+  <div class="status-right">
+    <div class="ts">Last checked: <span id="last-checked-time">—</span></div>
+    <button class="btn btn-sm btn-secondary" id="refresh-status-btn"><i class="fas fa-arrows-rotate"></i> <span data-i18n="em.refresh">Refresh Status</span></button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3: SOS + QUICK ACTIONS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid-2-1 mb-6">
+
+  <!-- SOS Button -->
+  <div class="card animate-fade-in">
+    <div class="card-body" style="text-align:center">
+      <div class="sos-label" data-i18n="em.sos">Emergency SOS</div>
+      <button class="sos-btn" id="sos-btn"><i class="fas fa-phone-volume"></i>SOS<span class="sos-sub" data-i18n="em.tap">Tap to Alert</span></button>
+      <div class="sos-note" data-i18n="em.press">Use only in medical emergencies</div>
+
+      <div class="sos-activated" id="sos-activated">
+        <h4><i class="fas fa-circle-exclamation"></i> SOS Activated <span id="sos-time"></span></h4>
+        <p>Emergency contacts have been notified</p>
+        <p><strong>Call emergency services immediately: 112</strong></p>
+        <button class="btn btn-secondary btn-sm mt-3" id="cancel-sos-btn"><i class="fas fa-xmark"></i> Cancel SOS</button>
+      </div>
+
+      <div class="emergency-nums">
+        <div class="enum">📞 112 <span data-i18n="em.national">National Emergency</span></div>
+        <div class="enum">🚑 108 <span data-i18n="em.ambulance">Ambulance</span></div>
+        <div class="enum">🏥 104 <span data-i18n="em.helpline">Medical Helpline</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2 gap-4">
+    <div class="qa-card" style="background:var(--danger-bg)">
+      <div class="qa-icon" style="background:#fecaca;color:var(--danger)"><i class="fas fa-phone"></i></div>
+      <h4 data-i18n="em.call_contact">Call Emergency Contact</h4>
+      <div class="qa-sub" id="primary-contact-name" data-i18n="em.no_contact">No contact set</div>
+      <button class="btn btn-danger btn-block btn-sm" id="call-primary-btn"><i class="fas fa-phone"></i> <span data-i18n="em.call_now">Call Now</span></button>
+    </div>
+    <div class="qa-card" style="background:#dbeafe">
+      <div class="qa-icon" style="background:#bfdbfe;color:#2563eb"><i class="fas fa-location-dot"></i></div>
+      <h4 data-i18n="em.share_loc">Share Location</h4>
+      <div class="qa-sub">Share your current location</div>
+      <button class="btn btn-secondary btn-block btn-sm" id="share-location-btn"><i class="fas fa-location-dot"></i> <span data-i18n="em.get_loc">Get Location</span></button>
+    </div>
+    <div class="qa-card" style="background:var(--warning-bg)">
+      <div class="qa-icon" style="background:#fde68a;color:var(--warning)"><i class="fas fa-notes-medical"></i></div>
+      <h4 data-i18n="em.medical_info">My Medical Info</h4>
+      <div class="qa-sub" id="med-info-preview">Loading...</div>
+      <a href="{{ url_for('health.profile') }}" class="btn btn-secondary btn-block btn-sm"><i class="fas fa-user"></i> View Full Details</a>
+    </div>
+    <div class="qa-card" style="background:var(--success-bg)">
+      <div class="qa-icon" style="background:#bbf7d0;color:var(--success)"><i class="fas fa-hospital"></i></div>
+      <h4 data-i18n="em.find_hospital">Find Nearby Hospital</h4>
+      <div class="qa-sub">Locate the nearest medical facility</div>
+      <button class="btn btn-secondary btn-block btn-sm" id="find-hospital-btn"><i class="fas fa-hospital"></i> <span data-i18n="em.find_btn">Find Hospital</span></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4: CRITICAL HEALTH ALERTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-triangle-exclamation" style="color:var(--danger)"></i> <span data-i18n="em.critical_alerts">Critical Health Alerts</span></div>
+    <div class="flex gap-3 items-center">
+      <span class="badge badge-success" id="critical-count-badge" data-i18n="em.all_clear">All Clear</span>
+      <span class="text-xs text-muted" id="alerts-updated">—</span>
+      <button class="btn btn-sm btn-secondary" id="refresh-alerts-btn"><i class="fas fa-arrows-rotate"></i></button>
+    </div>
+  </div>
+  <div class="card-body" id="critical-alerts-container">
+    <div class="all-clear"><i class="fas fa-circle-check"></i><div>No Critical Alerts</div><div class="text-sm text-muted mt-1">Your health vitals are within normal ranges.</div></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: AI EMERGENCY SUGGESTIONS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-brain"></i> <span data-i18n="em.ai_guidance">AI Emergency Guidance</span></div>
+    <span class="badge badge-primary">AI Powered</span>
+  </div>
+  <div class="card-body">
+    <div class="grid-3" id="ai-suggestions-container">
+      <div class="sug-card"><div class="sug-icon red"><i class="fas fa-heart-pulse"></i></div><div class="sug-cat">Vitals</div><div class="sug-title">Monitor Your Heart Rate</div><div class="sug-detail">Your recent heart rate data will be analyzed to detect any concerning patterns.</div><span class="badge badge-danger mt-2" data-i18n="alert.high">HIGH</span></div>
+      <div class="sug-card"><div class="sug-icon amber"><i class="fas fa-bed"></i></div><div class="sug-cat">Rest</div><div class="sug-title">Prioritize Rest & Recovery</div><div class="sug-detail">Adequate sleep (7-9 hours) is crucial for maintaining good health and preventing emergencies.</div><span class="badge badge-warning mt-2" data-i18n="alert.medium">MEDIUM</span></div>
+      <div class="sug-card"><div class="sug-icon blue"><i class="fas fa-droplet"></i></div><div class="sug-cat">Hydration</div><div class="sug-title">Stay Hydrated</div><div class="sug-detail">Drink at least 2.5L of water daily. Dehydration can cause serious health complications.</div><span class="badge badge-success mt-2" data-i18n="alert.low">LOW</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6: EMERGENCY CONTACTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-6 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-address-book"></i> <span data-i18n="em.contacts">Emergency Contacts</span></div>
+    <div class="flex gap-3 items-center">
+      <span class="badge badge-info" id="contacts-count-badge">0</span>
+      <button class="btn btn-primary btn-sm" id="add-contact-btn"><i class="fas fa-plus"></i> <span data-i18n="em.add_contact">Add Contact</span></button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="grid-2 gap-4" id="contacts-list">
+      <div class="empty-state"><i class="fas fa-address-book"></i><span data-i18n="em.no_contacts">No emergency contacts added yet.</span><br>Add contacts so MediCare AI can alert them in emergencies.</div>
+    </div>
+
+    <!-- Add Contact Form (hidden) -->
+    <div class="add-form" id="add-contact-form">
+      <h4 style="font-family:var(--font-display);font-weight:600;margin-bottom:var(--space-4)"><i class="fas fa-user-plus" style="color:var(--primary)"></i> Add Emergency Contact</h4>
+      <div class="form-row">
+        <div class="form-group"><label>Name *</label><input type="text" id="cf-name" placeholder="Full name" required></div>
+        <div class="form-group"><label>Relationship</label><select id="cf-rel"><option value="Family" data-i18n="em.family">Family</option><option value="Friend" data-i18n="em.friend">Friend</option><option value="Doctor" data-i18n="em.doctor">Doctor</option><option value="Colleague" data-i18n="em.colleague">Colleague</option><option value="Other" data-i18n="em.other">Other</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone *</label><input type="tel" id="cf-phone" placeholder="+91 XXXXXXXXXX" required></div>
+        <div class="form-group"><label>Email (Optional)</label><input type="email" id="cf-email" placeholder="email@example.com"></div>
+      </div>
+      <div class="check-row"><input type="checkbox" id="cf-primary"><label for="cf-primary">Set as primary contact</label></div>
+      <div class="flex gap-3">
+        <button class="btn btn-primary btn-sm" id="save-contact-btn"><i class="fas fa-check"></i> <span data-i18n="em.save_contact">Save Contact</span></button>
+        <button class="btn btn-secondary btn-sm" id="cancel-contact-btn"><i class="fas fa-xmark"></i> <span data-i18n="em.cancel">Cancel</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 7: EMERGENCY MEDICAL INFORMATION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="card mb-8 animate-fade-in">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-file-medical"></i> <span data-i18n="em.med_info">Emergency Medical Info</span></div>
+    <div class="flex gap-3 items-center">
+      <span class="text-xs text-muted" data-i18n="em.show_med">Show to medical personnel</span>
+      <a href="{{ url_for('health.profile') }}" class="btn btn-sm btn-primary print-hide"><i class="fas fa-edit"></i> Edit Records</a>
+      <button class="btn btn-sm btn-secondary print-hide" onclick="window.print()"><i class="fas fa-print"></i> <span data-i18n="em.print_card">Print Card</span></button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="grid-3">
+      <div class="emr-block">
+        <h4><i class="fas fa-user"></i> Personal Details</h4>
+        <div class="emr-row"><span>Name</span><span class="er-val" id="emr-name">—</span></div>
+        <div class="emr-row"><span>Age</span><span class="er-val" id="emr-age">—</span></div>
+        <div class="emr-row"><span>Gender</span><span class="er-val" id="emr-gender">—</span></div>
+        <div class="emr-row"><span>Blood Group</span><span class="er-val" id="emr-blood">—</span></div>
+      </div>
+      <div class="emr-block">
+        <h4><i class="fas fa-notes-medical"></i> Medical History</h4>
+        <div class="emr-row"><span style="flex-shrink:0;margin-right:10px">Conditions</span><div class="tag-list" style="justify-content:flex-end" id="emr-conditions"><span class="med-tag teal">None</span></div></div>
+        <div class="emr-row"><span style="flex-shrink:0;margin-right:10px">Allergies</span><div class="tag-list" style="justify-content:flex-end" id="emr-allergies"><span class="med-tag amber">None</span></div></div>
+        <div class="emr-row" style="border-bottom:none"><span style="flex-shrink:0;margin-right:10px">Medications</span><div class="tag-list" style="justify-content:flex-end" id="emr-meds"><span class="med-tag teal">None</span></div></div>
+      </div>
+      <div class="emr-block">
+        <h4><i class="fas fa-heart-pulse"></i> Recent Vitals</h4>
+        <div class="emr-row"><span>Heart Rate</span><span class="er-val" id="emr-hr">—</span></div>
+        <div class="emr-row"><span>Blood Pressure</span><span class="er-val" id="emr-bp">—</span></div>
+        <div class="emr-row"><span>Oxygen Level</span><span class="er-val" id="emr-oxygen">—</span></div>
+        <div class="emr-row" style="border-bottom:none; font-size:.68rem; color:var(--text-muted);"><span>Last Updated</span><span id="emr-updated">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  var primaryPhone = null;
+
+  function nowStr() { return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+
+
+  /* ─── 1. Health status check ───────────────────────────────────────────── */
+  function checkHealthStatus() {
+    document.getElementById('last-checked-time').textContent = nowStr();
+    fetch('/api/v1/health/risk-score')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var score = d.score >= 0 ? d.score : 20;
+        var bar = document.getElementById('emergency-status-bar');
+        var dot = document.getElementById('status-dot');
+        var title = document.getElementById('status-title');
+        var msg = document.getElementById('status-message');
+
+        if (score >= 70) {
+          bar.className = 'status-bar danger animate-fade-in';
+          dot.className = 'status-dot red';
+          title.textContent = '\u26a0\ufe0f Health Alert Active';
+          msg.textContent = 'Risk score: ' + score + '/100. Consider contacting your doctor immediately.';
+        } else if (score >= 40) {
+          bar.className = 'status-bar warning animate-fade-in';
+          dot.className = 'status-dot amber';
+          title.textContent = '\u26a0\ufe0f Moderate Risk Detected';
+          msg.textContent = 'Risk score: ' + score + '/100. Monitor your symptoms and consult a doctor if needed.';
+        } else {
+          bar.className = 'status-bar safe animate-fade-in';
+          dot.className = 'status-dot green';
+          title.textContent = 'You Are Currently Safe';
+          msg.textContent = 'No critical health alerts detected. Your health data looks stable.';
+        }
+      }).catch(function(){});
+  }
+
+
+  /* ─── 2. SOS Button ────────────────────────────────────────────────────── */
+  document.getElementById('sos-btn').addEventListener('click', function() {
+    if (!confirm('Activate MediCare AI SOS?\nYour emergency contacts will be notified.')) return;
+    document.getElementById('sos-time').textContent = new Date().toLocaleString();
+    document.getElementById('sos-activated').classList.add('show');
+    var btn = this;
+    btn.style.animation = 'none';
+    btn.style.background = '#991b1b';
+    btn.innerHTML = '<i class="fas fa-phone-volume"></i>Active<span class="sos-sub">SOS sent</span>';
+    showToast(t('🚨 SOS Activated! Alerting emergency contacts.'), 'error');
+  });
+
+  document.getElementById('cancel-sos-btn').addEventListener('click', function() {
+    document.getElementById('sos-activated').classList.remove('show');
+    var btn = document.getElementById('sos-btn');
+    btn.style.animation = '';
+    btn.style.background = '';
+    btn.innerHTML = '<i class="fas fa-phone-volume"></i>SOS<span class="sos-sub">Tap to Alert</span>';
+    showToast(t('SOS Cancelled'), 'info');
+  });
+
+
+  /* ─── 4. Load emergency contacts ───────────────────────────────────────── */
+  function loadContacts() {
+    fetch('/api/v1/user/contacts')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var contacts = d.contacts || [];
+        var container = document.getElementById('contacts-list');
+        document.getElementById('contacts-count-badge').textContent = contacts.length;
+
+        if (!contacts.length) {
+          container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-address-book"></i>No emergency contacts added yet.<br>Add contacts so MediCare AI can alert them in emergencies.<br><br><button class="btn btn-primary btn-sm" onclick="document.getElementById(\'add-contact-form\').classList.add(\'show\')"><i class="fas fa-plus"></i> Add Your First Contact</button></div>';
+          document.getElementById('primary-contact-name').textContent = 'No contact set';
+          primaryPhone = null;
+          return;
+        }
+
+        container.innerHTML = '';
+        var primary = contacts.find(function(c){return c.is_primary}) || contacts[0];
+        document.getElementById('primary-contact-name').textContent = primary.name;
+        primaryPhone = primary.phone;
+
+        contacts.forEach(function(c) {
+          var initial = c.name.charAt(0).toUpperCase();
+          var primaryBadge = c.is_primary ? ' <span class="badge badge-primary" style="margin-left:4px">Primary</span>' : '';
+          container.insertAdjacentHTML('beforeend',
+            '<div class="contact-card">' +
+              '<div class="contact-avatar">' + initial + '</div>' +
+              '<div class="contact-info"><div class="cn">' + c.name + primaryBadge + '</div><div class="cr">' + (c.relationship||'–') + '</div><div class="cp"><i class="fas fa-phone" style="font-size:.7rem"></i> ' + c.phone + '</div></div>' +
+              '<div class="contact-actions"><div class="icon-btn call" onclick="window.location.href=\'tel:' + c.phone + '\'"><i class="fas fa-phone"></i></div><div class="icon-btn del" data-id="' + c.id + '"><i class="fas fa-trash"></i></div></div>' +
+            '</div>'
+          );
+        });
+
+        container.querySelectorAll('.icon-btn.del').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            if (!confirm('Remove this emergency contact?')) return;
+            var id = this.dataset.id;
+            fetch('/api/v1/user/contacts/' + id, {method:'DELETE'})
+              .then(function(r){return r.json()})
+              .then(function(d) {
+                if (d.success) { showToast(t('toast.contact_removed'), 'info'); loadContacts(); }
+                else showToast(d.error || 'Failed to remove', 'error');
+              })
+              .catch(function(){ showToast(t('Network error'), 'error'); });
+          });
+        });
+      })
+      .catch(function(){});
+  }
+
+
+  /* ─── 5. Add contact ───────────────────────────────────────────────────── */
+  document.getElementById('add-contact-btn').addEventListener('click', function() {
+    document.getElementById('add-contact-form').classList.add('show');
+  });
+  document.getElementById('cancel-contact-btn').addEventListener('click', function() {
+    document.getElementById('add-contact-form').classList.remove('show');
+  });
+
+  document.getElementById('save-contact-btn').addEventListener('click', function() {
+    var name = document.getElementById('cf-name').value.trim();
+    var phone = document.getElementById('cf-phone').value.trim();
+    if (!name || !phone) { showToast(t('Name and phone are required'), 'warning'); return; }
+
+    var data = {
+      name: name,
+      relationship: document.getElementById('cf-rel').value,
+      phone: phone,
+      email: document.getElementById('cf-email').value.trim(),
+      is_primary: document.getElementById('cf-primary').checked
+    };
+
+    fetch('/api/v1/user/contacts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
+    })
+    .then(function(r){return r.json()})
+    .then(function(d) {
+      if (d.success) {
+        showToast(t('toast.contact_added'), 'success');
+        document.getElementById('add-contact-form').classList.remove('show');
+        ['cf-name','cf-phone','cf-email'].forEach(function(id){document.getElementById(id).value='';});
+        document.getElementById('cf-primary').checked = false;
+        loadContacts();
+      } else showToast(d.error || 'Failed to add contact', 'error');
+    })
+    .catch(function(){ showToast(t('Network error'), 'error'); });
+  });
+
+
+  /* ─── 7. Call primary ──────────────────────────────────────────────────── */
+  document.getElementById('call-primary-btn').addEventListener('click', function() {
+    if (primaryPhone) window.location.href = 'tel:' + primaryPhone;
+    else showToast(t('No primary contact set. Please add an emergency contact.'), 'warning');
+  });
+
+
+  /* ─── 8. Share location ────────────────────────────────────────────────── */
+  document.getElementById('share-location-btn').addEventListener('click', function() {
+    var btn = this;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Detecting...';
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude.toFixed(6);
+      var lng = pos.coords.longitude.toFixed(6);
+      btn.innerHTML = '<i class="fas fa-check"></i> ' + lat + ', ' + lng;
+      window.open('https://maps.google.com?q=' + lat + ',' + lng, '_blank');
+      showToast(t('toast.location'), 'success');
+    }, function() {
+      btn.innerHTML = '<i class="fas fa-location-dot"></i> Get Location';
+      showToast(t('Could not get location. Enable location access.'), 'error');
+    });
+  });
+
+
+  /* ─── 9. Find hospital ─────────────────────────────────────────────────── */
+  document.getElementById('find-hospital-btn').addEventListener('click', function() {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) { window.open('https://maps.google.com/maps?q=hospital+near+me&near=' + pos.coords.latitude + ',' + pos.coords.longitude, '_blank'); },
+      function() { window.open('https://maps.google.com/maps?q=hospital+near+me', '_blank'); }
+    );
+  });
+
+
+  /* ─── 10. Critical alerts ──────────────────────────────────────────────── */
+  function loadCriticalAlerts() {
+    document.getElementById('alerts-updated').textContent = nowStr();
+    fetch('/api/v1/health/risk-score')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var container = document.getElementById('critical-alerts-container');
+        var badge = document.getElementById('critical-count-badge');
+        var reasons = d.reasons || [];
+        var criticals = reasons.filter(function(r){ return r.toLowerCase().indexOf('high') !== -1 || r.toLowerCase().indexOf('critical') !== -1 || r.toLowerCase().indexOf('danger') !== -1 || r.toLowerCase().indexOf('emergency') !== -1; });
+
+        if (d.score >= 70) {
+          criticals.unshift('Your overall health risk score is ' + d.score + '/100 — immediate attention recommended.');
+        }
+
+        if (!criticals.length) {
+          container.innerHTML = '<div class="all-clear"><i class="fas fa-circle-check"></i><div>No Critical Alerts</div><div class="text-sm text-muted mt-1">Your health vitals are within normal ranges.</div></div>';
+          badge.className = 'badge badge-success';
+          badge.textContent = 'All Clear';
+          return;
+        }
+
+        badge.className = 'badge badge-danger';
+        badge.textContent = criticals.length;
+        container.innerHTML = '';
+        criticals.forEach(function(r) {
+          container.insertAdjacentHTML('beforeend',
+            '<div class="alert-item"><div class="alert-sev-dot critical"></div><div class="alert-content"><div class="at">Health Risk Alert</div><div class="am">' + r + '</div><div class="ad">Detected: ' + nowStr() + '</div></div><span class="badge badge-danger" data-i18n="alert.critical">CRITICAL</span></div>'
+          );
+        });
+      }).catch(function(){});
+  }
+
+
+  /* ─── 11. AI suggestions ───────────────────────────────────────────────── */
+  function loadAISuggestions() {
+    fetch('/api/v1/habits/tips')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var tips = (d.tips || []).slice(0,3);
+        if (!tips.length) return;
+        var container = document.getElementById('ai-suggestions-container');
+        var catMap = {sleep:{icon:'fa-bed',color:'blue'}, activity:{icon:'fa-person-running',color:'green'}, stress:{icon:'fa-brain',color:'amber'}, nutrition:{icon:'fa-apple-whole',color:'amber'}, vitals:{icon:'fa-heart-pulse',color:'red'}, medication:{icon:'fa-pills',color:'teal'}};
+        var prioMap = {high:'badge-danger', medium:'badge-warning', low:'badge-success'};
+        container.innerHTML = '';
+        tips.forEach(function(t) {
+          var cat = t.category || 'vitals';
+          var m = catMap[cat] || {icon:'fa-heart-pulse',color:'teal'};
+          var prio = t.priority || 'low';
+          container.insertAdjacentHTML('beforeend',
+            '<div class="sug-card"><div class="sug-icon ' + m.color + '"><i class="fas ' + m.icon + '"></i></div><div class="sug-cat">' + cat + '</div><div class="sug-title">' + (t.title||cat) + '</div><div class="sug-detail">' + (t.tip||'') + '</div><span class="badge ' + (prioMap[prio]||'badge-info') + ' mt-2">' + prio + '</span></div>'
+          );
+        });
+      }).catch(function(){});
+  }
+
+
+  /* ─── 12. Medical info ─────────────────────────────────────────────────── */
+  function loadMedicalInfo() {
+    fetch('/api/v1/user/profile')
+      .then(function(r){return r.json()})
+      .then(function(p) {
+        var name = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.username || '—';
+        document.getElementById('emr-name').textContent = name;
+        if (p.date_of_birth) {
+          var age = Math.floor((Date.now() - new Date(p.date_of_birth)) / 31557600000);
+          document.getElementById('emr-age').textContent = age + ' yrs';
+        }
+        document.getElementById('emr-gender').textContent = p.gender || '—';
+        document.getElementById('emr-blood').textContent = p.blood_type || '—';
+
+        var condsEl = document.getElementById('emr-conditions');
+        var conds = p.medical_conditions || [];
+        condsEl.innerHTML = conds.length ? conds.map(function(c){return '<span class="med-tag red">'+c+'</span>';}).join('') : '<span class="med-tag teal">None recorded</span>';
+
+        var allergEl = document.getElementById('emr-allergies');
+        var algs = p.allergies || [];
+        allergEl.innerHTML = algs.length ? algs.map(function(a){return '<span class="med-tag amber">'+a+'</span>';}).join('') : '<span class="med-tag amber">None recorded</span>';
+
+        var preview = (p.blood_type ? 'Blood: ' + p.blood_type : '') + (conds.length ? ' | ' + conds.join(', ') : '');
+        document.getElementById('med-info-preview').textContent = preview || 'No data';
+      }).catch(function(){});
+
+    fetch('/api/v1/health/summary')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        document.getElementById('emr-hr').textContent = d.heart_rate ? d.heart_rate + ' bpm' : '—';
+        document.getElementById('emr-bp').textContent = d.blood_pressure || '—';
+        document.getElementById('emr-oxygen').textContent = d.oxygen ? d.oxygen + '%' : '—';
+        document.getElementById('emr-updated').textContent = nowStr();
+      }).catch(function(){});
+
+    fetch('/api/v1/health/medications')
+      .then(function(r){return r.json()})
+      .then(function(d) {
+        var meds = d.medications || [];
+        var medsEl = document.getElementById('emr-meds');
+        medsEl.innerHTML = meds.length ? meds.map(function(m){return '<span class="med-tag teal">' + m.medication_name + '</span>';}).join('') : '<span class="med-tag teal">None</span>';
+      }).catch(function(){});
+  }
+
+
+  /* ─── 14. Refresh buttons ──────────────────────────────────────────────── */
+  document.getElementById('refresh-status-btn').addEventListener('click', checkHealthStatus);
+  document.getElementById('refresh-alerts-btn').addEventListener('click', loadCriticalAlerts);
+
+
+  /* ─── 15. Init ─────────────────────────────────────────────────────────── */
+  checkHealthStatus();
+  loadContacts();
+  loadCriticalAlerts();
+  loadAISuggestions();
+  loadMedicalInfo();
+
+})();
+</script>
+{% endblock %}
