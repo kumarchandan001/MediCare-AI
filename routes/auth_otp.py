@@ -156,9 +156,19 @@ def signup():
     otp, err = create_otp(email, "signup", ip_address=_get_ip(), user_agent=_get_ua())
     if err:
         return render_template("auth/signup.html", errors={"general": err},
-                               form_data={"username": username, "email": email})
+                               form_data={"username": username, "email": email, "phone": phone})
 
-    send_otp_email(email, otp, "signup", OTP_EXPIRY_MINUTES)
+    try:
+        email_sent = send_otp_email(email, otp, "signup", OTP_EXPIRY_MINUTES)
+    except Exception as e:
+        logger.error("SMTP failure during signup for %s: %s", email, e)
+        email_sent = False
+
+    if not email_sent:
+        logger.error("Failed to send OTP email to %s", email)
+        return render_template("auth/signup.html",
+            errors={"general": "Could not send verification email. Please check your email address or try again later."},
+            form_data={"username": username, "email": email, "phone": phone})
 
     session["otp_email"]   = email
     session["otp_purpose"] = "signup"
@@ -318,7 +328,16 @@ def login():
         return render_template("auth/login.html",
             error=err, form_data={"identifier": identifier})
 
-    send_otp_email(user.email, otp, "login")
+    try:
+        email_sent = send_otp_email(user.email, otp, "login")
+    except Exception as e:
+        logger.error("SMTP failure during login OTP for %s: %s", user.email, e)
+        email_sent = False
+
+    if not email_sent:
+        return render_template("auth/login.html",
+            error="Could not send OTP email. Please try the direct sign-in option or try again later.",
+            form_data={"identifier": identifier})
 
     session["otp_email"]   = user.email
     session["otp_purpose"] = "login"
@@ -412,7 +431,10 @@ def forgot_password():
             otp, err = create_otp(email, "reset_password",
                 ip_address=_get_ip(), user_agent=_get_ua())
             if otp:
-                send_otp_email(email, otp, "reset_password")
+                try:
+                    send_otp_email(email, otp, "reset_password")
+                except Exception as e:
+                    logger.error("SMTP failure during password reset for %s: %s", email, e)
                 session["reset_email"]   = email
                 session["reset_user_id"] = user.id
                 session["reset_step"]    = "otp"
@@ -587,7 +609,11 @@ def resend_otp():
     if err:
         flash(err, "error")
     else:
-        sent = send_otp_email(email, otp, purpose)
+        try:
+            sent = send_otp_email(email, otp, purpose)
+        except Exception as e:
+            logger.error("SMTP failure during resend for %s: %s", email, e)
+            sent = False
         flash("OTP resent! Check your email." if sent else "Failed to send email. Try again.",
               "success" if sent else "error")
 

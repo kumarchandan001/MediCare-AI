@@ -72,7 +72,7 @@ def _send_email(to_email: str, subject: str,
             msg.attach(MIMEText(text_body, "plain", "utf-8"))
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-        with smtplib.SMTP(cfg["server"], cfg["port"]) as server:
+        with smtplib.SMTP(cfg["server"], cfg["port"], timeout=15) as server:
             server.ehlo()
             if cfg["use_tls"]:
                 server.starttls()
@@ -84,14 +84,17 @@ def _send_email(to_email: str, subject: str,
         logger.info("Email sent to %s: %s", to_email, subject)
         return True
 
-    except smtplib.SMTPAuthenticationError:
-        logger.error("SMTP Auth failed — check MAIL_USERNAME / MAIL_PASSWORD")
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error("SMTP Auth failed — check MAIL_USERNAME / MAIL_PASSWORD: %s", e)
         return False
     except smtplib.SMTPException as e:
-        logger.error("SMTP error: %s", e)
+        logger.error("SMTP error sending to %s: %s", to_email, e)
+        return False
+    except (OSError, TimeoutError, ConnectionError) as e:
+        logger.error("Network/connection error sending email to %s: %s", to_email, e)
         return False
     except Exception as e:
-        logger.error("Email send failed: %s", e)
+        logger.error("Unexpected email send failure to %s: %s", to_email, e)
         return False
 
 
