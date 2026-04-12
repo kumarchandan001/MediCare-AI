@@ -21,7 +21,8 @@ import logging
 from datetime import timedelta
 from dotenv import load_dotenv
 from sqlalchemy import text
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from werkzeug.middleware.proxy_fix import ProxyFix
 from utils.trend_analysis import analyze_trends
 from services.alert_service import generate_alerts
 from utils.risk_engine import calculate_risk
@@ -53,6 +54,10 @@ if DATABASE_URL.startswith('postgres://'):
 # ── App factory ───────────────────────────────────────────────────────────────
 app = Flask(__name__)
 
+# Reverse proxy support (Render / Heroku put the app behind a load balancer)
+# This ensures request.remote_addr, request.scheme etc. are correct.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 # Security: Refuse to start without a real SECRET_KEY
 _secret = os.getenv('SECRET_KEY')
 if not _secret or _secret == 'health_assistant_fallback_key':
@@ -60,15 +65,15 @@ if not _secret or _secret == 'health_assistant_fallback_key':
 app.secret_key = _secret
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=31)
-app.config['SESSION_TYPE'] = 'filesystem'
+# Use Flask's built-in cookie sessions (no filesystem needed)
 
 # Session Security
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-# In production with HTTPS, use SESSION_COOKIE_SECURE = True
 app.config['SESSION_COOKIE_SECURE'] = (os.getenv('FLASK_ENV') == 'production')
 
-# Enable CSRF Protection globally
+# CSRF Protection
+app.config['WTF_CSRF_SSL_STRICT'] = False  # Allow CSRF behind reverse proxy (HTTP internally)
 csrf = CSRFProtect(app)
 
 # ── Database Configuration (PostgreSQL) ───────────────────────────────────────
@@ -266,6 +271,14 @@ def unhandled_exception(e):
         from utils.api_response import server_error as api_500
         return api_500('An unexpected error occurred.', exc=e)
     return "Something went wrong. Please try again later.", 500
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    """Handle CSRF token mismatch gracefully — redirect back to the form."""
+    logger.warning("CSRF error on %s: %s", request.path, e.description)
+    from flask import flash
+    flash("Session expired. Please try again.", "warning")
+    return redirect(request.referrer or url_for('auth.login'))
 
 # ── Server entry point ────────────────────────────────────────────────────────
 if __name__ == '__main__':
