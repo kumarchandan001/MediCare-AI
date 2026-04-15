@@ -6,189 +6,7 @@
 
 {% block head %}
 <style>
-  /* ── Greeting Bar ─────────────────────────────────────────────────────── */
-  .greeting-bar {
-    background: linear-gradient(135deg, var(--primary), var(--primary-400));
-    color: #fff;
-    border-radius: var(--radius-xl);
-    padding: var(--space-8);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-6);
-    margin-bottom: var(--space-6);
-    position: relative;
-    overflow: hidden;
-  }
-  .greeting-bar::before {
-    content: '\f21e'; /* fa-heart-pulse */
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    position: absolute;
-    bottom: -60px;
-    right: -10px;
-    font-size: 20rem;
-    color: rgba(255,255,255,.05);
-    transform: rotate(5deg);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .greeting-bar::after {
-    content: '\f48b'; /* fa-notes-medical */
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    position: absolute;
-    top: -20px;
-    right: 180px;
-    font-size: 8rem;
-    color: rgba(255,255,255,.03);
-    transform: rotate(-10deg);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .greeting-text h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; margin-bottom: var(--space-1); }
-  .greeting-text p  { font-size: .9rem; opacity: .85; }
-  .greeting-text .greeting-date { font-size: .75rem; opacity: .6; margin-top: var(--space-2); }
-  .karuna-box {
-    background: rgba(255,255,255,.15);
-    backdrop-filter: blur(8px);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4) var(--space-5);
-    display: flex; align-items: flex-start; gap: var(--space-3);
-    max-width: 380px; position: relative; z-index: 1;
-    flex-shrink: 0;
-  }
-  .karuna-icon {
-    width: 36px; height: 36px; border-radius: var(--radius-md);
-    background: rgba(255,255,255,.2); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1rem; flex-shrink: 0;
-  }
-  .karuna-box p { font-size: .82rem; line-height: 1.55; opacity: .95; }
-  .karuna-pulse {
-    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-    background: #4ade80; margin-left: 6px; vertical-align: middle;
-    animation: pulseDot 1.6s infinite;
-  }
-  @keyframes pulseDot {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50%     { opacity: .4; transform: scale(1.6); }
-  }
-
-  /* ── Quick Action Cards ───────────────────────────────────────────────── */
-  .quick-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--space-4);
-  }
-  .quick-card {
-    display: flex; flex-direction: column; align-items: center;
-    text-align: center; padding: var(--space-6) var(--space-4);
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-xl); transition: all 300ms var(--ease);
-    text-decoration: none; color: var(--text);
-    position: relative; overflow: hidden;
-  }
-  .quick-card::after {
-    content: '\f061'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-    position: absolute; bottom: 12px; right: 14px; font-size: .75rem;
-    color: var(--text-muted); opacity: 0; transition: var(--transition);
-  }
-  .quick-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); color: var(--text); }
-  .quick-card:active { transform: scale(0.97); }
-  .quick-card:hover::after { opacity: 1; }
-  .quick-icon {
-    width: 54px; height: 54px; border-radius: var(--radius-lg);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.3rem; margin-bottom: var(--space-4);
-  }
-  .quick-icon.teal   { background: var(--primary-50); color: var(--primary); }
-  .quick-icon.purple  { background: #f3e8ff; color: #7c3aed; }
-  .quick-icon.red     { background: var(--danger-bg);  color: var(--danger); }
-  .quick-icon.blue    { background: var(--info-bg);    color: var(--info); }
-  .quick-icon.amber   { background: var(--warning-bg); color: var(--warning); }
-  .quick-card h4 { font-family: var(--font-display); font-weight: 600; font-size: .9rem; margin-bottom: 4px; }
-  .quick-card p  { font-size: .75rem; color: var(--text-muted); }
-
-  /* Skeleton loader — defined in global medicare.css */
-
-  /* ── Risk reasons list ────────────────────────────────────────────────── */
-  .risk-reasons-list { list-style: none; padding: 0; margin-top: var(--space-4); }
-  .risk-reasons-list li {
-    font-size: .78rem; color: var(--text-secondary); padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--border-light); display: flex; align-items: flex-start; gap: 8px;
-  }
-  .risk-reasons-list li:last-child { border-bottom: none; }
-  .risk-reasons-list li i { color: var(--warning); margin-top: 2px; flex-shrink: 0; }
-
-  /* ── Chart labels ─────────────────────────────────────────────────────── */
-  .chart-label { font-size: .78rem; color: var(--text-muted); text-align: center; margin-top: var(--space-2); }
-
-  /* ── Responsive ───────────────────────────────────────────────────────── */
-  @media (max-width: 768px) {
-    .greeting-bar { flex-direction: column; align-items: flex-start; }
-    .karuna-box { max-width: 100%; }
-    .quick-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 480px) {
-    .quick-grid { grid-template-columns: 1fr; }
-  }
-
-  /* ── Google Fit Integration Card ─────────────────────────────────────── */
-  .gfit-card {
-    background: var(--surface, #ffffff);
-    color: var(--text-color, #1f2937);
-    border: 1px solid var(--border-color, #e5e7eb);
-    border-left: 4px solid #1a73e8;
-    border-radius: var(--radius-xl);
-    padding: var(--space-5) var(--space-6);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  }
-  .gfit-left { display: flex; align-items: center; gap: var(--space-4); z-index: 1; }
-  .gfit-icon {
-    width: 48px; height: 48px; border-radius: var(--radius-lg);
-    background: #e8f0fe; color: #1a73e8; display: flex;
-    align-items: center; justify-content: center; font-size: 1.3rem;
-    flex-shrink: 0;
-  }
-  .gfit-info h4 { font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
-  .gfit-info p  { font-size: .78rem; color: var(--text-muted, #6b7280); margin: 0; }
-  .gfit-actions { display: flex; gap: var(--space-3); z-index: 1; flex-shrink: 0; flex-wrap: wrap; }
-  .gfit-btn {
-    padding: 8px 18px; border-radius: var(--radius-md); font-size: .82rem;
-    font-weight: 600; border: none; cursor: pointer; display: inline-flex;
-    align-items: center; gap: 6px; transition: all 200ms var(--ease);
-    text-decoration: none;
-  }
-  .gfit-btn-connect { background: #1a73e8; color: #fff; border: 1px solid #1a73e8; }
-  .gfit-btn-connect:hover { background: #1557b0; color: #fff; transform: translateY(-1px); }
-  .gfit-btn-sync { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
-  .gfit-btn-sync:hover { background: #e5e7eb; }
-  .gfit-btn-sync:disabled { opacity: .5; cursor: not-allowed; }
-  .gfit-btn-disconnect { background: #fee2e2; color: #ef4444; font-size: .72rem; padding: 6px 12px; border: 1px solid #fecaca; }
-  .gfit-btn-disconnect:hover { background: #fecaca; }
-  .gfit-status-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 10px; border-radius: 20px; font-size: .7rem; font-weight: 600;
-  }
-  .gfit-status-badge.connected { background: #dcfce7; color: #166534; }
-  .gfit-status-badge.disconnected { background: #f3f4f6; color: #6b7280; }
-  .gfit-spinner {
-    display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.15);
-    border-top-color: #374151; border-radius: 50%;
-    animation: gfitSpin .6s linear infinite;
-  }
-  @keyframes gfitSpin { to { transform: rotate(360deg); } }
-  @media (max-width: 640px) {
-    .gfit-card { flex-direction: column; align-items: flex-start; }
-    .gfit-actions { width: 100%; }
-  }
+  /* All component styles are in medicare.css — only page-specific overrides here */
 </style>
 {% endblock %}
 
@@ -597,12 +415,12 @@
     el.style.display = 'inline-flex';
     if (source === 'manual') {
       el.innerHTML = '<i class="fas fa-pen" style="font-size:0.55rem"></i> Manual';
-      el.style.background = 'rgba(16,185,129,0.15)';
-      el.style.color = '#059669';
+      el.style.background = 'rgba(0,245,200,0.08)';
+      el.style.color = '#00F5C8';
     } else {
       el.innerHTML = '<i class="fas fa-watch" style="font-size:0.55rem"></i> Google Fit';
-      el.style.background = 'rgba(59,130,246,0.15)';
-      el.style.color = '#2563eb';
+      el.style.background = 'rgba(0,180,255,0.1)';
+      el.style.color = '#00B4FF';
     }
   }
 
@@ -694,8 +512,8 @@
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { family: "'Plus Jakarta Sans'", size: 11 } } },
-        y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: "'Plus Jakarta Sans'", size: 11 } }, beginAtZero: true }
+        x: { grid: { display: false }, ticks: { font: { family: "'Outfit'", size: 11 }, color: 'rgba(255,255,255,0.3)' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { family: "'Outfit'", size: 11 }, color: 'rgba(255,255,255,0.3)' }, beginAtZero: true }
       }
     };
 
@@ -708,12 +526,12 @@
         labels: labels.slice(-7),
         datasets: [{
           data: sleepData,
-          borderColor: '#0a7a6b',
-          backgroundColor: 'rgba(10,122,107,.1)',
+          borderColor: '#9C6FFF',
+          backgroundColor: 'rgba(156,111,255,.08)',
           fill: true,
           tension: 0.4,
           pointRadius: 4,
-          pointBackgroundColor: '#0a7a6b',
+          pointBackgroundColor: '#9C6FFF',
           borderWidth: 2,
         }]
       },
@@ -731,8 +549,8 @@
         labels: labels.slice(-7),
         datasets: [{
           data: stepsData,
-          backgroundColor: 'rgba(16,185,129,.55)',
-          borderColor: '#10B981',
+          backgroundColor: 'rgba(0,230,118,.25)',
+          borderColor: '#00E676',
           borderWidth: 1,
           borderRadius: 6,
           borderSkipped: false,

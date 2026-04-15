@@ -73,7 +73,7 @@
   .sug-icon { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; margin-bottom:var(--space-3); }
   .sug-icon.red { background:var(--danger-bg); color:var(--danger); }
   .sug-icon.amber { background:var(--warning-bg); color:var(--warning); }
-  .sug-icon.blue { background:#dbeafe; color:#2563eb; }
+  .sug-icon.blue { background:rgba(0,180,255,0.1); color:#00B4FF; }
   .sug-icon.green { background:var(--success-bg); color:var(--success); }
   .sug-icon.teal { background:var(--primary-50); color:var(--primary); }
   .sug-cat { font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); font-weight:600; }
@@ -101,7 +101,7 @@
   .form-group { display:flex; flex-direction:column; gap:4px; }
   .form-group label { font-size:.75rem; font-weight:600; color:var(--text-secondary); }
   .form-group input, .form-group select { padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:.85rem; }
-  .form-group input:focus, .form-group select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,122,107,.1); }
+  .form-group input:focus, .form-group select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,245,200,.12); }
   .check-row { display:flex; align-items:center; gap:8px; font-size:.82rem; margin-bottom:var(--space-4); }
 
   /* ── EMR info blocks ──────────────────────────────────────────────────── */
@@ -181,13 +181,13 @@
 
   <div class="grid-2 gap-4">
     <div class="qa-card" style="background:var(--danger-bg)">
-      <div class="qa-icon" style="background:#fecaca;color:var(--danger)"><i class="fas fa-phone"></i></div>
+      <div class="qa-icon" style="background:rgba(255,107,107,0.15);color:var(--danger)"><i class="fas fa-phone"></i></div>
       <h4 data-i18n="em.call_contact">Call Emergency Contact</h4>
       <div class="qa-sub" id="primary-contact-name" data-i18n="em.no_contact">No contact set</div>
       <button class="btn btn-danger btn-block btn-sm" id="call-primary-btn"><i class="fas fa-phone"></i> <span data-i18n="em.call_now">Call Now</span></button>
     </div>
-    <div class="qa-card" style="background:#dbeafe">
-      <div class="qa-icon" style="background:#bfdbfe;color:#2563eb"><i class="fas fa-location-dot"></i></div>
+    <div class="qa-card" style="background:rgba(0,180,255,0.05)">
+      <div class="qa-icon" style="background:rgba(0,180,255,0.12);color:#00B4FF"><i class="fas fa-location-dot"></i></div>
       <h4 data-i18n="em.share_loc">Share Location</h4>
       <div class="qa-sub">Share your current location</div>
       <button class="btn btn-secondary btn-block btn-sm" id="share-location-btn"><i class="fas fa-location-dot"></i> <span data-i18n="em.get_loc">Get Location</span></button>

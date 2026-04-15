@@ -223,7 +223,7 @@ function initSleepDistChart(data) {
       labels: ['Poor (< 6h)', 'Fair (6-7h)', 'Good (7-9h)', 'Excessive (> 9h)'],
       datasets: [{
         data: [15, 25, 48, 12],
-        backgroundColor: ['#F43F5E','#F59E0B','#10B981','#0EA5E9'],
+        backgroundColor: ['#FF6B6B','#FFB300','#00E676','#00B4FF'],
         borderWidth: 0, hoverOffset: 8
       }]
     },
@@ -250,8 +250,8 @@ function initStepsChart(data) {
         data: steps,
         backgroundColor: function(ctx2) {
           var g = ctx2.chart.ctx.createLinearGradient(0,0,0,280);
-          g.addColorStop(0, 'rgba(10,122,107,.8)');
-          g.addColorStop(1, 'rgba(10,122,107,.3)');
+          g.addColorStop(0, 'rgba(0,245,200,.6)');
+          g.addColorStop(1, 'rgba(0,245,200,.15)');
           return g;
         },
         borderRadius: 6, borderSkipped: false
@@ -260,7 +260,7 @@ function initStepsChart(data) {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } }, x: { grid: { display: false } } }
+      scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: 'rgba(255,255,255,0.3)' } }, x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.3)' } } }
     }
   });
 }
@@ -269,9 +269,9 @@ function initRiskChart() {
   var ctx = document.getElementById('riskPieChart');
   if (!ctx) return;
   var riskData = [
-    { level: 'Low', count: 60, color: '#10B981' },
-    { level: 'Moderate', count: 25, color: '#F59E0B' },
-    { level: 'High', count: 12, color: '#F43F5E' },
+    { level: 'Low', count: 60, color: '#00E676' },
+    { level: 'Moderate', count: 25, color: '#FFB300' },
+    { level: 'High', count: 12, color: '#FF6B6B' },
     { level: 'Critical', count: 3, color: '#881337' }
   ];
   var total = riskData.reduce((s,d) => s + d.count, 0);

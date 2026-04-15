@@ -1360,9 +1360,32 @@
   .user-management-table-card .admin-full-table-row > *:nth-child(n+5) { display: none; }
   .user-management-table-card .admin-full-table-row.header > *:nth-child(n+5) { display: none; }
 
-  /* ── General Admin Tables: Horizontally Scrollable ── */
-  .admin-table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .admin-full-table-row { min-width: 650px; font-size: .8rem; }
+  /* ── General Admin Tables: Mobile Card Redesign ── */
+  .admin-table-card { overflow-x: hidden; max-width: 100%; border-radius: var(--radius-lg); }
+  
+  .admin-table-card:not(.user-management-table-card) .admin-full-table-row.header { display: none !important; }
+  
+  .admin-table-card:not(.user-management-table-card) .admin-full-table-row { 
+    display: flex !important; 
+    flex-wrap: wrap !important;
+    min-width: 0 !important; 
+    padding: var(--space-4) !important; 
+    gap: var(--space-2) !important; 
+    border-bottom: 1px solid var(--border-light) !important;
+    border-left: 3px solid transparent;
+  }
+  
+  /* Create an elegant flow for elements */
+  .admin-table-card:not(.user-management-table-card) .admin-full-table-row > * {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem !important;
+  }
+  
+  /* For risk rows specifically */
+  .admin-full-table-row.risk-row { background: var(--surface-2); border-radius: var(--radius-md); margin-bottom: var(--space-2); border-left: 3px solid var(--warning); }
+  .admin-full-table-row.risk-row[data-risk="high"] { border-left-color: var(--danger); }
+  .admin-full-table-row.risk-row[data-risk="low"] { border-left-color: var(--success); }
   .admin-modal { max-width: 95vw; }
   .admin-risk-split { flex-direction: column; }
   .admin-emergency-bar-content { flex-wrap: wrap; }

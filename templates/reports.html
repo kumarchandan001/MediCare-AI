@@ -313,8 +313,8 @@
     el.className = 'metric-trend ' + dir;
     el.innerHTML = '<i class="fas ' + (icons[dir]||icons.flat) + '"></i> ' + (lbls[dir]||'Stable');
   }
-  var chartFont = { family: "'Plus Jakarta Sans'" };
-  var chartGrid = { color: 'rgba(0,0,0,0.05)' };
+  var chartFont = { family: "'Outfit'" };
+  var chartGrid = { color: 'rgba(255,255,255,0.04)' };
 
   /* ─── 1. Period toggle ─────────────────────────────────────────────────── */
   window.setPeriod = function(p) {
@@ -447,23 +447,23 @@
     if (riskChart) riskChart.destroy();
 
     sleepChart = new Chart(document.getElementById('sleepTrendChart'), {
-      type:'line', data:{ labels:labels, datasets:[{ data:sleepData, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.1)', tension:0.4, fill:true, pointBackgroundColor:'#2563eb', pointRadius:4, borderWidth:2 }] },
-      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:0,max:12,grid:chartGrid,ticks:{font:chartFont}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+      type:'line', data:{ labels:labels, datasets:[{ data:sleepData, borderColor:'#9C6FFF', backgroundColor:'rgba(156,111,255,0.08)', tension:0.4, fill:true, pointBackgroundColor:'#9C6FFF', pointRadius:4, borderWidth:2 }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:0,max:12,grid:chartGrid,ticks:{font:chartFont,color:'rgba(255,255,255,0.3)'}}, x:{grid:{display:false},ticks:{font:chartFont,color:'rgba(255,255,255,0.3)'}} } }
     });
 
     activityChart = new Chart(document.getElementById('activityTrendChart'), {
-      type:'bar', data:{ labels:labels, datasets:[{ data:stepsData, backgroundColor:'rgba(16,185,129,0.55)', borderColor:'#10B981', borderWidth:1, borderRadius:6, borderSkipped:false }] },
-      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,grid:chartGrid,ticks:{font:chartFont}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+      type:'bar', data:{ labels:labels, datasets:[{ data:stepsData, backgroundColor:'rgba(0,230,118,0.25)', borderColor:'#00E676', borderWidth:1, borderRadius:6, borderSkipped:false }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,grid:chartGrid,ticks:{font:chartFont,color:'rgba(255,255,255,0.3)'}}, x:{grid:{display:false},ticks:{font:chartFont,color:'rgba(255,255,255,0.3)'}} } }
     });
 
     bmiChart = new Chart(document.getElementById('bmiTrendChart'), {
-      type:'line', data:{ labels:labels, datasets:[{ data:bmiData, borderColor:'#0a7a6b', backgroundColor:'rgba(10,122,107,0.08)', tension:0.3, fill:true, pointRadius:4, pointBackgroundColor:'#0a7a6b', borderWidth:2 }] },
-      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:15,max:40,grid:chartGrid,ticks:{font:chartFont,callback:function(v){return v.toFixed(0)}}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+      type:'line', data:{ labels:labels, datasets:[{ data:bmiData, borderColor:'#00F5C8', backgroundColor:'rgba(0,245,200,0.06)', tension:0.3, fill:true, pointRadius:4, pointBackgroundColor:'#00F5C8', borderWidth:2 }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:15,max:40,grid:chartGrid,ticks:{font:chartFont,color:'rgba(255,255,255,0.3)',callback:function(v){return v.toFixed(0)}}}, x:{grid:{display:false},ticks:{font:chartFont,color:'rgba(255,255,255,0.3)'}} } }
     });
 
     riskChart = new Chart(document.getElementById('riskTrendChart'), {
-      type:'line', data:{ labels:labels, datasets:[{ data:riskData, borderColor:'#F43F5E', backgroundColor:'rgba(244,63,94,0.1)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#F43F5E', borderWidth:2 }] },
-      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:0,max:100,grid:chartGrid,ticks:{font:chartFont}}, x:{grid:{display:false},ticks:{font:chartFont}} } }
+      type:'line', data:{ labels:labels, datasets:[{ data:riskData, borderColor:'#FF6B6B', backgroundColor:'rgba(255,107,107,0.08)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#FF6B6B', borderWidth:2 }] },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{min:0,max:100,grid:chartGrid,ticks:{font:chartFont,color:'rgba(255,255,255,0.3)'}}, x:{grid:{display:false},ticks:{font:chartFont,color:'rgba(255,255,255,0.3)'}} } }
     });
   }
 

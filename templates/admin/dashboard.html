@@ -354,19 +354,19 @@ function initActivityChart() {
       datasets: [{
         label: 'Health Logs',
         data: chartData7d,
-        borderColor: '#0a7a6b',
-        backgroundColor: 'rgba(10,122,107,.08)',
+        borderColor: '#00F5C8',
+        backgroundColor: 'rgba(0,245,200,.06)',
         tension: .4, fill: true,
-        pointRadius: 5, pointBackgroundColor: '#0a7a6b',
-        pointBorderColor: '#fff', pointBorderWidth: 2
+        pointRadius: 5, pointBackgroundColor: '#00F5C8',
+        pointBorderColor: '#0F1512', pointBorderWidth: 2
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } },
-        x: { grid: { display: false } }
+        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: 'rgba(255,255,255,0.3)' } },
+        x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.3)' } }
       }
     }
   });

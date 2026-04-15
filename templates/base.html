@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <!-- ═══════════════════════════════════════════════════════════════════════
-       SECTION 1: HEAD — Performance-Optimized
+       SECTION 1: HEAD — Clinical Dark
        ═══════════════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="MediCare AI — Your Intelligent Personal Health Assistant">
-  <meta name="theme-color" content="#0A7A6B">
+  <meta name="theme-color" content="#080C0B">
+  <meta name="color-scheme" content="dark">
 
   <title>{% block title %}MediCare AI{% endblock %}</title>
 
@@ -88,9 +89,14 @@
 <div class="app-shell">
 
   <!-- ═══════════════════════════════════════════════════════════════════════
-       SECTION 2: SIDEBAR — Dark Gradient Premium
+       SECTION 2: SIDEBAR — Clinical Dark
        ═══════════════════════════════════════════════════════════════════════ -->
   <aside class="sidebar" id="sidebar">
+
+    <!-- Collapse toggle (desktop) -->
+    <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-label="Collapse sidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
 
     <!-- ── Brand ──────────────────────────────────────────────────────────── -->
     <div class="sidebar-brand">
@@ -111,7 +117,7 @@
       <a href="{{ url_for('home') }}"
          class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
         <i class="fas fa-th-large"></i>
-        <span data-i18n="nav.dashboard">Dashboard</span>
+        <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
       </a>
 
       <!-- Health -->
@@ -119,17 +125,17 @@
       <a href="{{ url_for('health.health_page') }}"
          class="nav-item {% if request.endpoint == 'health.health_page' %}active{% endif %}">
         <i class="fas fa-heart-pulse"></i>
-        <span data-i18n="nav.health_section">Health</span>
+        <span class="nav-label" data-i18n="nav.health_section">Health</span>
       </a>
       <a href="{{ url_for('health.disease_prediction') }}"
          class="nav-item {% if request.endpoint == 'health.disease_prediction' %}active{% endif %}">
         <i class="fas fa-stethoscope"></i>
-        <span data-i18n="nav.disease">Disease Prediction</span>
+        <span class="nav-label" data-i18n="nav.disease">Disease Prediction</span>
       </a>
       <a href="{{ url_for('health.ai_assistant') }}"
          class="nav-item {% if request.endpoint == 'health.ai_assistant' %}active{% endif %}">
         <i class="fas fa-robot"></i>
-        <span data-i18n="nav.ai">AI Assistant</span>
+        <span class="nav-label" data-i18n="nav.ai">AI Assistant</span>
       </a>
 
       <!-- Analytics -->
@@ -137,7 +143,7 @@
       <a href="{{ url_for('health.reports') }}"
          class="nav-item {% if request.endpoint == 'health.reports' %}active{% endif %}">
         <i class="fas fa-chart-line"></i>
-        <span data-i18n="nav.reports">Reports</span>
+        <span class="nav-label" data-i18n="nav.reports">Reports</span>
       </a>
 
       <!-- Safety -->
@@ -145,7 +151,7 @@
       <a href="{{ url_for('health.emergency') }}"
          class="nav-item {% if request.endpoint == 'health.emergency' %}active{% endif %}">
         <i class="fas fa-kit-medical"></i>
-        <span data-i18n="nav.emergency" data-i18n="qa.emergency">Emergency</span>
+        <span class="nav-label" data-i18n="nav.emergency">Emergency</span>
       </a>
 
       <!-- Admin (only for admins) -->
@@ -155,7 +161,7 @@
          class="nav-item {% if request.endpoint and request.endpoint.startswith('admin.') %}active{% endif %}"
          style="color:var(--accent)">
         <i class="fas fa-shield-halved"></i>
-        <span>Admin Panel</span>
+        <span class="nav-label">Admin Panel</span>
       </a>
       {% endif %}
 
@@ -164,11 +170,11 @@
       <a href="{{ url_for('health.profile') }}"
          class="nav-item {% if request.endpoint == 'health.profile' %}active{% endif %}">
         <i class="fas fa-user-circle"></i>
-        <span data-i18n="nav.profile">Profile</span>
+        <span class="nav-label" data-i18n="nav.profile">Profile</span>
       </a>
       <a href="{{ url_for('auth.logout') }}" class="nav-item">
         <i class="fas fa-right-from-bracket"></i>
-        <span data-i18n="nav.logout">Logout</span>
+        <span class="nav-label" data-i18n="nav.logout">Logout</span>
       </a>
 
     </nav>
@@ -179,7 +185,7 @@
       <div class="user-avatar">{{ display_name[0] | upper }}</div>
       <div class="user-info">
         <span class="user-name">{{ display_name }}</span>
-        <span class="user-role">{% if current_user.is_admin %}System Admin{% else %}Health Member{% endif %}</span>
+        <span class="user-role">{% if current_user.is_admin %}System Admin{% else %}<span class="status-dot"></span> Health Member{% endif %}</span>
       </div>
     </a>
 
@@ -191,9 +197,9 @@
   <!-- ═══════════════════════════════════════════════════════════════════════
        SECTION 3: MAIN CONTENT
        ═══════════════════════════════════════════════════════════════════════ -->
-  <div class="main-content">
+  <div class="main-content" id="main-content">
 
-    <!-- ── Topbar — Glassmorphism ─────────────────────────────────────────── -->
+    <!-- ── Topbar — Clinical Dark Glass ───────────────────────────────────── -->
     <header class="topbar">
       <div class="topbar-left">
         <div class="flex items-center gap-3">
@@ -255,13 +261,42 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 4: TOAST CONTAINER
+     SECTION 4: BOTTOM NAVIGATION — Mobile
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="{{ url_for('home') }}" class="bnav-item {% if request.endpoint == 'home' %}active{% endif %}">
+      <i class="fas fa-th-large bnav-icon"></i>
+      <span data-i18n="nav.today">Today</span>
+    </a>
+    <a href="{{ url_for('health.health_page') }}" class="bnav-item {% if request.endpoint == 'health.health_page' %}active{% endif %}">
+      <i class="fas fa-heart-pulse bnav-icon"></i>
+      <span data-i18n="nav.health_section">Health</span>
+    </a>
+    <a href="{{ url_for('health.disease_prediction') }}" class="bnav-item {% if request.endpoint == 'health.disease_prediction' %}active{% endif %}">
+      <i class="fas fa-stethoscope bnav-icon"></i>
+      <span data-i18n="nav.predict">Predict</span>
+    </a>
+    <a href="{{ url_for('health.ai_assistant') }}" class="bnav-item {% if request.endpoint == 'health.ai_assistant' %}active{% endif %}">
+      <i class="fas fa-robot bnav-icon"></i>
+      <span data-i18n="nav.ai_short">AI</span>
+    </a>
+    <a href="{{ url_for('health.emergency') }}" class="bnav-item {% if request.endpoint == 'health.emergency' %}active{% endif %}">
+      <i class="fas fa-kit-medical bnav-icon"></i>
+      <span data-i18n="nav.sos">SOS</span>
+    </a>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5: TOAST CONTAINER
      ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="toast-container" id="toast-container"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 5: BASE JAVASCRIPT
+     SECTION 6: BASE JAVASCRIPT
      ═══════════════════════════════════════════════════════════════════════════ -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -315,10 +350,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var container = document.getElementById('toast-container');
     if (container) container.appendChild(toast);
 
+    /* Animate in */
+    requestAnimationFrame(function() {
+      toast.classList.add('show');
+    });
+
     setTimeout(function () {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(40px)';
-      setTimeout(function () { toast.remove(); }, 300);
+      toast.classList.remove('show');
+      setTimeout(function () { toast.remove(); }, 400);
     }, 4000);
   };
 
@@ -341,7 +380,37 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 
-  /* ── 4. Active Nav Highlight (fallback JS) ──────────────────────────── */
+  /* ── 4. Sidebar Collapse (Desktop) ─────────────────────────────────── */
+  var collapseBtn = document.getElementById('sidebar-collapse-btn');
+  var mainContent = document.getElementById('main-content');
+
+  function applySidebarState(collapsed) {
+    if (!sidebar) return;
+    if (collapsed) {
+      sidebar.classList.add('collapsed');
+      if (mainContent) mainContent.classList.add('sidebar-collapsed');
+      if (collapseBtn) collapseBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    } else {
+      sidebar.classList.remove('collapsed');
+      if (mainContent) mainContent.classList.remove('sidebar-collapsed');
+      if (collapseBtn) collapseBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    }
+  }
+
+  /* Restore from localStorage */
+  var savedCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+  applySidebarState(savedCollapsed);
+
+  if (collapseBtn) {
+    collapseBtn.addEventListener('click', function() {
+      var isCollapsed = sidebar.classList.contains('collapsed');
+      applySidebarState(!isCollapsed);
+      localStorage.setItem('sidebar-collapsed', !isCollapsed);
+    });
+  }
+
+
+  /* ── 5. Active Nav Highlight (fallback JS) ──────────────────────────── */
   var path  = window.location.pathname;
   var items = document.querySelectorAll('.sidebar-nav .nav-item');
   items.forEach(function (item) {
@@ -352,8 +421,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  /* Bottom nav active */
+  var bnavItems = document.querySelectorAll('.bnav-item');
+  bnavItems.forEach(function(item) {
+    var href = item.getAttribute('href');
+    if (href && href === path) {
+      bnavItems.forEach(function(n) { n.classList.remove('active'); });
+      item.classList.add('active');
+    }
+  });
 
-  /* ── 5. Date Display ────────────────────────────────────────────────── */
+
+  /* ── 6. Date Display ────────────────────────────────────────────────── */
   function setDate() {
     var el = document.getElementById('current-date');
     if (!el) return;
@@ -365,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   setDate();
 
-  /* ── 6. Search Bar Toggle & Logic ───────────────────────────────────── */
+  /* ── 7. Search Bar Toggle & Logic ───────────────────────────────────── */
   var searchBtn = document.getElementById('search-toggle-btn');
   var searchInput = document.getElementById('global-search-input');
   
@@ -408,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
 
-  /* ── 7. Scroll Animation Observer (Performance) ─────────────────────── */
+  /* ── 8. Scroll Animation Observer (Performance) ─────────────────────── */
   if ('IntersectionObserver' in window) {
     var scrollObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
@@ -427,6 +506,46 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
       el.classList.add('is-visible');
     });
+  }
+
+
+  /* ── 9. Chart.js Dark Theme Config ──────────────────────────────────── */
+  function configureChartDarkTheme() {
+    if (typeof Chart === 'undefined') return;
+    Chart.defaults.color = 'rgba(255,255,255,0.40)';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+    Chart.defaults.font.family = "'Outfit', system-ui, sans-serif";
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15,21,18,0.95)';
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.08)';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.cornerRadius = 12;
+    Chart.defaults.plugins.tooltip.titleFont = { weight: '700', size: 13 };
+    Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+    Chart.defaults.plugins.tooltip.padding = 12;
+    Chart.defaults.elements.line.borderWidth = 2;
+    Chart.defaults.elements.point.radius = 0;
+    Chart.defaults.elements.point.hoverRadius = 5;
+    Chart.defaults.elements.bar.borderRadius = 6;
+    Chart.defaults.scale.grid = Chart.defaults.scale.grid || {};
+    Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.04)';
+    Chart.defaults.scale.grid.drawBorder = false;
+  }
+
+  /* Apply chart dark theme once Chart.js is loaded */
+  if (typeof Chart !== 'undefined') {
+    configureChartDarkTheme();
+  } else {
+    /* Chart.js is deferred — wait for it */
+    var chartReady = setInterval(function() {
+      if (typeof Chart !== 'undefined') {
+        configureChartDarkTheme();
+        clearInterval(chartReady);
+      }
+    }, 100);
+    /* Stop trying after 5s */
+    setTimeout(function() { clearInterval(chartReady); }, 5000);
   }
 
 });

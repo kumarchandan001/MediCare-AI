@@ -42,7 +42,7 @@
   .form-group { display:flex; flex-direction:column; gap:4px; }
   .form-group label { font-size:.75rem; font-weight:600; color:var(--text-secondary); }
   .form-group input, .form-group select, .form-group textarea { padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:.85rem; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,122,107,.1); }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,245,200,.12); }
   .form-hint { font-size:.68rem; color:var(--text-muted); }
 
   /* ── Contact cards ────────────────────────────────────────────────────── */
@@ -91,11 +91,11 @@
   .summary-box .sb-sub { font-size:.68rem; color:var(--text-muted); }
 
   /* ── Danger zone ──────────────────────────────────────────────────────── */
-  .danger-zone { background:var(--danger-bg); border:1px solid #fca5a5; border-radius:var(--radius-lg); padding:var(--space-5); }
+  .danger-zone { background:var(--danger-bg); border:1px solid rgba(255,107,107,0.2); border-radius:var(--radius-lg); padding:var(--space-5); }
   .danger-zone h4 { color:var(--danger); font-family:var(--font-display); font-weight:700; margin-bottom:var(--space-4); }
   .dz-section { margin-bottom:var(--space-4); }
   .dz-section:last-child { margin-bottom:0; }
-  .dz-section p { font-size:.82rem; color:#991b1b; margin-bottom:var(--space-2); }
+  .dz-section p { font-size:.82rem; color:var(--danger); margin-bottom:var(--space-2); }
 
   .empty-state { text-align:center; padding:var(--space-5); color:var(--text-muted); font-size:.85rem; }
   .empty-state i { font-size:1.5rem; display:block; margin-bottom:var(--space-2); opacity:.4; }

@@ -139,7 +139,7 @@
   .search-wrap input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(10, 122, 107, .1);
+    box-shadow: 0 0 0 3px rgba(0,245,200,.12);
   }
 
   /* ── Symptoms grid ────────────────────────────────────────────────────── */
@@ -175,7 +175,7 @@
     background: var(--primary);
     color: #fff;
     border-color: var(--primary);
-    box-shadow: 0 2px 8px rgba(10, 122, 107, .25);
+    box-shadow: 0 2px 8px rgba(0, 245, 200, .2);
   }
 
   .symptom-tag.hidden {
@@ -1121,25 +1121,25 @@
       var h = HOSPITAL_DATA[id];
       if (!h) return;
       var specsHtml = h.specialities.map(function (s) {
-        return '<span style="display:inline-block;background:#e6f7f5;color:#0a7a6b;border-radius:999px;padding:3px 10px;font-size:0.78rem;font-weight:600;margin:3px 2px;border:1px solid #d1e8e5">' + s + '</span>';
+        return '<span style="display:inline-block;background:rgba(0,245,200,0.08);color:#00F5C8;border-radius:999px;padding:3px 10px;font-size:0.78rem;font-weight:600;margin:3px 2px;border:1px solid rgba(0,245,200,0.15)">' + s + '</span>';
       }).join('');
-      var phoneHtml = h.phone ? '<div style="background:#eff6ff;border-radius:0.875rem;padding:0.875rem;border:1px solid #bfdbfe;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem"><i class="fas fa-phone" style="color:#2563eb;font-size:1.1rem"></i><div><div style="font-size:0.7rem;color:#6b8e89;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">Phone</div><a href="tel:' + h.phone + '" style="font-size:1rem;font-weight:700;color:#2563eb;text-decoration:none">' + h.phone + '</a></div></div>' : '';
+      var phoneHtml = h.phone ? '<div style="background:rgba(0,180,255,0.06);border-radius:0.875rem;padding:0.875rem;border:1px solid rgba(0,180,255,0.1);margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem"><i class="fas fa-phone" style="color:#00B4FF;font-size:1.1rem"></i><div><div style="font-size:0.7rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em">Phone</div><a href="tel:' + h.phone + '" style="font-size:1rem;font-weight:700;color:#00B4FF;text-decoration:none">' + h.phone + '</a></div></div>' : '';
 
       document.getElementById('hospital-modal-content').innerHTML =
         '<div style="background:' + h.headerGradient + ';padding:2rem;border-radius:1.5rem 1.5rem 0 0;position:relative">' +
         '<div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:0.875rem;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:white;margin-bottom:1rem"><i class="fas ' + h.icon + '"></i></div>' +
         '<div style="display:inline-block;background:rgba(255,255,255,0.2);color:white;border-radius:999px;padding:3px 12px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.75rem">' + h.badge + '</div>' +
-        '<h2 style="font-family:Plus Jakarta Sans,sans-serif;font-size:1.4rem;font-weight:800;color:white;margin:0 0 0.4rem">' + h.name + '</h2>' +
+        '<h2 style="font-family:Outfit,sans-serif;font-size:1.4rem;font-weight:800;color:white;margin:0 0 0.4rem">' + h.name + '</h2>' +
         '<p style="color:rgba(255,255,255,0.8);font-size:0.875rem;margin:0;display:flex;align-items:center;gap:0.4rem"><i class="fas fa-location-dot"></i>' + h.address + '</p>' +
         '</div>' +
         '<div style="padding:1.5rem">' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:1.25rem">' +
-        '<div style="background:#f4f9f8;border-radius:0.875rem;padding:0.875rem;border:1px solid #d1e8e5"><div style="font-size:0.7rem;color:#6b8e89;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem"><i class="fas fa-clock" style="color:#0a7a6b;margin-right:4px"></i>OPD Timings</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-size:1rem;font-weight:800;color:#0a7a6b">' + h.timing + '</div></div>' +
-        '<div style="background:#f4f9f8;border-radius:0.875rem;padding:0.875rem;border:1px solid #d1e8e5"><div style="font-size:0.7rem;color:#6b8e89;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem"><i class="fas fa-calendar" style="color:#10B981;margin-right:4px"></i>Days Open</div><div style="font-size:0.9rem;font-weight:700;color:#0d1f1c">' + h.days + '</div></div>' +
+        '<div style="background:rgba(0,245,200,0.06);border-radius:0.875rem;padding:0.875rem;border:1px solid rgba(0,245,200,0.1)"><div style="font-size:0.7rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem"><i class="fas fa-clock" style="color:#00F5C8;margin-right:4px"></i>OPD Timings</div><div style="font-family:Outfit,sans-serif;font-size:1rem;font-weight:800;color:#00F5C8">' + h.timing + '</div></div>' +
+        '<div style="background:rgba(0,230,118,0.06);border-radius:0.875rem;padding:0.875rem;border:1px solid rgba(0,230,118,0.1)"><div style="font-size:0.7rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem"><i class="fas fa-calendar" style="color:#00E676;margin-right:4px"></i>Days Open</div><div style="font-size:0.9rem;font-weight:700;color:var(--text)">' + h.days + '</div></div>' +
         '</div>' +
         phoneHtml +
         '<div style="margin-bottom:1.25rem"><div style="font-size:0.75rem;font-weight:700;color:#6b8e89;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.6rem">Specialities Available</div><div>' + specsHtml + '</div></div>' +
-        '<div style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:0.5rem;padding:0.75rem 1rem;font-size:0.82rem;color:#92400e;margin-bottom:1.25rem"><i class="fas fa-info-circle" style="color:#f59e0b;margin-right:6px"></i>' + h.note + '</div>' +
+        '<div style="background:rgba(255,179,0,0.06);border:1px solid rgba(255,179,0,0.15);border-left:4px solid #FFB300;border-radius:0.5rem;padding:0.75rem 1rem;font-size:0.82rem;color:#FFB300;margin-bottom:1.25rem"><i class="fas fa-info-circle" style="color:#FFB300;margin-right:6px"></i>' + h.note + '</div>' +
         '<div style="display:flex;gap:0.75rem">' +
         '<a href="https://maps.google.com/maps?q=' + h.mapQuery + '" target="_blank" class="btn btn-outline" style="flex:1;justify-content:center;gap:0.5rem"><i class="fas fa-map-location-dot"></i> Get Directions</a>' +
         '<button onclick="closeHospitalModal()" class="btn btn-secondary" style="flex:1;justify-content:center;gap:0.5rem"><i class="fas fa-xmark"></i> Close</button>' +
@@ -1405,7 +1405,7 @@
       if (data.xai && data.xai.personalization_insight) {
         var piData = data.xai.personalization_insight;
         var pLevel = piData.level || 'Info';
-        var bColor = '#0a7a6b';
+        var bColor = '#00F5C8';
         if (pLevel === 'High') { bColor = 'var(--danger)'; }
         else if (pLevel === 'Medium') { bColor = 'var(--warning)'; }
         
@@ -1655,7 +1655,7 @@
   }
 
   function _severityColor(label) {
-    return {'Critical':'#F43F5E','High':'#F97316','Moderate':'#F59E0B','Low':'#10B981'}[label] || '#0a7a6b';
+    return {'Critical':'#FF6B6B','High':'#F97316','Moderate':'#FFB300','Low':'#00E676'}[label] || '#00F5C8';
   }
 
   /* ── Panel 2: Contribution Chart (enhanced tooltips) ──── */
@@ -1674,7 +1674,7 @@
     var norms = fc.map(function(f) { return f.normalized_score || 0; });
 
     var colorMap = { 'Critical': '#F43F5E', 'High': '#F97316', 'Moderate': '#F59E0B', 'Low': '#10B981' };
-    var colors = fc.map(function(f) { return colorMap[f.severity_label] || '#0a7a6b'; });
+    var colors = fc.map(function(f) { return colorMap[f.severity_label] || '#00F5C8'; });
 
     contributionChart = new Chart(canvas, {
       type: 'bar',
@@ -1756,7 +1756,7 @@
       return;
     }
 
-    var altColors = ['#0a7a6b', '#2563eb', '#7c3aed'];
+    var altColors = ['#00F5C8', '#00B4FF', '#9C6FFF'];
     list.innerHTML = alts.map(function(alt, i) {
       var confBadge = alt.confidence
         ? '<span class="alt-conf-badge" style="color:' + (alt.confidence_color || altColors[i]) + ';background:' + (alt.confidence_color || altColors[i]) + '15">' + alt.confidence + '</span>'

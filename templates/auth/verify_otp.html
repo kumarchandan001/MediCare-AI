@@ -129,9 +129,9 @@ boxes.forEach(function(box, i) {
   });
 
   box.addEventListener('focus', function() {
-    this.style.borderColor = 'var(--primary)';
-    this.style.boxShadow = '0 0 0 4px rgba(10,122,107,0.1)';
-    this.style.background = '#F0FDF9';
+    this.style.borderColor = 'var(--accent)';
+    this.style.boxShadow = '0 0 0 4px rgba(0,245,200,0.12)';
+    this.style.background = 'rgba(0,245,200,0.04)';
   });
   box.addEventListener('blur', function() {
     this.style.borderColor = this.value ? 'var(--primary)' : 'var(--border)';

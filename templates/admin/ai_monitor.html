@@ -237,13 +237,13 @@ function initPredictionsChart() {
         backgroundColor: 'rgba(124,58,237,.08)',
         tension: .4, fill: true,
         pointRadius: 5, pointBackgroundColor: '#7c3aed',
-        pointBorderColor: '#fff', pointBorderWidth: 2
+        pointBorderColor: '#0F1512', pointBorderWidth: 2
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } }, x: { grid: { display: false } } }
+      scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: 'rgba(255,255,255,0.3)' } }, x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.3)' } } }
     }
   });
 }
@@ -252,7 +252,7 @@ function initDiseasesChart(diseases) {
   var ctx = document.getElementById('diseasesChart');
   if (!ctx) return;
   if (!diseases.length) diseases = [{predicted_disease:'Flu',count:4},{predicted_disease:'Cold',count:3},{predicted_disease:'Migraine',count:2},{predicted_disease:'Allergies',count:1}];
-  var colors = ['rgba(10,122,107,.8)','rgba(10,122,107,.65)','rgba(10,122,107,.5)','rgba(10,122,107,.35)','rgba(10,122,107,.25)'];
+  var colors = ['rgba(0,245,200,.7)','rgba(0,245,200,.55)','rgba(0,245,200,.4)','rgba(0,245,200,.28)','rgba(0,245,200,.18)'];
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -267,7 +267,7 @@ function initDiseasesChart(diseases) {
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
       plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } }, y: { grid: { display: false } } }
+      scales: { x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: 'rgba(255,255,255,0.3)' } }, y: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.3)' } } }
     }
   });
 }
