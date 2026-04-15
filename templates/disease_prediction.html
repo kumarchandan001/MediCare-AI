@@ -545,6 +545,637 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* ── Custom Dark Theme Refinements for Prediction Result ── */
+  .conf-card-custom {
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    transition: transform var(--transition);
+  }
+  .conf-card-custom:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-500);
+  }
+  .explain-box-custom {
+    margin: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-left: 4px solid var(--primary);
+  }
+  .precautions-box-custom {
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--border-light);
+  }
+  .insight-box-custom {
+    padding: 12px;
+    background: var(--surface-3);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary);
+    margin-top: 8px;
+  }
+
+  /* ── Consult Doctor Redesign ────────────────────────────────────────────── */
+  .consult-section {
+    display: none;
+    margin-top: var(--space-8);
+  }
+  .consult-section.show {
+    display: block;
+    animation: fade-in 0.5s ease;
+  }
+  .consult-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .consult-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .consult-icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-xl);
+    background: var(--surface-2);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+  .consult-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+  }
+  .consult-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  .consult-header-badge {
+    background: var(--surface-2);
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border-light);
+  }
+  .consult-disclaimer {
+    background: var(--warning-bg);
+    border: 1px dashed var(--warning);
+    color: var(--warning);
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    margin-bottom: var(--space-6);
+  }
+  .consult-disclaimer i {
+    font-size: 1.2rem;
+  }
+  .consult-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-6);
+  }
+  .hospital-card {
+    background: var(--surface-2);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition);
+  }
+  .hospital-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+  }
+  .hospital-card-header {
+    padding: var(--space-5);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .jain-header { background: linear-gradient(135deg, #0a7a6b, #12a090); }
+  .dayananda-header { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+  .nearby-header { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+  
+  .hospital-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-lg);
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    backdrop-filter: blur(4px);
+  }
+  .hospital-status-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(4px);
+  }
+  .consult-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px rgba(74,222,128,0.6);
+  }
+  .consult-live-dot {
+    animation: pulse 1.5s infinite;
+  }
+  .hospital-card-body {
+    padding: var(--space-5);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .hospital-type-tag {
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--surface-3);
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+  }
+  .hospital-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 6px 0;
+  }
+  .hospital-location {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hospital-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: var(--space-4) 0;
+  }
+  .hospital-info-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+    flex: 1;
+  }
+  .hospital-info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .info-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+  .info-icon-box.teal { background: rgba(20, 184, 166, 0.1); color: #14b8a6; }
+  .info-icon-box.green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+  .info-icon-box.amber { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+  .info-icon-box.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+  
+  .info-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .info-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .info-value {
+    font-size: 0.85rem;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .info-value.timing {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .hospital-card-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .hospital-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .nearby-features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: var(--space-5);
+    flex: 1;
+  }
+  .nearby-feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+  .nearby-feature i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+  .nearby-main-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: linear-gradient(135deg, #4c1d95, #7c3aed);
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition);
+  }
+  .nearby-main-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    color: white;
+  }
+  /* ── XAI Tabs Navigation ────────────────────────────────────────── */
+  .xai-tabs {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    border-bottom: 2px solid var(--border-light);
+    padding-bottom: var(--space-4);
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .xai-tab {
+    background: transparent;
+    border: none;
+    padding: var(--space-3) var(--space-5);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .xai-tab:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .xai-tab.active {
+    background: var(--primary);
+    color: white;
+  }
+  .xai-panel {
+    display: none;
+    padding-top: var(--space-6);
+    animation: fade-in 0.4s ease;
+  }
+  .xai-panel.active {
+    display: block;
+  }
+
+  /* ── XAI Panel 1: Explanation ───────────────────────────────────── */
+  .evidence-strength-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+  .evidence-strength-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+    font-weight: 600;
+  }
+  .evidence-bar {
+    height: 8px;
+    background: var(--surface-3);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  .evidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-500));
+    transition: width 1s ease;
+  }
+  .xai-summary-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .xai-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .xai-brain-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+  .xai-summary-header strong {
+    display: block;
+    color: var(--text);
+    font-size: 1.1rem;
+  }
+  .xai-summary-header span {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .xai-summary-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .confidence-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-4);
+  }
+  .conf-metric-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    text-align: center;
+  }
+  .conf-metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .conf-metric-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── XAI Panel 2: Contributions ─────────────────────────────────── */
+  .top-symptoms-summary {
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+  .top-symptoms-summary h4 {
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+  #top-symptoms-summary-list {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+  }
+  #top-symptoms-summary-list li {
+    margin-bottom: 6px;
+  }
+  .contributions-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  @media (min-width: 900px) {
+    .contributions-layout {
+      grid-template-columns: 3fr 2fr;
+    }
+  }
+  .chart-container-xai {
+    position: relative;
+    width: 100%;
+    max-height: 350px;
+  }
+  .contributions-table-wrap {
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+  }
+  .contributions-table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    background: var(--surface-3);
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-light);
+  }
+  #contributions-table-body .row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  #contributions-table-body .row:last-child {
+    border-bottom: none;
+  }
+
+  /* ── XAI Panel 3: Alternatives ──────────────────────────────────── */
+  .alternatives-intro {
+    background: var(--surface-2);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-6);
+  }
+  .primary-diagnosis-bar {
+    background: var(--surface-2);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+  .primary-label {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .alt-diagnosis-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .alt-diagnosis-row.primary .alt-disease-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .alt-disease-name {
+    width: 25%;
+    min-width: 120px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .alt-bar-container {
+    flex: 1;
+    min-width: 150px;
+    height: 12px;
+    background: var(--surface-3);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  .alt-bar {
+    height: 100%;
+    background: var(--text-muted);
+    transition: width 1s ease;
+  }
+  .alt-bar.primary-bar { background: var(--primary); }
+  .alt-bar.risk-high { background: var(--error); }
+  .alt-bar.risk-med { background: var(--warning); }
+  .alt-bar.risk-low { background: var(--success); }
+  .alt-pct {
+    width: 50px;
+    text-align: right;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .alternatives-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: var(--space-6);
+  }
+  .alternatives-note {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  /* ── Risk Factors Panel ── */
+  .risk-factors-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .risk-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-left: 4px solid var(--warning);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+  .risk-box.severe {
+    border-left-color: var(--error);
+  }
+  .no-risk-msg {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--success);
+    background: var(--surface-2);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+  }
+  .alt-conf-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .alt-reason-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-weight: 400;
+    white-space: normal;
+  }
 </style>
 {% endblock %}
 
@@ -669,7 +1300,7 @@
             style="background: var(--primary-50); color: var(--primary-700); letter-spacing: 0.1em; font-weight: 700; text-transform: uppercase;"
             data-i18n="disease.predicted_condition">Predicted Condition</span></div>
         <div class="result-disease" id="result-disease"
-          style="font-size: 2.8rem; color: var(--primary-800); margin-bottom: 1rem;">—</div>
+          style="font-size: 2.8rem; color: var(--primary); margin-bottom: 1rem;">—</div>
         <p class="result-desc" id="result-description"
           style="max-width: 750px; margin: 0 auto; font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6;">
           —</p>
@@ -680,8 +1311,7 @@
         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
 
         <!-- Confidence -->
-        <div class="conf-card"
-          style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1.5rem;">
+        <div class="conf-card conf-card-custom">
           <div class="conf-label" data-i18n="disease.confidence">Confidence Score</div>
           <div class="conf-num" id="result-confidence">--</div>
           <div id="confidence-label-badge" class="confidence-label-badge" style="display:none;"></div>
@@ -692,8 +1322,7 @@
         </div>
 
         <!-- Risk Level -->
-        <div class="conf-card"
-          style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1.5rem;">
+        <div class="conf-card conf-card-custom">
           <div class="conf-label" data-i18n="disease.risk">Risk Level</div>
           <div>
             <div class="risk-badge" id="result-risk-level" style="margin-top: 0">—</div>
@@ -702,8 +1331,7 @@
         </div>
 
         <!-- Health Context -->
-        <div class="conf-card"
-          style="background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-xl); text-align: left; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 2rem 1.5rem;">
+        <div class="conf-card conf-card-custom" style="text-align: left;">
           <h4
             style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1.25rem; text-align: center;">
             <i class="fas fa-heart-pulse" style="color:var(--primary)"></i> <span
@@ -722,21 +1350,19 @@
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
 
         <!-- Explainable AI -->
-        <div class="explain-box"
-          style="margin: 0; background: #f0fdfa; border: 1px solid #ccfbf1; border-left: 4px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+        <div class="explain-box explain-box-custom">
           <div class="explain-head"><i class="fas fa-microchip"></i> <span data-i18n="disease.why_prediction">AI
               Reasoning Pattern</span></div>
           <p id="result-explanation">—</p>
           <div class="top-symptoms-tags" id="result-top-symptoms" style="margin-bottom:var(--space-4)"></div>
-          <div id="personalization-insight-box" style="display:none; padding:12px; background:white; border-radius:8px; border-left:3px solid var(--primary); margin-top:8px;">
+          <div id="personalization-insight-box" class="insight-box-custom" style="display:none;">
             <div style="font-size:0.8rem; font-weight:700; color:var(--text); margin-bottom:4px;" id="pi-title"><i class="fas fa-user-doctor" style="color:var(--primary)"></i> Personalized Focus</div>
             <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;" id="pi-message"></p>
           </div>
         </div>
 
         <!-- Precautions -->
-        <div
-          style="background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+        <div class="precautions-box-custom">
           <h4 class="text-sm font-semibold mb-3"
             style="display: flex; align-items: center; gap: 8px; color: var(--text);"><i class="fas fa-shield-heart"
               style="color:var(--success)"></i> <span data-i18n="disease.precautions">Recommended Precautions</span>
@@ -1692,6 +2318,7 @@
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         indexAxis: 'y',
         plugins: {
           legend: { display: false },
