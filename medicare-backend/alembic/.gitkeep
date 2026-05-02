@@ -1,0 +1,3 @@
+# Alembic migration config
+# Initialize with: alembic init alembic
+# Then edit alembic.ini and alembic/env.py to use core.database settings
