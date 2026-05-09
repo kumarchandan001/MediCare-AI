@@ -1,0 +1,85 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
+  BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build and Push Backend
+      - name: Extract metadata (tags, labels) for Backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./medicare-backend
+          file: ./medicare-backend/Dockerfile.prod
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+
+      # Build and Push Frontend
+      - name: Extract metadata (tags, labels) for Frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./medicare-frontend
+          file: ./medicare-frontend/Dockerfile.prod
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name != 'pull_request'
+    
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /path/to/your/app
+            # Pull latest images
+            docker compose -f docker-compose.prod.yml pull
+            # Restart services
+            docker compose -f docker-compose.prod.yml up -d
+            # Optional: Clean up old images
+            docker image prune -f

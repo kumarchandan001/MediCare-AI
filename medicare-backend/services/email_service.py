@@ -53,6 +53,7 @@ async def _send_email_async(
             start_tls=True,
             username=settings.MAIL_USERNAME,
             password=settings.MAIL_PASSWORD,
+            local_hostname="localhost",
         )
         logger.info(f"✅ Email sent to {to_email} — {subject}")
         return True
@@ -79,8 +80,11 @@ def _send_email_sync(
         msg["To"] = to_email
         msg.attach(MIMEText(html_body, "html"))
 
-        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT) as server:
+        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT,
+                         local_hostname="localhost") as server:
+            server.ehlo("localhost")
             server.starttls()
+            server.ehlo("localhost")
             server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.send_message(msg)
 

@@ -18,10 +18,26 @@ export default defineConfig({
         target: "http://localhost:8000",
         changeOrigin: true,
       },
+      // Proxy WebSocket connections
+      "/ws": {
+        target: "ws://localhost:8000",
+        ws: true,
+      },
     },
   },
   build: {
-    // Code splitting per route
+    // ── Performance Budgets ──────────────────────
+    chunkSizeWarningLimit: 500, // KB — warn if any chunk exceeds this
+    sourcemap: false, // Disable sourcemaps in production for security
+    target: "es2020",
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true, // Strip console.log in production
+        drop_debugger: true,
+      },
+    },
+    // ── Code Splitting ──────────────────────────
     rollupOptions: {
       output: {
         manualChunks: {

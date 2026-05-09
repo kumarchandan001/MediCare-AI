@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import './features/clinical-interview/clinical-interview.css';
 
 @tailwind base;
 @tailwind components;
@@ -276,3 +277,118 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PRODUCTION ACCESSIBILITY & STABILITY SAFEGUARDS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Reduced Motion Support ──────────────
+   Respects user's motion preference for cognitive safety.
+   Disables all non-essential animations to prevent:
+   - vestibular disorders
+   - cognitive overload
+   - motion sickness
+*/
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-shimmer,
+  .animate-page-in,
+  .animate-pulse-dot {
+    animation: none !important;
+  }
+
+  /* Disable framer-motion transforms */
+  [style*="transform"] {
+    transition: none !important;
+  }
+}
+
+/* ── High Contrast Support ──────────────
+   Ensures critical health indicators remain readable
+   under forced high-contrast modes.
+*/
+@media (forced-colors: active) {
+  .hero-scores-grid [data-status="critical"] {
+    border: 2px solid CanvasText;
+  }
+
+  button, a, [role="button"] {
+    border: 1px solid ButtonText;
+  }
+
+  /* Ensure chart elements remain visible */
+  svg text {
+    fill: CanvasText;
+  }
+}
+
+/* ── Alert Intensity Moderation ──────────
+   Prevent rapid flashing on health alerts.
+   WCAG 2.1 Section 2.3: Three flashes or below.
+*/
+@keyframes safe-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.alert-indicator {
+  animation: safe-pulse 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-indicator {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+/* ── Layout Stability ────────────────────
+   Prevent Cumulative Layout Shift (CLS) on dynamic content.
+   Reserve space for charts, images, and async panels.
+*/
+.chart-container {
+  contain: layout style;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+.card-skeleton {
+  contain: layout style;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 200px;
+}
+
+.dashboard-panel {
+  contain: layout;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+
+/* ── Focus Visibility ────────────────────
+   Keyboard navigation improvements for all interactive elements.
+*/
+:focus-visible {
+  outline: 2px solid rgba(99, 230, 190, 0.7);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Low-Power / Battery Saver ───────────
+   Reduce rendering costs when battery is low.
+*/
+@media (prefers-reduced-data: reduce) {
+  .decorative-gradient,
+  .background-particles {
+    display: none !important;
+  }
+
+  .glassmorphism {
+    backdrop-filter: none !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+}

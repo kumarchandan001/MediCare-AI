@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import type { ReactNode, ErrorInfo } from "react";
 import { ErrorFallback } from "./ErrorFallback";
+import { crashReporter } from "@/lib/crashReporting";
 
 interface Props {
   children: ReactNode;
@@ -28,6 +29,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ErrorBoundary]", error, info);
+    // Report crash to backend in production
+    crashReporter.reportRenderCrash(error, info.componentStack || undefined);
+    
     this.props.onError?.(error, info);
   }
 

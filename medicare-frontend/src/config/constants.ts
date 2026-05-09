@@ -70,6 +70,7 @@ export const ROUTES = {
   DASHBOARD: "/dashboard",
   HEALTH: "/health",
   PREDICTION: "/prediction",
+  CLINICAL_INTERVIEW: "/clinical-interview",
   AI_ASSISTANT: "/ai-assistant",
   REPORTS: "/reports",
   EMERGENCY: "/emergency",

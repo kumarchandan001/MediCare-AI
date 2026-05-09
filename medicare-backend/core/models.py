@@ -26,6 +26,13 @@ from features.prediction.models import PredictionRecord
 # Google Fit Models
 from features.google_fit.models import GoogleFitSync
 
+# Health Intelligence Longitudinal Models
+from health_intelligence.models import (
+    HealthBaselineLog, HealthScoreLog, PreventiveAlertLog,
+    HealthEventLog, SymptomLogEntry, WearableSnapshot,
+    PhysiologicalStateLog, LiveSessionLog,
+)
+
 # Make them available here
 __all__ = [
     "User",
@@ -45,4 +52,12 @@ __all__ = [
     "EmergencyContact",
     "PredictionRecord",
     "GoogleFitSync",
+    "HealthBaselineLog",
+    "HealthScoreLog",
+    "PreventiveAlertLog",
+    "HealthEventLog",
+    "SymptomLogEntry",
+    "WearableSnapshot",
+    "PhysiologicalStateLog",
+    "LiveSessionLog",
 ]

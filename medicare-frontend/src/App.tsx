@@ -24,6 +24,7 @@ const ResetPasswordPage = lazy(() => import("@/features/auth/pages/ResetPassword
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/DashboardPage"));
 const HealthPage = lazy(() => import("@/features/health/pages/HealthPage"));
 const PredictionPage = lazy(() => import("@/features/prediction/pages/PredictionPage"));
+const ClinicalInterviewPage = lazy(() => import("@/features/clinical-interview/pages/ClinicalInterviewPage"));
 const AIAssistantPage = lazy(() => import("@/features/ai-assistant/pages/AIAssistantPage"));
 const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
 const EmergencyPage = lazy(() => import("@/features/emergency/pages/EmergencyPage"));
@@ -66,6 +67,7 @@ export default function App() {
                 <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
                 <Route path={ROUTES.HEALTH} element={<HealthPage />} />
                 <Route path={ROUTES.PREDICTION} element={<PredictionPage />} />
+                <Route path={ROUTES.CLINICAL_INTERVIEW} element={<ClinicalInterviewPage />} />
                 <Route path={ROUTES.AI_ASSISTANT} element={<AIAssistantPage />} />
                 <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
                 <Route path={ROUTES.EMERGENCY} element={<EmergencyPage />} />

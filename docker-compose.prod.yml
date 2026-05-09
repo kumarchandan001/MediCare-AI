@@ -1,0 +1,113 @@
+version: "3.9"
+
+services:
+  # ── Frontend (Nginx + Built Assets) ──────────
+  frontend:
+    build:
+      context: ./medicare-frontend
+      dockerfile: Dockerfile.prod
+    image: ghcr.io/kumarchandan001/medicare-frontend:latest
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+
+  # ── Backend (FastAPI + Uvicorn) ──────────────
+  backend:
+    build:
+      context: ./medicare-backend
+      dockerfile: Dockerfile.prod
+    image: ghcr.io/kumarchandan001/medicare-backend:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - DEBUG=False
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+    # Graceful shutdown: allow WebSocket connections to drain
+    stop_grace_period: 30s
+
+  # ── PostgreSQL ────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: medicare
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d medicare"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  # ── Redis ─────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 300M
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { googleFitApi } from "../api/googleFitApi";
@@ -18,33 +18,46 @@ export function useGoogleFitConnect() {
   const qc = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
+  const processedRef = useRef(false);
 
   // Handle OAuth callback on profile page
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const fitStatus = params.get("google_fit");
 
+    // Guard: only process once per callback to prevent DOM corruption
+    if (!fitStatus || processedRef.current) return;
+    processedRef.current = true;
+
     if (fitStatus === "success") {
       const access_token = params.get("access_token") || "";
       const refresh_token = params.get("refresh_token") || "";
       const expires_in = parseInt(params.get("expires_in") || "3600");
 
+      // Clean the URL first to prevent re-processing on re-renders
+      // Use window.history directly to avoid React re-render during mount
+      window.history.replaceState({}, "", "/profile");
+
       if (access_token) {
-        googleFitApi
-          .completeAuth({ access_token, refresh_token, expires_in })
-          .then(() => {
-            toast.success("Google Fit connected! Initial data synced.");
-            qc.invalidateQueries({ queryKey: ["google-fit"] });
-            qc.invalidateQueries({ queryKey: ["health"] });
-          })
-          .catch(() => {
-            toast.error("Failed to save Google Fit tokens.");
-          });
+        // Defer the API call to let React finish mounting
+        setTimeout(() => {
+          googleFitApi
+            .completeAuth({ access_token, refresh_token, expires_in })
+            .then(() => {
+              toast.success("Google Fit connected! Initial data synced.");
+              qc.invalidateQueries({ queryKey: ["google-fit"] });
+              qc.invalidateQueries({ queryKey: ["health"] });
+            })
+            .catch(() => {
+              toast.error("Failed to save Google Fit tokens.");
+            });
+        }, 100);
       }
-      navigate("/profile", { replace: true });
     } else if (fitStatus === "error") {
-      toast.error("Google Fit connection failed.");
-      navigate("/profile", { replace: true });
+      window.history.replaceState({}, "", "/profile");
+      setTimeout(() => {
+        toast.error("Google Fit connection failed.");
+      }, 100);
     }
   }, [location.search]);
 
