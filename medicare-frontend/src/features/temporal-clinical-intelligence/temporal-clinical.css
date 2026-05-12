@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════
+   Temporal Clinical Intelligence — Design System
+   Calm, medically intelligent, continuously aware.
+   ═══════════════════════════════════════════════════ */
+:root {
+  --tc-teal: #3dd9a8;
+  --tc-teal-dim: rgba(61,217,168,.1);
+  --tc-blue: #60a5fa;
+  --tc-blue-dim: rgba(96,165,250,.1);
+  --tc-amber: #f0b856;
+  --tc-amber-dim: rgba(240,184,86,.08);
+  --tc-red: #ef5350;
+  --tc-red-dim: rgba(239,83,80,.08);
+  --tc-purple: #a78bfa;
+  --tc-purple-dim: rgba(167,139,250,.08);
+  --tc-surface: rgba(255,255,255,.035);
+  --tc-surface-hover: rgba(255,255,255,.06);
+  --tc-border: rgba(255,255,255,.07);
+  --tc-text: rgba(255,255,255,.85);
+  --tc-text-dim: rgba(255,255,255,.48);
+  --tc-radius: 14px;
+  --tc-radius-sm: 8px;
+}
+
+/* ── Shared ──────────────────────────── */
+.tc-section-title{font-size:.86rem;font-weight:600;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.tc-panel{background:var(--tc-surface);border:1px solid var(--tc-border);border-radius:var(--tc-radius);padding:16px;animation:tc-fade .3s ease}
+.tc-badge{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:500}
+
+@keyframes tc-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Severity Monitor ────────────────── */
+.tc-severity-monitor{display:flex;align-items:center;gap:12px;padding:12px 16px}
+.tc-severity-ring{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;transition:all .4s ease}
+.tc-sev-minimal{background:var(--tc-teal-dim);color:var(--tc-teal);border:2px solid rgba(61,217,168,.2)}
+.tc-sev-mild{background:var(--tc-blue-dim);color:var(--tc-blue);border:2px solid rgba(96,165,250,.2)}
+.tc-sev-moderate{background:var(--tc-amber-dim);color:var(--tc-amber);border:2px solid rgba(240,184,86,.15)}
+.tc-sev-significant{background:rgba(251,146,60,.1);color:#fb923c;border:2px solid rgba(251,146,60,.15)}
+.tc-sev-severe{background:var(--tc-red-dim);color:var(--tc-red);border:2px solid rgba(239,83,80,.15)}
+.tc-sev-critical{background:rgba(239,83,80,.15);color:var(--tc-red);border:2px solid rgba(239,83,80,.25)}
+.tc-severity-info{flex:1}
+.tc-severity-level{font-size:.82rem;font-weight:600;color:var(--tc-text);text-transform:capitalize}
+.tc-severity-explanation{font-size:.72rem;color:var(--tc-text-dim);line-height:1.5;margin-top:2px}
+
+/* ── Triage badge ────────────────────── */
+.tc-triage-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:10px;font-size:.7rem;font-weight:500}
+.tc-triage-self_monitoring{background:var(--tc-teal-dim);color:var(--tc-teal)}
+.tc-triage-routine_consultation{background:var(--tc-blue-dim);color:var(--tc-blue)}
+.tc-triage-urgent_evaluation{background:var(--tc-amber-dim);color:var(--tc-amber)}
+.tc-triage-emergency_escalation{background:var(--tc-red-dim);color:var(--tc-red)}
+
+/* ── Symptom Evolution Timeline ──────── */
+.tc-evolution-timeline{display:flex;flex-direction:column;gap:6px}
+.tc-evo-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--tc-radius-sm);background:rgba(255,255,255,.02)}
+.tc-evo-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tc-evo-dot-new{background:var(--tc-teal)}
+.tc-evo-dot-persistent{background:var(--tc-amber)}
+.tc-evo-dot-resolved{background:var(--tc-text-dim)}
+.tc-evo-dot-worsening{background:var(--tc-red)}
+.tc-evo-dot-improving{background:var(--tc-blue)}
+.tc-evo-name{font-size:.78rem;color:var(--tc-text);flex:1;text-transform:capitalize}
+.tc-evo-trend{font-size:.68rem;padding:2px 6px;border-radius:6px}
+.tc-trend-worsening{background:var(--tc-red-dim);color:var(--tc-red)}
+.tc-trend-improving{background:var(--tc-teal-dim);color:var(--tc-teal)}
+.tc-trend-stable{background:var(--tc-surface-hover);color:var(--tc-text-dim)}
+
+/* ── Deterioration Risk ──────────────── */
+.tc-det-bar-wrap{height:6px;background:var(--tc-border);border-radius:3px;overflow:hidden;margin:8px 0}
+.tc-det-bar{height:100%;border-radius:3px;transition:width .5s ease}
+.tc-det-bar-low{background:var(--tc-teal)}
+.tc-det-bar-med{background:var(--tc-amber)}
+.tc-det-bar-high{background:var(--tc-red)}
+.tc-det-domains{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tc-det-domain{font-size:.68rem;padding:2px 8px;border-radius:8px;background:var(--tc-red-dim);color:var(--tc-red);text-transform:capitalize}
+
+/* ── Recovery Progress ───────────────── */
+.tc-recovery-milestones{display:flex;gap:8px;margin-top:8px}
+.tc-milestone{font-size:.68rem;padding:3px 10px;border-radius:10px;background:var(--tc-teal-dim);color:var(--tc-teal)}
+.tc-milestone-pending{background:var(--tc-surface-hover);color:var(--tc-text-dim)}
+.tc-recovery-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.tc-recovery-metric{text-align:center;padding:8px;border-radius:var(--tc-radius-sm);background:rgba(255,255,255,.02)}
+.tc-recovery-metric-value{font-size:1rem;font-weight:600;color:var(--tc-teal)}
+.tc-recovery-metric-label{font-size:.68rem;color:var(--tc-text-dim);margin-top:2px}
+
+/* ── Escalation Prediction ───────────── */
+.tc-esc-meter{display:flex;align-items:center;gap:10px;margin:8px 0}
+.tc-esc-bar-wrap{flex:1;height:6px;background:var(--tc-border);border-radius:3px;overflow:hidden}
+.tc-esc-bar{height:100%;border-radius:3px;transition:width .5s ease}
+.tc-esc-pct{font-size:.75rem;font-weight:600;min-width:30px;text-align:right}
+.tc-esc-cooldown{font-size:.68rem;color:var(--tc-text-dim);font-style:italic;margin-top:4px}
+
+/* ── Wearable Fusion ─────────────────── */
+.tc-wearable-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.tc-wearable-card{text-align:center;padding:10px 8px;border-radius:var(--tc-radius-sm);background:rgba(255,255,255,.02);border:1px solid var(--tc-border)}
+.tc-wearable-value{font-size:1.1rem;font-weight:700;color:var(--tc-teal)}
+.tc-wearable-label{font-size:.65rem;color:var(--tc-text-dim);margin-top:2px}
+.tc-wearable-trust{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.72rem;color:var(--tc-text-dim)}
+.tc-trust-dot{width:8px;height:8px;border-radius:50%}
+.tc-trust-high{background:var(--tc-teal)}
+.tc-trust-med{background:var(--tc-amber)}
+.tc-trust-low{background:var(--tc-red)}
+
+/* ── Longitudinal View ───────────────── */
+.tc-narrative{font-size:.78rem;color:var(--tc-text-dim);line-height:1.65;padding:12px;background:rgba(255,255,255,.02);border-radius:var(--tc-radius-sm);border-left:3px solid var(--tc-teal);margin-top:8px}
+.tc-follow-up{margin-top:10px}
+.tc-follow-up-prompt{font-size:.75rem;color:var(--tc-text);line-height:1.5;padding:6px 10px;border-radius:var(--tc-radius-sm);background:rgba(255,255,255,.02);margin-top:4px}
+.tc-follow-up-timing{font-size:.68rem;color:var(--tc-amber);margin-top:6px}
+
+/* ── Trend Explorer ──────────────────── */
+.tc-trend-cards{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+.tc-trend-card{min-width:160px;flex-shrink:0;padding:12px;border-radius:var(--tc-radius);background:var(--tc-surface);border:1px solid var(--tc-border);scroll-snap-align:start}
+.tc-trend-card-label{font-size:.72rem;color:var(--tc-text-dim);margin-bottom:4px}
+.tc-trend-card-value{font-size:1rem;font-weight:600;color:var(--tc-text)}
+.tc-trend-card-sub{font-size:.68rem;color:var(--tc-text-dim);margin-top:2px}
+
+/* ── Explainability ──────────────────── */
+.tc-explain-row{font-size:.75rem;color:var(--tc-text-dim);line-height:1.6;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.tc-explain-row:last-child{border-bottom:none}
+.tc-explain-label{color:var(--tc-text);font-weight:500;margin-right:4px}
+
+/* ── Safety Footer ───────────────────── */
+.tc-safety-footer{background:var(--tc-amber-dim);border:1px solid rgba(240,184,86,.12);border-radius:var(--tc-radius-sm);padding:10px 14px;margin-top:8px}
+.tc-safety-footer p{font-size:.72rem;color:var(--tc-amber);line-height:1.5;margin:0}
+
+/* ── Collapse Toggle ─────────────────── */
+.tc-collapse-toggle{display:none;background:var(--tc-surface);border:1px solid var(--tc-border);color:var(--tc-text-dim);padding:10px 16px;border-radius:var(--tc-radius-sm);font-size:.82rem;cursor:pointer;text-align:left;width:100%}
+
+/* ── Mobile ──────────────────────────── */
+@media(max-width:900px){
+  .tc-collapse-toggle{display:block}
+  .tc-wearable-grid{grid-template-columns:1fr 1fr}
+  .tc-recovery-metrics{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .tc-wearable-grid{grid-template-columns:1fr}
+  .tc-trend-cards{gap:6px}
+  .tc-trend-card{min-width:140px;padding:10px}
+  .tc-severity-monitor{flex-direction:column;text-align:center}
+}

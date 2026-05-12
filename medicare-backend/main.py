@@ -149,6 +149,18 @@ app.include_router(digital_twin_router)
 from health_intelligence.api.clinical_interview_routes import router as clinical_interview_router
 app.include_router(clinical_interview_router, prefix="/api/v1")
 
+# Temporal Clinical Intelligence (continuous longitudinal reasoning & severity)
+from health_intelligence.api.temporal_clinical_routes import router as temporal_clinical_router
+app.include_router(temporal_clinical_router, prefix="/api/v1")
+
+# Clinical Explainability (transparent reasoning, evidence, trust, storytelling)
+from health_intelligence.api.explainability_routes import explainability_router
+app.include_router(explainability_router, prefix="/api/v1")
+
+# Clinical Governance (safety, emotional safety, escalation, human review, audit)
+from health_intelligence.api.clinical_governance_routes import governance_router
+app.include_router(governance_router, prefix="/api/v1")
+
 # Mount static uploads directory for profile pictures
 import os
 from fastapi.staticfiles import StaticFiles

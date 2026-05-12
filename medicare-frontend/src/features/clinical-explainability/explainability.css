@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════
+   Clinical Explainability — Transparent Reasoning UX
+   Calm, progressive, cognitively lightweight.
+   ═══════════════════════════════════════════════════ */
+:root {
+  --ex-teal: #3dd9a8;
+  --ex-teal-dim: rgba(61,217,168,.1);
+  --ex-blue: #60a5fa;
+  --ex-blue-dim: rgba(96,165,250,.1);
+  --ex-amber: #f0b856;
+  --ex-amber-dim: rgba(240,184,86,.08);
+  --ex-red: #ef5350;
+  --ex-red-dim: rgba(239,83,80,.08);
+  --ex-purple: #a78bfa;
+  --ex-purple-dim: rgba(167,139,250,.08);
+  --ex-surface: rgba(255,255,255,.035);
+  --ex-surface-hover: rgba(255,255,255,.06);
+  --ex-border: rgba(255,255,255,.07);
+  --ex-text: rgba(255,255,255,.85);
+  --ex-text-dim: rgba(255,255,255,.48);
+  --ex-radius: 14px;
+  --ex-radius-sm: 8px;
+}
+
+/* ── Shared ──────────────────────────── */
+.ex-panel{background:var(--ex-surface);border:1px solid var(--ex-border);border-radius:var(--ex-radius);padding:16px;animation:ex-fade .3s ease}
+.ex-title{font-size:.86rem;font-weight:600;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ex-badge{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:500}
+.ex-dim{font-size:.72rem;color:var(--ex-text-dim);line-height:1.55}
+
+@keyframes ex-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Progressive Disclosure Toggle ───── */
+.ex-expand-btn{background:none;border:1px solid var(--ex-border);color:var(--ex-text-dim);padding:6px 12px;border-radius:var(--ex-radius-sm);font-size:.72rem;cursor:pointer;transition:all .2s ease;margin-top:8px}
+.ex-expand-btn:hover{background:var(--ex-surface-hover);color:var(--ex-text)}
+.ex-hidden{display:none}
+.ex-expanded{display:block;animation:ex-fade .2s ease}
+
+/* ── Reasoning Chain ─────────────────── */
+.ex-chain{display:flex;flex-direction:column;gap:2px}
+.ex-step{padding:10px 14px;border-left:3px solid var(--ex-border);margin-left:8px;position:relative}
+.ex-step::before{content:"";position:absolute;left:-7px;top:14px;width:10px;height:10px;border-radius:50%;border:2px solid var(--ex-border);background:#1a1a2e}
+.ex-step-observation::before{border-color:var(--ex-blue)}
+.ex-step-observation{border-left-color:var(--ex-blue)}
+.ex-step-inference::before{border-color:var(--ex-purple)}
+.ex-step-inference{border-left-color:var(--ex-purple)}
+.ex-step-hypothesis::before{border-color:var(--ex-teal)}
+.ex-step-hypothesis{border-left-color:var(--ex-teal)}
+.ex-step-escalation::before{border-color:var(--ex-amber)}
+.ex-step-escalation{border-left-color:var(--ex-amber)}
+.ex-step-wearable_influence::before{border-color:var(--ex-purple)}
+.ex-step-wearable_influence{border-left-color:var(--ex-purple)}
+.ex-step-temporal_influence::before{border-color:var(--ex-blue)}
+.ex-step-temporal_influence{border-left-color:var(--ex-blue)}
+.ex-step-title{font-size:.76rem;font-weight:500;color:var(--ex-text);margin-bottom:4px}
+.ex-step-item{font-size:.72rem;color:var(--ex-text-dim);line-height:1.55;padding:2px 0}
+
+/* ── Evidence Transparency ───────────── */
+.ex-evidence-grid{display:flex;flex-direction:column;gap:6px}
+.ex-ev-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--ex-radius-sm);background:rgba(255,255,255,.02)}
+.ex-ev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ex-ev-dot-strong{background:var(--ex-teal)}
+.ex-ev-dot-weak{background:var(--ex-amber)}
+.ex-ev-dot-missing{background:var(--ex-text-dim)}
+.ex-ev-dot-conflicting{background:var(--ex-red)}
+.ex-ev-text{font-size:.74rem;color:var(--ex-text-dim);flex:1;line-height:1.4}
+.ex-ev-tag{font-size:.65rem;padding:2px 6px;border-radius:6px;flex-shrink:0}
+.ex-ev-tag-strong{background:var(--ex-teal-dim);color:var(--ex-teal)}
+.ex-ev-tag-weak{background:var(--ex-amber-dim);color:var(--ex-amber)}
+.ex-ev-tag-missing{background:var(--ex-surface-hover);color:var(--ex-text-dim)}
+.ex-ev-tag-conflicting{background:var(--ex-red-dim);color:var(--ex-red)}
+
+/* ── Sufficiency Bar ─────────────────── */
+.ex-suf-bar-wrap{height:6px;background:var(--ex-border);border-radius:3px;overflow:hidden;margin:8px 0}
+.ex-suf-bar{height:100%;border-radius:3px;transition:width .5s ease}
+
+/* ── Trust Indicators ────────────────── */
+.ex-trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ex-trust-card{padding:10px;border-radius:var(--ex-radius-sm);background:rgba(255,255,255,.02);border:1px solid var(--ex-border);text-align:center}
+.ex-trust-value{font-size:1rem;font-weight:600}
+.ex-trust-label{font-size:.68rem;color:var(--ex-text-dim);margin-top:2px}
+.ex-trust-status{font-size:.65rem;padding:2px 6px;border-radius:6px;margin-top:4px;display:inline-block}
+.ex-status-strong,.ex-status-thorough,.ex-status-reliable,.ex-status-stable,.ex-status-low{background:var(--ex-teal-dim);color:var(--ex-teal)}
+.ex-status-adequate,.ex-status-progressing,.ex-status-moderate,.ex-status-adjusting{background:var(--ex-amber-dim);color:var(--ex-amber)}
+.ex-status-limited,.ex-status-early,.ex-status-uncertain,.ex-status-evolving,.ex-status-elevated{background:var(--ex-red-dim);color:var(--ex-red)}
+
+/* ── Uncertainty Panel ───────────────── */
+.ex-unc-sources{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.ex-unc-source{padding:6px 10px;border-radius:var(--ex-radius-sm);background:rgba(255,255,255,.02);font-size:.72rem;color:var(--ex-text-dim);line-height:1.5}
+.ex-unc-norm{font-size:.78rem;color:var(--ex-text);font-weight:500;padding:10px;background:rgba(255,255,255,.03);border-radius:var(--ex-radius-sm);border-left:3px solid var(--ex-amber);margin-top:8px}
+
+/* ── Contradiction View ──────────────── */
+.ex-contra-list{display:flex;flex-direction:column;gap:6px}
+.ex-contra-item{padding:8px 12px;border-radius:var(--ex-radius-sm);background:rgba(255,255,255,.02);border-left:3px solid var(--ex-amber)}
+.ex-contra-label{font-size:.72rem;font-weight:500;color:var(--ex-amber);margin-bottom:2px}
+.ex-contra-text{font-size:.72rem;color:var(--ex-text-dim);line-height:1.5}
+.ex-contra-story{font-size:.76rem;color:var(--ex-text-dim);line-height:1.65;padding:12px;background:rgba(255,255,255,.02);border-radius:var(--ex-radius-sm);border-left:3px solid var(--ex-purple);margin-top:8px}
+
+/* ── Stability View ──────────────────── */
+.ex-stability-ring{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;flex-shrink:0;border:2px solid var(--ex-border)}
+.ex-stab-stable{border-color:var(--ex-teal);color:var(--ex-teal);background:var(--ex-teal-dim)}
+.ex-stab-adjusting{border-color:var(--ex-amber);color:var(--ex-amber);background:var(--ex-amber-dim)}
+.ex-stab-unstable,.ex-stab-rapidly_shifting,.ex-stab-high_ambiguity{border-color:var(--ex-red);color:var(--ex-red);background:var(--ex-red-dim)}
+
+/* ── Pathway Graph ───────────────────── */
+.ex-graph-nodes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ex-graph-node{padding:6px 12px;border-radius:10px;font-size:.7rem;border:1px solid var(--ex-border)}
+.ex-graph-node-symptom{background:var(--ex-blue-dim);color:var(--ex-blue);border-color:rgba(96,165,250,.15)}
+.ex-graph-node-condition{background:var(--ex-teal-dim);color:var(--ex-teal);border-color:rgba(61,217,168,.15)}
+.ex-graph-node-trajectory{background:var(--ex-amber-dim);color:var(--ex-amber);border-color:rgba(240,184,86,.15)}
+.ex-graph-node-escalation{background:var(--ex-red-dim);color:var(--ex-red);border-color:rgba(239,83,80,.15)}
+.ex-graph-node-recovery{background:var(--ex-purple-dim);color:var(--ex-purple);border-color:rgba(167,139,250,.15)}
+.ex-graph-edges{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.ex-graph-edge{font-size:.68rem;color:var(--ex-text-dim);padding:4px 10px;border-radius:var(--ex-radius-sm);background:rgba(255,255,255,.02)}
+
+/* ── Decision Panel ──────────────────── */
+.ex-decisions{display:flex;flex-direction:column;gap:6px}
+.ex-decision{padding:8px 12px;border-radius:var(--ex-radius-sm);background:rgba(255,255,255,.02)}
+.ex-decision-action{font-size:.72rem;font-weight:500;color:var(--ex-text);margin-bottom:2px}
+.ex-decision-text{font-size:.72rem;color:var(--ex-text-dim);line-height:1.5}
+.ex-decision-prio{font-size:.62rem;padding:1px 6px;border-radius:6px;margin-left:6px}
+.ex-prio-high{background:var(--ex-red-dim);color:var(--ex-red)}
+.ex-prio-moderate{background:var(--ex-amber-dim);color:var(--ex-amber)}
+.ex-prio-low{background:var(--ex-surface-hover);color:var(--ex-text-dim)}
+
+/* ── Narrative ───────────────────────── */
+.ex-narrative{font-size:.78rem;color:var(--ex-text-dim);line-height:1.65;padding:14px;background:rgba(255,255,255,.02);border-radius:var(--ex-radius-sm);border-left:3px solid var(--ex-teal)}
+.ex-narrative-longitudinal{border-left-color:var(--ex-purple);margin-top:8px}
+
+/* ── Safety Footer ───────────────────── */
+.ex-safety{background:var(--ex-amber-dim);border:1px solid rgba(240,184,86,.12);border-radius:var(--ex-radius-sm);padding:10px 14px;margin-top:10px}
+.ex-safety p{font-size:.72rem;color:var(--ex-amber);line-height:1.5;margin:0}
+
+/* ── Tabs ────────────────────────────── */
+.ex-tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ex-tab{padding:6px 14px;border-radius:10px;font-size:.74rem;border:1px solid var(--ex-border);background:transparent;color:var(--ex-text-dim);cursor:pointer;white-space:nowrap;transition:all .2s ease}
+.ex-tab:hover{background:var(--ex-surface-hover)}
+.ex-tab-active{background:var(--ex-teal-dim);color:var(--ex-teal);border-color:rgba(61,217,168,.2)}
+
+/* ── Collapse Toggle (mobile) ────────── */
+.ex-collapse-toggle{display:none;background:var(--ex-surface);border:1px solid var(--ex-border);color:var(--ex-text-dim);padding:10px 16px;border-radius:var(--ex-radius-sm);font-size:.82rem;cursor:pointer;text-align:left;width:100%}
+
+/* ── Mobile ──────────────────────────── */
+@media(max-width:900px){
+  .ex-collapse-toggle{display:block}
+  .ex-trust-grid{grid-template-columns:1fr 1fr}
+  .ex-graph-nodes{gap:4px}
+}
+@media(max-width:600px){
+  .ex-trust-grid{grid-template-columns:1fr}
+  .ex-tabs{gap:2px}
+  .ex-tab{padding:5px 10px;font-size:.7rem}
+  .ex-step{padding:8px 10px;margin-left:4px}
+}

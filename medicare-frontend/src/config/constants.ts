@@ -75,6 +75,7 @@ export const ROUTES = {
   REPORTS: "/reports",
   EMERGENCY: "/emergency",
   PROFILE: "/profile",
+  UNIFIED_OS: "/unified-os",
   ADMIN: "/admin",
   ADMIN_USERS: "/admin/users",
   ADMIN_USER_DETAIL: "/admin/users/:id",

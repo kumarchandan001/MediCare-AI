@@ -30,6 +30,8 @@ const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
 const EmergencyPage = lazy(() => import("@/features/emergency/pages/EmergencyPage"));
 const ProfilePage = lazy(() => import("@/features/profile/pages/ProfilePage"));
 const OnboardingPage = lazy(() => import("@/features/onboarding/pages/OnboardingPage"));
+const UnifiedMobilePage = lazy(() => import("@/features/unified-health-system/pages/UnifiedMobilePage"));
+const ClinicalWorkspacePage = lazy(() => import("@/features/unified-clinical-workspace/UnifiedClinicalWorkspace"));
 
 // ── Admin pages ──────────────────────────
 const AdminLayout = lazy(() => import("@/features/admin/components/AdminLayout"));
@@ -60,6 +62,8 @@ export default function App() {
               
               {/* Standalone protected routes */}
               <Route path={ROUTES.ONBOARDING} element={<OnboardingPage />} />
+              <Route path={ROUTES.UNIFIED_OS} element={<UnifiedMobilePage />} />
+              <Route path="/clinical-workspace" element={<ClinicalWorkspacePage />} />
 
               {/* Protected routes (AppLayout handles auth guard) */}
               <Route element={<AppLayout />}>

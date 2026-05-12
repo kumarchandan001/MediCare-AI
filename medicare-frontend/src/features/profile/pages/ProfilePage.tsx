@@ -12,7 +12,7 @@ import GoogleFitConnectCard from "@/features/googleFit/components/GoogleFitConne
 export default function ProfilePage() {
   return (
     <ErrorBoundary>
-      <div className="animate-page-in max-w-4xl mx-auto">
+      <div className="animate-page-in w-full">
         {/* Profile Header */}
         <ProfileHeader />
 

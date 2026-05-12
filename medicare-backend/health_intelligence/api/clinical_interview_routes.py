@@ -1,14 +1,19 @@
 """
 health_intelligence/api/clinical_interview_routes.py
 ────────────────────────────────────────────────────
-FastAPI routes for the Conversational Clinical Interview Engine.
+FastAPI routes for the Conversational Clinical Interview Engine
+and Differential Reasoning Intelligence.
 
 Endpoints:
-  POST /clinical-interview/start     — Start a new clinical interview
-  POST /clinical-interview/respond   — Submit a response & get next question
-  GET  /clinical-interview/state     — Current reasoning state
-  POST /clinical-interview/reset     — Reset the interview
-  GET  /clinical-interview/history   — Past interview sessions
+  POST /clinical-interview/start              — Start a new clinical interview
+  POST /clinical-interview/respond            — Submit a response & get next question
+  GET  /clinical-interview/state              — Current reasoning state
+  POST /clinical-interview/reset              — Reset the interview
+  GET  /clinical-interview/history            — Past interview sessions
+  GET  /clinical-interview/differential-state — Differential reasoning snapshot
+  GET  /clinical-interview/evidence-map       — Clinical evidence graph
+  GET  /clinical-interview/hypothesis-evolution — Confidence history
+  GET  /clinical-interview/uncertainty-state  — Multi-dimensional uncertainty
 """
 
 import logging
@@ -19,6 +24,8 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from health_intelligence.clinical_interview import ClinicalInterviewEngine
+from health_intelligence.differential_reasoning import DifferentialEngine
+from health_intelligence.evidence_graph import EvidenceGraphEngine
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +37,10 @@ router = APIRouter(
     },
 )
 
-# Singleton engine instance
+# Singleton engine instances
 _engine = ClinicalInterviewEngine()
+_differential = DifferentialEngine()
+_evidence_graph = EvidenceGraphEngine()
 
 
 # ── Request / Response Models ───────────────────
@@ -209,3 +218,118 @@ async def get_interview_history(
             status_code=500,
             detail=f"Interview history error: {str(e)}",
         )
+
+
+# ── Differential Reasoning Endpoints ─────────────
+
+@router.get(
+    "/differential-state",
+    summary="Differential Reasoning State",
+    description=(
+        "Returns the full differential reasoning snapshot including "
+        "ranked hypotheses, weighted evidence, exclusions, comparisons, "
+        "stability, and strategic investigation guidance."
+    ),
+)
+async def get_differential_state(
+    session_id: str = Query(..., description="Active session ID"),
+):
+    """Retrieve the differential reasoning state for a session."""
+    try:
+        state = _engine.state_manager.get_state(session_id)
+        if not state:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        result = _differential.process_new_evidence(
+            session_id=session_id,
+            active_symptoms=state.active_symptoms,
+            clinical_context={"domain": state.active_domain},
+        )
+        return {"status": "success", "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception("Failed to retrieve differential state")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/evidence-map",
+    summary="Clinical Evidence Graph",
+    description="Returns the structured evidence graph for the session.",
+)
+async def get_evidence_map(
+    session_id: str = Query(..., description="Active session ID"),
+):
+    """Retrieve the clinical evidence graph."""
+    try:
+        state = _engine.state_manager.get_state(session_id)
+        if not state:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        diff = _differential.process_new_evidence(
+            session_id=session_id,
+            active_symptoms=state.active_symptoms,
+            clinical_context={"domain": state.active_domain},
+        )
+
+        graph = _evidence_graph.build_graph(
+            session_id=session_id,
+            active_symptoms=state.active_symptoms,
+            hypotheses=diff["hypotheses"],
+            contradictions=[],
+        )
+        return {"status": "success", "data": graph}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception("Failed to build evidence map")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/hypothesis-evolution",
+    summary="Hypothesis Confidence Evolution",
+    description="Returns the confidence evolution history for a session.",
+)
+async def get_hypothesis_evolution(
+    session_id: str = Query(..., description="Active session ID"),
+):
+    """Retrieve confidence evolution snapshots."""
+    try:
+        history = _differential.confidence_evolution.get_full_history(session_id)
+        return {"status": "success", "data": {"history": history}}
+    except Exception as e:
+        log.exception("Failed to retrieve hypothesis evolution")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/uncertainty-state",
+    summary="Multi-Dimensional Uncertainty State",
+    description=(
+        "Returns multi-dimensional uncertainty metrics including "
+        "evidence insufficiency, conflicting evidence, unstable "
+        "progression, and symptom overlap ambiguity."
+    ),
+)
+async def get_uncertainty_state(
+    session_id: str = Query(..., description="Active session ID"),
+):
+    """Retrieve the multi-dimensional uncertainty assessment."""
+    try:
+        state = _engine.state_manager.get_state(session_id)
+        if not state:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        diff = _differential.process_new_evidence(
+            session_id=session_id,
+            active_symptoms=state.active_symptoms,
+            clinical_context={"domain": state.active_domain},
+        )
+        return {"status": "success", "data": diff["ambiguity"]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception("Failed to retrieve uncertainty state")
+        raise HTTPException(status_code=500, detail=str(e))

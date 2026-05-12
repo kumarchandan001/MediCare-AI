@@ -1,0 +1,90 @@
+/* ═══════════════════════════════════════════════════
+   Clinical Governance — Trust & Safety UX
+   Production-grade, calm, human-centered.
+   ═══════════════════════════════════════════════════ */
+:root {
+  --gov-teal: #3dd9a8;
+  --gov-teal-dim: rgba(61,217,168,.1);
+  --gov-blue: #60a5fa;
+  --gov-blue-dim: rgba(96,165,250,.1);
+  --gov-amber: #f0b856;
+  --gov-amber-dim: rgba(240,184,86,.08);
+  --gov-red: #ef5350;
+  --gov-red-dim: rgba(239,83,80,.08);
+  --gov-purple: #a78bfa;
+  --gov-purple-dim: rgba(167,139,250,.08);
+  --gov-surface: rgba(255,255,255,.035);
+  --gov-border: rgba(255,255,255,.07);
+  --gov-text: rgba(255,255,255,.85);
+  --gov-text-dim: rgba(255,255,255,.48);
+  --gov-radius: 14px;
+  --gov-radius-sm: 8px;
+}
+
+.gov-panel{background:var(--gov-surface);border:1px solid var(--gov-border);border-radius:var(--gov-radius);padding:16px;animation:gov-fade .3s ease}
+.gov-title{font-size:.86rem;font-weight:600;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.gov-badge{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:500}
+.gov-dim{font-size:.72rem;color:var(--gov-text-dim);line-height:1.55}
+
+@keyframes gov-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* Safety Status */
+.gov-safety-status{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--gov-radius-sm);margin-bottom:10px}
+.gov-safe{background:var(--gov-teal-dim);border:1px solid rgba(61,217,168,.15)}
+.gov-unsafe{background:var(--gov-red-dim);border:1px solid rgba(239,83,80,.15)}
+.gov-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.gov-status-dot-safe{background:var(--gov-teal)}
+.gov-status-dot-unsafe{background:var(--gov-red)}
+.gov-status-text{font-size:.78rem;font-weight:500}
+
+/* Trust Meter */
+.gov-trust-meter{height:8px;background:var(--gov-border);border-radius:4px;overflow:hidden;margin:8px 0}
+.gov-trust-fill{height:100%;border-radius:4px;transition:width .6s ease}
+
+/* Escalation Banner */
+.gov-escalation-banner{padding:14px 16px;border-radius:var(--gov-radius-sm);border-left:4px solid var(--gov-amber);margin-bottom:8px}
+.gov-esc-routine{border-left-color:var(--gov-teal);background:var(--gov-teal-dim)}
+.gov-esc-watchful{border-left-color:var(--gov-blue);background:var(--gov-blue-dim)}
+.gov-esc-elevated{border-left-color:var(--gov-amber);background:var(--gov-amber-dim)}
+.gov-esc-urgent{border-left-color:var(--gov-red);background:var(--gov-red-dim)}
+.gov-esc-emergency{border-left-color:var(--gov-red);background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.2)}
+.gov-esc-level{font-size:.76rem;font-weight:600;text-transform:capitalize;margin-bottom:4px}
+.gov-esc-action{font-size:.72rem;color:var(--gov-text-dim);line-height:1.5}
+
+/* Human Review */
+.gov-review{padding:14px;border-radius:var(--gov-radius-sm);border:1px solid var(--gov-border);background:rgba(167,139,250,.06)}
+.gov-review-triggers{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.gov-review-trigger{font-size:.72rem;padding:6px 10px;background:rgba(255,255,255,.02);border-radius:var(--gov-radius-sm);color:var(--gov-text-dim);line-height:1.5}
+.gov-review-action{font-size:.78rem;font-weight:500;color:var(--gov-purple);margin-top:8px}
+
+/* Completeness */
+.gov-completeness-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gov-comp-item{text-align:center;padding:10px;border-radius:var(--gov-radius-sm);background:rgba(255,255,255,.02);border:1px solid var(--gov-border)}
+.gov-comp-value{font-size:1rem;font-weight:600}
+.gov-comp-label{font-size:.68rem;color:var(--gov-text-dim);margin-top:2px}
+
+/* Emotional Safety */
+.gov-emotional{padding:12px 16px;border-radius:var(--gov-radius-sm);border-left:3px solid var(--gov-teal)}
+.gov-emotional-score{font-size:.82rem;font-weight:500;color:var(--gov-text)}
+
+/* Confidence Adjustments */
+.gov-adj-list{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.gov-adj{font-size:.72rem;padding:6px 10px;border-radius:var(--gov-radius-sm);background:rgba(255,255,255,.02);color:var(--gov-text-dim)}
+.gov-adj-reason{color:var(--gov-amber);font-size:.68rem}
+
+/* Disclaimer */
+.gov-disclaimer{background:var(--gov-amber-dim);border:1px solid rgba(240,184,86,.12);border-radius:var(--gov-radius-sm);padding:10px 14px;margin-top:8px}
+.gov-disclaimer p{font-size:.72rem;color:var(--gov-amber);line-height:1.5;margin:0}
+
+/* Tabs */
+.gov-tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto}
+.gov-tab{padding:6px 14px;border-radius:10px;font-size:.74rem;border:1px solid var(--gov-border);background:transparent;color:var(--gov-text-dim);cursor:pointer;white-space:nowrap;transition:all .2s ease}
+.gov-tab:hover{background:rgba(255,255,255,.04)}
+.gov-tab-active{background:var(--gov-teal-dim);color:var(--gov-teal);border-color:rgba(61,217,168,.2)}
+
+/* Mobile */
+@media(max-width:600px){
+  .gov-completeness-grid{grid-template-columns:1fr}
+  .gov-tabs{gap:2px}
+  .gov-tab{padding:5px 10px;font-size:.7rem}
+}

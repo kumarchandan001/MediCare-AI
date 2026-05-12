@@ -8,6 +8,10 @@ import InvestigationProgressTracker from "./InvestigationProgressTracker";
 import SeverityAlertPanel from "./SeverityAlertPanel";
 import ClinicalReasoningPreview from "./ClinicalReasoningPreview";
 import InterviewContextSidebar from "./InterviewContextSidebar";
+import DifferentialDiagnosisWorkspace from "../../differential-reasoning/components/DifferentialDiagnosisWorkspace";
+import TemporalClinicalWorkspace from "../../temporal-clinical-intelligence/components/TemporalClinicalWorkspace";
+import InvestigationWorkspace from "../../clinical-explainability/components/InvestigationWorkspace";
+import GovernanceWorkspace from "../../clinical-governance/components/GovernanceWorkspace";
 
 export default function ClinicalInterviewWorkspace() {
   const [sessionId, setSessionId] = React.useState<string | null>(null);
@@ -180,6 +184,10 @@ export default function ClinicalInterviewWorkspace() {
             reasoningConfidence={interviewState?.reasoning_metadata?.reasoning_confidence || 0.1}
           />
           <ClinicalReasoningPreview metadata={interviewState?.reasoning_metadata || null} />
+          <DifferentialDiagnosisWorkspace sessionId={sessionId} />
+          <TemporalClinicalWorkspace sessionId={sessionId} />
+          <InvestigationWorkspace sessionId={sessionId} />
+          <GovernanceWorkspace sessionId={sessionId} />
           <InterviewContextSidebar
             context={null}
             symptoms={interviewState?.active_symptoms || []}

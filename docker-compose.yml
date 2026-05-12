@@ -9,7 +9,9 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://backend:8000/api/v1
+      # Host browser must reach API on published port (not Docker service DNS).
+      - VITE_API_URL=http://localhost:8000
+      - VITE_WS_URL=ws://localhost:8000
     depends_on:
       - backend
     volumes:
